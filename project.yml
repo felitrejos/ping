@@ -1,0 +1,69 @@
+name: Mako
+options:
+  deploymentTarget:
+    iOS: "26.0"
+    macOS: "26.0"
+packages:
+  SwiftProtobuf:
+    url: https://github.com/apple/swift-protobuf.git
+    from: 1.36.0
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation.git
+    from: 0.9.19
+settings:
+  base:
+    PRODUCT_NAME: Mako
+    SWIFT_VERSION: 6.0
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0
+targets:
+  Mako iOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Shared
+      - path: iOS
+    dependencies:
+      - package: SwiftProtobuf
+      - package: ZIPFoundation
+      - target: MakoWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.mako.ios
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_NSCalendarsUsageDescription: Mako uses your calendar to suggest when to leave for upcoming commutes.
+        INFOPLIST_KEY_NSUserNotificationsUsageDescription: Mako sends leave-now reminders for upcoming trips.
+        INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers: app.mako.refresh
+  Mako macOS:
+    type: application
+    platform: macOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Shared
+      - path: macOS
+    dependencies:
+      - package: SwiftProtobuf
+      - package: ZIPFoundation
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.mako.macos
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_LSUIElement: true
+        INFOPLIST_KEY_NSCalendarsUsageDescription: Mako uses your calendar to suggest when to leave for upcoming commutes.
+  MakoWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Shared
+      - path: Widgets
+    dependencies:
+      - package: SwiftProtobuf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.mako.widgets
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_NSExtensionPointIdentifier: com.apple.widgetkit-extension
