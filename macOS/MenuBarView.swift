@@ -28,36 +28,44 @@ struct MenuBarView: View {
     // MARK: - Train card
 
     private func trainCard(_ dep: LiveDeparture) -> some View {
-        let leaveIn = max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes())
+        let walkMin = UserSettings.walkingMinutes()
+        let leaveIn = max(0, dep.minutesUntilDeparture - walkMin)
+        let rideMin = max(1, Int((dep.arrivalTime.timeIntervalSince(dep.scheduledTime) / 60).rounded()))
 
-        return VStack(alignment: .leading, spacing: 12) {
-            // Header: destination + arrival
+        return VStack(alignment: .leading, spacing: 14) {
+            // Header
             HStack(alignment: .top) {
                 HStack(spacing: 5) {
                     Image(systemName: "tram.fill")
                         .font(.caption)
-                    Text(destinationName.uppercased())
+                    Text("TO \(destinationName.uppercased())")
                         .font(.caption.weight(.semibold))
                         .tracking(0.5)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 1) {
+                VStack(alignment: .trailing, spacing: 2) {
                     Text("ARRIVE BY")
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(dep.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
-                        .font(.title3.weight(.bold))
+                        .font(.title2.weight(.bold))
                 }
             }
 
-            // Big countdown
+            // Hero countdown
             HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text("Leave in")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                 Text("\(leaveIn)")
                     .font(.system(size: 54, weight: .heavy, design: .rounded))
                 Text("min")
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
             }
+
+            // Timeline
+            timeline(walkMin: walkMin, rideMin: rideMin, dep: dep)
 
             // Status pill
             HStack(spacing: 6) {
@@ -78,6 +86,50 @@ struct MenuBarView: View {
             .background(.fill.quaternary, in: Capsule())
         }
         .padding(16)
+    }
+
+    // MARK: - Timeline
+
+    private func timeline(walkMin: Int, rideMin: Int, dep: LiveDeparture) -> some View {
+        let total = walkMin + rideMin
+        let walkFraction = CGFloat(walkMin) / CGFloat(total)
+
+        return VStack(spacing: 4) {
+            // Bar
+            GeometryReader { geo in
+                HStack(spacing: 2) {
+                    // Walk segment
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(.blue.opacity(0.5))
+                        .frame(width: max(20, (geo.size.width - 2) * walkFraction))
+
+                    // Train segment
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(.green)
+                }
+            }
+            .frame(height: 6)
+
+            // Labels
+            HStack {
+                HStack(spacing: 3) {
+                    Image(systemName: "figure.walk")
+                        .font(.system(size: 9))
+                    Text("\(walkMin) min")
+                }
+                .foregroundStyle(.blue)
+
+                Spacer()
+
+                HStack(spacing: 3) {
+                    Image(systemName: "tram.fill")
+                        .font(.system(size: 9))
+                    Text("\(rideMin) min")
+                }
+                .foregroundStyle(.green)
+            }
+            .font(.caption2.weight(.medium))
+        }
     }
 
     // MARK: - Commute row
