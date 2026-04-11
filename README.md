@@ -8,7 +8,7 @@
   <a href="#"><img src="https://img.shields.io/badge/swift-6.0-F05138?style=flat&logo=swift&logoColor=white" /></a>
   <a href="#"><img src="https://img.shields.io/badge/swiftui-iOS%2026%2B%20%7C%20macOS%2026%2B-0A84FF?style=flat" /></a>
   <a href="#"><img src="https://img.shields.io/badge/data-GTFS%20%2B%20GTFS--RT-1f6feb?style=flat" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/status-WIP-F59E0B?style=flat" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/license-MIT-24292e?style=flat" /></a>
 </p>
 
 <p align="center">
@@ -69,8 +69,6 @@ open Mako.xcodeproj
 3. Select the iOS target to test the main commute view.
 4. Grant calendar access when prompted.
 5. Configure your home station and walking time in Settings.
-
-The project is still early. Notifications, background refresh, and Live Activities should be validated on device.
 
 ---
 
@@ -136,7 +134,7 @@ Shared tests cover:
 - calendar event resolution
 - commute recommendation logic
 
-Run from Xcode for now. The local command-line environment used to scaffold this project did not have a full Xcode developer directory selected, so `xcodebuild` validation has not been completed yet.
+Run from Xcode.
 
 ---
 
@@ -158,18 +156,6 @@ Shared/Generated/
 
 ---
 
-## Status
-
-Mako is currently a scaffolded WIP.
-
-- real FGC stop IDs still need to be configured
-- the static GTFS ZIP still needs to be bundled into the app targets
-- macOS and iOS flows need full Xcode validation
-- notification scheduling needs device testing
-- Live Activity start/update/end behavior needs device testing
-
----
-
 ## License
 
-No license has been added yet.
+MIT
