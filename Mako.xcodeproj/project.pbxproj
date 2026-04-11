@@ -484,7 +484,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.mako.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.mako.ios.widgets;
 				PRODUCT_MODULE_NAME = MakoWidgets;
 				PRODUCT_NAME = MakoWidgets;
 				SDKROOT = iphoneos;
@@ -626,7 +626,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.mako.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = app.mako.ios.widgets;
 				PRODUCT_MODULE_NAME = MakoWidgets;
 				PRODUCT_NAME = MakoWidgets;
 				SDKROOT = iphoneos;
