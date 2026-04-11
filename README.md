@@ -1,8 +1,25 @@
-# Mako
+<h1 align="center">
+  Mako
+</h1>
 
-Mako is a multiplatform FGC commute assistant for iPhone, Mac, and Live Activities.
+<p align="center">
+  Mako is a multiplatform FGC commute assistant for iPhone, Mac, and Live Activities.
+</p>
 
-Mako combines bundled GTFS static data, FGC GTFS Realtime trip updates, and your calendar to answer a very small question well: when do I need to leave home to catch the right train?
+<p align="center">
+  It combines bundled GTFS static data, FGC GTFS Realtime trip updates, and calendar context to answer one question quickly: when do I need to leave to catch the right train?
+</p>
+
+<p align="center">
+  <img alt="Swift" src="https://img.shields.io/badge/Swift-6.0-F05138?style=for-the-badge&logo=swift&logoColor=white">
+  <img alt="Platforms" src="https://img.shields.io/badge/Platforms-iOS%2026%2B%20%7C%20macOS%2026%2B-0A84FF?style=for-the-badge">
+  <img alt="Status" src="https://img.shields.io/badge/Status-WIP-F59E0B?style=for-the-badge">
+  <img alt="Last commit" src="https://img.shields.io/github/last-commit/felitrejos/mako?style=for-the-badge">
+</p>
+
+## What is Mako?
+
+Mako is an early-stage native Apple client for commute planning on FGC. It reads local GTFS schedule data, overlays realtime trip updates, checks your next calendar events, and computes a leave-by time based on walking time and buffer settings.
 
 ## Current status
 
@@ -15,7 +32,7 @@ Mako is scaffolded and the first implementation pass is in place:
 
 The project still needs full validation in Xcode with bundled FGC assets, real stop IDs, and on-device testing for notifications and Live Activities.
 
-## What Mako does
+## Features
 
 - parses bundled FGC GTFS static data from a local ZIP
 - fetches FGC GTFS Realtime trip updates and keeps the last known snapshot
@@ -23,7 +40,7 @@ The project still needs full validation in Xcode with bundled FGC assets, real s
 - recommends when to leave based on walking time, buffer time, and realtime delay
 - surfaces upcoming departures on macOS, iOS, notifications, and Live Activities
 
-## Installing Mako
+## Installation
 
 Mako is currently set up as an Xcode-driven app project generated from `project.yml`.
 
@@ -39,7 +56,13 @@ Dependencies:
 - `SwiftProtobuf`
 - `ZIPFoundation`
 
-## Project overview
+If you need to regenerate the Xcode project:
+
+```bash
+xcodegen generate
+```
+
+## Overview
 
 Mako is split into a few distinct layers:
 
@@ -52,7 +75,7 @@ Mako is split into a few distinct layers:
 
 The shared layer is intended to hold almost all product logic. The app targets mostly render and trigger refreshes.
 
-## Configuring Mako
+## Configuration
 
 The main project-specific configuration lives in `Shared/Models/Constants.swift`.
 
@@ -77,6 +100,12 @@ Mako currently expects:
 
 The realtime service currently resolves the OpenDataSoft records endpoint first, then downloads the protobuf file URL exposed by that endpoint.
 
+To regenerate GTFS Realtime Swift types:
+
+```bash
+protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
+```
+
 ## Testing
 
 Shared tests live in `Tests/MakoSharedTests` and cover:
@@ -99,18 +128,6 @@ In this repository state, the most important next validation steps are:
 - `Mako.xcodeproj` is generated with `xcodegen generate`
 - GTFS Realtime Swift types are generated from `Proto/gtfs-realtime.proto`
 - generated protobuf Swift is committed so contributors do not need `protoc` just to build
-
-To regenerate the project:
-
-```bash
-xcodegen generate
-```
-
-To regenerate GTFS Realtime Swift types:
-
-```bash
-protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
-```
 
 ## Roadmap
 
