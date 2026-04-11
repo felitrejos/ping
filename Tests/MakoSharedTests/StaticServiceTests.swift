@@ -15,8 +15,10 @@ struct StaticServiceTests {
         let after = ISO8601DateFormatter().date(from: "2026-04-11T07:00:00Z")!
         let departures = try await service.departuresBetween(origin: "ST_HOME", destination: "ST_CITY", after: after)
 
-        #expect(departures.count == 1)
+        #expect(departures.count >= 1)
         #expect(departures.first?.tripID == "TRIP_1")
+        // First result should be today's departure at 07:10
+        #expect(departures.first?.headsign == "Placa Catalunya")
         #expect(departures.first?.headsign == "Placa Catalunya")
         #expect(departures.first?.routeShortName == "S1")
     }

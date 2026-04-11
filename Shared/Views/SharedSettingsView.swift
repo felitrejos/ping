@@ -4,9 +4,9 @@ public struct SharedSettingsView: View {
     @Environment(MakoStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UserSettings.Keys.walkingMinutes) private var walkingMinutes = UserSettings.defaultWalkingMinutes
-    @State private var originName: String?
-    @State private var destinationName: String?
-    @State private var pickerTarget: StationPickerTarget?
+    @State private var selectedOrigin: StopID?
+    @State private var selectedDestination: StopID?
+    @State private var loaded = false
 
     public init() {}
 
@@ -18,61 +18,48 @@ public struct SharedSettingsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
-        .task {
-            await loadStationNames()
-        }
-        .sheet(item: $pickerTarget) { target in
-            NavigationStack {
-                StationPickerView(target: target) { stop in
-                    Task {
-                        await selectStation(stop, for: target)
-                    }
-                    pickerTarget = nil
-                }
-            }
-        }
+        #if os(macOS)
+        .toolbar(.hidden, for: .automatic)
+        #else
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }
             }
         }
+        #endif
+        .task {
+            guard !loaded else { return }
+            selectedOrigin = await store.selectedHomeStationID()
+            selectedDestination = await store.selectedDestinationStationID()
+            loaded = true
+        }
     }
 
     private var routeSection: some View {
         Section {
-            Button {
-                pickerTarget = .origin
-            } label: {
-                LabeledContent {
-                    HStack(spacing: 6) {
-                        Text(originName ?? "Choose")
-                            .foregroundStyle(originName != nil ? .primary : .secondary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                } label: {
-                    Label("Origin", systemImage: "house")
+            Picker(selection: $selectedOrigin) {
+                Text("None").tag(StopID?.none)
+                ForEach(store.availableStops) { stop in
+                    Text(stop.name).tag(StopID?.some(stop.id))
                 }
+            } label: {
+                Label("Origin", systemImage: "house")
             }
-            .tint(.primary)
+            .onChange(of: selectedOrigin) { _, newValue in
+                Task { await store.setHomeStation(newValue) }
+            }
 
-            Button {
-                pickerTarget = .destination
-            } label: {
-                LabeledContent {
-                    HStack(spacing: 6) {
-                        Text(destinationName ?? "Choose")
-                            .foregroundStyle(destinationName != nil ? .primary : .secondary)
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                } label: {
-                    Label("Destination", systemImage: "mappin.and.ellipse")
+            Picker(selection: $selectedDestination) {
+                Text("None").tag(StopID?.none)
+                ForEach(store.availableStops) { stop in
+                    Text(stop.name).tag(StopID?.some(stop.id))
                 }
+            } label: {
+                Label("Destination", systemImage: "mappin.and.ellipse")
             }
-            .tint(.primary)
+            .onChange(of: selectedDestination) { _, newValue in
+                Task { await store.setDestinationStation(newValue) }
+            }
         } header: {
             Text("Route")
         }
@@ -143,25 +130,6 @@ public struct SharedSettingsView: View {
             Text("Mako uses your calendar to suggest when to leave for upcoming commutes.")
         }
     }
-
-    private func loadStationNames() async {
-        let stops = store.availableStops
-        let homeID = await store.selectedHomeStationID()
-        let destID = await store.selectedDestinationStationID()
-        originName = stops.first(where: { $0.id == homeID })?.name
-        destinationName = stops.first(where: { $0.id == destID })?.name
-    }
-
-    private func selectStation(_ stop: Stop, for target: StationPickerTarget) async {
-        switch target {
-        case .origin:
-            originName = stop.name
-            await store.setHomeStation(stop.id)
-        case .destination:
-            destinationName = stop.name
-            await store.setDestinationStation(stop.id)
-        }
-    }
 }
 
 #if canImport(UIKit) && !os(watchOS)
@@ -177,61 +145,3 @@ private struct OpenSettingsButton: View {
     }
 }
 #endif
-
-enum StationPickerTarget: String, Identifiable {
-    case origin
-    case destination
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .origin: "Choose Origin"
-        case .destination: "Choose Destination"
-        }
-    }
-}
-
-struct StationPickerView: View {
-    let target: StationPickerTarget
-    let onSelect: (Stop) -> Void
-
-    @Environment(MakoStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var searchText = ""
-
-    var body: some View {
-        List(filtered) { stop in
-            Button {
-                onSelect(stop)
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(stop.name)
-                    Text(stop.id)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .tint(.primary)
-        }
-        .searchable(text: $searchText, prompt: "Station name")
-        .navigationTitle(target.title)
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-        }
-    }
-
-    private var filtered: [Stop] {
-        guard !searchText.isEmpty else {
-            return store.availableStops
-        }
-        return store.availableStops.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
-        }
-    }
-}

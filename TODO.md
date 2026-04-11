@@ -1,69 +1,53 @@
 # Mako TODO
 
-This tracks what remains from the first three implementation items:
-
-1. Bundle real FGC GTFS data and configure default route.
-2. Get Xcode package/build resolution clean.
-3. Add editable destination stop settings.
-
 ## Done
 
 - Downloaded the current FGC static GTFS ZIP to `Resources/google_transit.zip`.
-- Added `Resources/google_transit.zip` as an explicit resource for the iOS and macOS app targets in `project.yml`.
+- Added `Resources/` as a resource build phase for iOS and macOS targets in `project.yml`.
 - Regenerated `Mako.xcodeproj` from `project.yml`.
 - Moved default route data out of `Constants.swift` and into mutable user settings.
-- Set default origin to Volpelleres (`VO`).
-- Set default destination to Sarrià (`SR`).
-- Added user-default backed destination station storage.
-- Added Settings UI for changing both origin and destination stations.
-- Updated iOS and macOS UI copy to talk about origin/destination instead of only home station.
-- Added lightweight SDK typechecks for the UI-facing iOS and macOS files.
+- Set default origin to Volpelleres (`VO`), default destination to Sarrià (`SR`).
+- Added user-default backed origin/destination station storage.
+- Built Settings UI with Form layout, Picker dropdowns for station selection, walking time stepper, and calendar access status.
+- Updated iOS and macOS UI to use origin/destination terminology.
+- Fixed GTFS parent/child stop ID resolution — `departuresBetween` now expands parent station IDs (e.g. `VO`) into platform-level child IDs (e.g. `VO1`, `VO2`) so stop_times.txt matches work.
+- Station picker only shows parent stations, not individual platforms.
+- Calendar permission is requested automatically on first launch via `MakoStore.start()`.
+- Fixed all Swift 6 concurrency errors (Sendable closures, type inference, ActivityKit).
+- Fixed widget target module name collision and missing ZIPFoundation dependency.
+- All 11 tests passing (static, realtime, calendar, engine).
 
-## Still Missing
+## Still To Do
 
-### 4. Validate Real Route Data
+### 1. On-device validation
 
-After the app builds, confirm the default route works:
+Launch the app and confirm the Volpelleres → Sarrià route shows real departures:
 
-- origin: Volpelleres (`VO`)
-- destination: Sarrià (`SR`)
+1. Launch the macOS menu bar app.
+2. Verify trains appear under "Next train" and "Upcoming trains".
+3. Open Settings and confirm origin/destination dropdowns work.
+4. Repeat on iOS simulator or device.
 
-Manual checks:
+### 2. Improve Settings UX (polish)
 
-1. Launch the iOS app.
-2. Confirm Settings shows Volpelleres as origin and Sarrià as destination.
-3. Pull to refresh.
-4. Confirm the upcoming train rail populates from the bundled GTFS data.
-5. Repeat in the macOS menu bar app.
+- Swap origin/destination action
+- Recent/favorite stations
+- Show line/platform context when multiple child stops exist
 
-If no trains appear, inspect whether `FGCStaticService.departuresBetween(origin:destination:after:)` needs to use platform stop IDs (`VO1`, `VO2`, `SR1`, `SR2`, etc.) instead of parent station IDs (`VO`, `SR`) for stop-time matching.
+### 3. Decide GTFS Update Policy
 
-### 5. Improve Route Settings UX
-
-The current settings UI uses a station search list where each station row opens a menu with:
-
-- Set as origin
-- Set as destination
-
-This is functional, but the next UX pass should consider:
-
-- separate origin and destination picker screens
-- swap origin/destination action
-- recent/favorite stations
-- showing line/platform context when multiple child stops exist
-
-### 6. Decide GTFS Update Policy
-
-The ZIP is currently committed as a bundled static asset. Decide whether Mako should:
+The ZIP is currently committed as a bundled static asset. Decide whether to:
 
 - keep a committed bundled ZIP only
 - support replacing the ZIP manually during development
 - download/update static GTFS periodically in-app later
 
-For now, the app expects `google_transit.zip` in the main bundle.
+### 4. Static Home Screen Widget
 
-## Do Not Do Yet
+Only the LiveActivity widget exists. Add a small/medium WidgetKit widget showing next train at a glance.
 
-- Do not run app simulator UI checks until package resolution/build succeeds.
-- Do not run the test suite until the build graph is clean.
-- Do not add background refresh or Live Activity debugging until the default static route works.
+### 5. On-device Testing
+
+- Notifications: verify local notification scheduling and dedupe
+- Live Activity: verify start, update, and end lifecycle
+- Background refresh: verify `app.mako.refresh` task registration and execution

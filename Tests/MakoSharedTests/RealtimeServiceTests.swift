@@ -2,14 +2,17 @@ import Foundation
 import Testing
 @testable import MakoShared
 
+@Suite(.serialized)
 struct RealtimeServiceTests {
     @Test
     func delayLookupReturnsParsedDepartureDelay() async throws {
+        let feedURL = URL(string: "https://example.com/test1/records")!
+        let pbURL = URL(string: "https://example.com/test1/feed.pb")!
         let session = URLSession.stubbed(with: [
-            Constants.fgcRealtimeFeedURL: .jsonRecords(fileURL: URL(string: "https://example.com/feed.pb")!),
-            URL(string: "https://example.com/feed.pb")!: .protobuf(makeFeedData(delay: 180)),
+            feedURL: .jsonRecords(fileURL: pbURL),
+            pbURL: .protobuf(try makeFeedData(delay: 180)),
         ])
-        let service = FGCRealtimeService(feedURL: Constants.fgcRealtimeFeedURL, session: session, pollIntervalNanoseconds: 1_000_000)
+        let service = FGCRealtimeService(feedURL: feedURL, session: session, pollIntervalNanoseconds: 1_000_000)
 
         await service.refresh()
         let delay = await service.delayFor(tripID: "TRIP_1", stopID: "ST_HOME")
@@ -19,11 +22,13 @@ struct RealtimeServiceTests {
 
     @Test
     func failedRefreshKeepsLastKnownSnapshot() async throws {
+        let feedURL = URL(string: "https://example.com/test2/records")!
+        let pbURL = URL(string: "https://example.com/test2/feed.pb")!
         let session = URLSession.stubbed(with: [
-            Constants.fgcRealtimeFeedURL: .jsonRecords(fileURL: URL(string: "https://example.com/feed.pb")!),
-            URL(string: "https://example.com/feed.pb")!: .protobuf(makeFeedData(delay: 240)),
+            feedURL: .jsonRecords(fileURL: pbURL),
+            pbURL: .protobuf(try makeFeedData(delay: 240)),
         ])
-        let service = FGCRealtimeService(feedURL: Constants.fgcRealtimeFeedURL, session: session)
+        let service = FGCRealtimeService(feedURL: feedURL, session: session)
         await service.refresh()
 
         let failingSession = URLSession.stubbed(with: [:])
@@ -58,6 +63,10 @@ struct RealtimeServiceTests {
 
 private func makeFeedData(delay: Int32) throws -> Data {
     var feed = TransitRealtime_FeedMessage()
+    var header = TransitRealtime_FeedHeader()
+    header.gtfsRealtimeVersion = "2.0"
+    header.timestamp = UInt64(Date().timeIntervalSince1970)
+    feed.header = header
     var entity = TransitRealtime_FeedEntity()
     entity.id = "1"
 
@@ -98,7 +107,7 @@ private enum StubbedResponse {
 }
 
 private final class URLProtocolStub: URLProtocol, @unchecked Sendable {
-    static var responses: [URL: StubbedResponse] = [:]
+    nonisolated(unsafe) static var responses: [URL: StubbedResponse] = [:]
 
     override class func canInit(with request: URLRequest) -> Bool {
         true

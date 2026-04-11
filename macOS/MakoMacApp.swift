@@ -17,11 +17,9 @@ struct MakoMacApp: App {
         }
 
         Settings {
-            NavigationStack {
-                SharedSettingsView()
-            }
-            .environment(store)
-            .frame(minWidth: 420, minHeight: 460)
+            SharedSettingsView()
+                .environment(store)
+                .frame(width: 340, height: 340)
         }
     }
 

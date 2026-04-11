@@ -91,6 +91,10 @@ private struct FixedClock: Clock {
 private actor EngineStaticService: StaticServiceProviding {
     let departures: [TrainDeparture]
 
+    init(departures: [TrainDeparture]) {
+        self.departures = departures
+    }
+
     func departuresBetween(origin: StopID, destination: StopID, after: Date) async throws -> [TrainDeparture] {
         departures.filter { $0.departureTime >= after }
     }

@@ -23,6 +23,7 @@ public actor FGCStaticService: StaticServiceProviding {
     private struct ParsedCache: Sendable {
         let stops: [StopID: Stop]
         let stopsSortedByName: [Stop]
+        let childStopIDs: [StopID: Set<StopID>]
         let routes: [String: GTFSRoute]
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
@@ -39,6 +40,8 @@ public actor FGCStaticService: StaticServiceProviding {
 
     public func departuresBetween(origin: StopID, destination: StopID, after: Date) async throws -> [TrainDeparture] {
         let cache = try loadCache()
+        let originIDs = cache.childStopIDs[origin] ?? [origin]
+        let destIDs = cache.childStopIDs[destination] ?? [destination]
         let serviceDays = candidateServiceDays(for: after)
         var departures: [TrainDeparture] = []
 
@@ -48,8 +51,8 @@ public actor FGCStaticService: StaticServiceProviding {
             }
 
             guard
-                let originTime = stopTimes.first(where: { $0.stopID == origin }),
-                let destinationTime = stopTimes.first(where: { $0.stopID == destination && $0.stopSequence > originTime.stopSequence }),
+                let originTime = stopTimes.first(where: { originIDs.contains($0.stopID) }),
+                let destinationTime = stopTimes.first(where: { destIDs.contains($0.stopID) && $0.stopSequence > originTime.stopSequence }),
                 let route = cache.routes[trip.routeID]
             else {
                 continue
@@ -114,6 +117,33 @@ extension FGCStaticService {
         }
         let stops = Dictionary(uniqueKeysWithValues: stopPairs)
 
+        // Build parent → children mapping so departuresBetween can match platform-level IDs
+        var childStopIDs: [StopID: Set<StopID>] = [:]
+        for row in stopsRows {
+            guard
+                let stopID = row["stop_id"],
+                let parentStation = row["parent_station"],
+                !parentStation.isEmpty
+            else {
+                continue
+            }
+            childStopIDs[parentStation, default: []].insert(stopID)
+        }
+
+        // Only expose parent stations (location_type=1) or stops without a parent for the picker
+        let stationStops: [Stop] = stopsRows.compactMap { row in
+            guard let stopID = row["stop_id"], let stopName = row["stop_name"] else {
+                return nil
+            }
+            let locationType = row["location_type"] ?? "0"
+            let parentStation = row["parent_station"] ?? ""
+            // Include parent stations (type 1) and standalone stops (type 0 with no parent)
+            if locationType == "1" || parentStation.isEmpty {
+                return Stop(id: stopID, name: stopName)
+            }
+            return nil
+        }.sorted { $0.name < $1.name }
+
         let routePairs: [(String, GTFSRoute)] = routesRows.compactMap { row in
             guard let routeID = row["route_id"] else {
                 return nil
@@ -164,7 +194,8 @@ extension FGCStaticService {
 
         let parsed = ParsedCache(
             stops: stops,
-            stopsSortedByName: stops.values.sorted { $0.name < $1.name },
+            stopsSortedByName: stationStops,
+            childStopIDs: childStopIDs,
             routes: routes,
             trips: trips,
             stopTimesByTripID: stopTimes
