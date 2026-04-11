@@ -1,141 +1,174 @@
-<h1 align="center">
-  Mako
-</h1>
+<h1 align="center">Mako</h1>
 
 <p align="center">
-  Mako is a multiplatform FGC commute assistant for iPhone, Mac, and Live Activities.
+  <strong>Multiplatform FGC commute assistant for iPhone, Mac, and Live Activities</strong>
 </p>
 
 <p align="center">
-  It combines bundled GTFS static data, FGC GTFS Realtime trip updates, and calendar context to answer one question quickly: when do I need to leave to catch the right train?
+  <a href="#"><img src="https://img.shields.io/badge/swift-6.0-F05138?style=flat&logo=swift&logoColor=white" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/swiftui-iOS%2026%2B%20%7C%20macOS%2026%2B-0A84FF?style=flat" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/data-GTFS%20%2B%20GTFS--RT-1f6feb?style=flat" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/status-WIP-F59E0B?style=flat" /></a>
 </p>
 
 <p align="center">
-  <img alt="Swift" src="https://img.shields.io/badge/Swift-6.0-F05138?style=for-the-badge&logo=swift&logoColor=white">
-  <img alt="Platforms" src="https://img.shields.io/badge/Platforms-iOS%2026%2B%20%7C%20macOS%2026%2B-0A84FF?style=for-the-badge">
-  <img alt="Status" src="https://img.shields.io/badge/Status-WIP-F59E0B?style=for-the-badge">
-  <img alt="Last commit" src="https://img.shields.io/github/last-commit/felitrejos/mako?style=for-the-badge">
+  Local-first commute planning using FGC schedule data, realtime trip updates, and calendar context
 </p>
 
-## What is Mako?
+---
 
-Mako is an early-stage native Apple client for commute planning on FGC. It reads local GTFS schedule data, overlays realtime trip updates, checks your next calendar events, and computes a leave-by time based on walking time and buffer settings.
+## What It Does
 
-## Current status
+`Mako` helps you decide when to leave home for an upcoming FGC commute.
 
-Mako is scaffolded and the first implementation pass is in place:
+- Parse bundled FGC GTFS static data from a local ZIP
+- Fetch FGC GTFS Realtime Trip Updates and keep the last known snapshot
+- Match calendar event locations against known FGC station names
+- Compute leave-by times from walking minutes, buffer minutes, and realtime delays
+- Show upcoming departures in a macOS menu bar app
+- Show commute plans and next trains in an iOS app
+- Schedule leave-now notifications for upcoming calendar commutes
+- Start and update Live Activities for tracked departures
 
-- GTFS static parsing lives in the shared layer
-- GTFS Realtime polling and protobuf decoding are wired up
-- calendar matching and commute planning are implemented
-- macOS menu bar, iOS app, notifications, and Live Activity shells are present
-
-The project still needs full validation in Xcode with bundled FGC assets, real stop IDs, and on-device testing for notifications and Live Activities.
-
-## Features
-
-- parses bundled FGC GTFS static data from a local ZIP
-- fetches FGC GTFS Realtime trip updates and keeps the last known snapshot
-- matches calendar event locations against known station names
-- recommends when to leave based on walking time, buffer time, and realtime delay
-- surfaces upcoming departures on macOS, iOS, notifications, and Live Activities
+---
 
 ## Installation
 
-Mako is currently set up as an Xcode-driven app project generated from `project.yml`.
+Requires: Xcode with iOS 26+ and macOS 26+ SDKs, `xcodegen`, `protoc`
 
-Before you run it, make sure:
+```bash
+git clone https://github.com/felitrejos/mako.git
+cd mako
+xcodegen generate
+open Mako.xcodeproj
+```
 
-1. Xcode is installed and selected as the active developer directory
-2. you have the bundled FGC GTFS static ZIP in the app target resources as `google_transit.zip`
-3. you replace the placeholder stop IDs in `Shared/Models/Constants.swift`
-4. you open `Mako.xcodeproj` and let Swift Package Manager resolve dependencies
+Before running the app:
+
+1. Add the FGC GTFS static ZIP to the app target resources as `google_transit.zip`.
+2. Replace the placeholder stop IDs in `Shared/Models/Constants.swift`.
+3. Let Xcode resolve Swift Package Manager dependencies.
+4. Run the macOS or iOS target from Xcode.
 
 Dependencies:
 
 - `SwiftProtobuf`
 - `ZIPFoundation`
 
-If you need to regenerate the Xcode project:
+---
+
+## Quickstart
 
 ```bash
 xcodegen generate
+open Mako.xcodeproj
 ```
 
-## Overview
+1. Open the project in Xcode.
+2. Select the macOS target to test the menu bar app.
+3. Select the iOS target to test the main commute view.
+4. Grant calendar access when prompted.
+5. Configure your home station and walking time in Settings.
 
-Mako is split into a few distinct layers:
+The project is still early. Notifications, background refresh, and Live Activities should be validated on device.
 
-- `Shared/Models`: shared app models, constants, and Live Activity attributes
-- `Shared/Services`: GTFS static parsing, GTFS Realtime ingestion, and calendar access
-- `Shared/Engine`: commute planning logic, refresh orchestration, and shared app state
-- `iOS`: iPhone app shell, notifications, and refresh scheduling
-- `macOS`: menu bar app and settings surface
-- `Widgets`: Live Activity presentation
-
-The shared layer is intended to hold almost all product logic. The app targets mostly render and trigger refreshes.
+---
 
 ## Configuration
 
-The main project-specific configuration lives in `Shared/Models/Constants.swift`.
+Project defaults live in:
 
-You should replace:
+```text
+Shared/Models/Constants.swift
+```
+
+Replace:
 
 - `PUT_YOUR_HOME_STOP_ID_HERE`
 - `PUT_DESTINATION_STOP_ID_HERE`
 
-You may also want to adjust:
+User settings are stored with `UserDefaults`:
 
-- the bundled GTFS asset name if you rename the ZIP
-- the FGC realtime feed URL if FGC changes the export endpoint
+- home station
+- walking minutes to station
+- buffer minutes before departure
 
-User-adjustable values such as home station, walking minutes, and buffer minutes are stored through `UserDefaults`.
+---
 
-## GTFS and realtime data
+## GTFS Realtime
 
-Mako currently expects:
+The realtime service resolves the FGC OpenDataSoft record endpoint, downloads the protobuf file exposed by that endpoint, and decodes it with SwiftProtobuf.
 
-- a bundled FGC GTFS ZIP for static schedule data
-- the FGC GTFS Realtime Trip Updates feed for delay data
+Generated GTFS Realtime Swift types are committed to the repository so Xcode can build without requiring `protoc` on every machine.
 
-The realtime service currently resolves the OpenDataSoft records endpoint first, then downloads the protobuf file URL exposed by that endpoint.
-
-To regenerate GTFS Realtime Swift types:
+Regenerate them with:
 
 ```bash
 protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
 ```
 
+---
+
+## Project Layout
+
+```text
+mako/
+├── Shared/
+│   ├── Models/       # shared models, constants, ActivityKit attributes
+│   ├── Services/     # GTFS static, GTFS-RT, calendar services
+│   ├── Engine/       # commute planning and shared observable app state
+│   └── Views/        # shared SwiftUI settings UI
+├── iOS/              # iPhone app, notifications, background refresh
+├── macOS/            # menu bar app and popover UI
+├── Widgets/          # Live Activity widget
+├── Tests/            # shared service and engine tests
+└── Proto/            # GTFS Realtime proto source
+```
+
+---
+
 ## Testing
 
-Shared tests live in `Tests/MakoSharedTests` and cover:
+Shared tests cover:
 
 - GTFS parsing and post-midnight times
 - GTFS Realtime decoding and snapshot updates
 - calendar event resolution
 - commute recommendation logic
 
-In this repository state, the most important next validation steps are:
+Run from Xcode for now. The local command-line environment used to scaffold this project did not have a full Xcode developer directory selected, so `xcodebuild` validation has not been completed yet.
 
-1. run the shared tests from full Xcode
-2. add the real FGC ZIP to the app targets
-3. test the macOS menu bar flow against live data
-4. test iOS notifications and Live Activities on device
+---
 
-## Development notes
+## Development
 
-- `project.yml` is the source of truth for the Xcode project
-- `Mako.xcodeproj` is generated with `xcodegen generate`
-- GTFS Realtime Swift types are generated from `Proto/gtfs-realtime.proto`
-- generated protobuf Swift is committed so contributors do not need `protoc` just to build
+`project.yml` is the source of truth for the Xcode project.
 
-## Roadmap
+Regenerate the project after changing target structure:
 
-- validate the current scaffold in full Xcode
-- bundle real FGC assets into the targets
-- refine station matching and commute selection rules
-- harden notification scheduling and background refresh behavior
-- finish the Live Activity update loop from realtime changes
+```bash
+xcodegen generate
+```
+
+Generated protobuf code lives under:
+
+```text
+Shared/Generated/
+```
+
+---
+
+## Status
+
+Mako is currently a scaffolded WIP.
+
+- real FGC stop IDs still need to be configured
+- the static GTFS ZIP still needs to be bundled into the app targets
+- macOS and iOS flows need full Xcode validation
+- notification scheduling needs device testing
+- Live Activity start/update/end behavior needs device testing
+
+---
 
 ## License
 
