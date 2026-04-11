@@ -69,6 +69,9 @@ public final class MakoStore {
         }
 
         refreshTask = Task {
+            if await calendarService.authorizationStatus() == .notDetermined {
+                calendarAuthorization = await calendarService.requestAccess()
+            }
             await realtimeService.startPolling()
             await refresh()
             let stream = await realtimeService.updates()

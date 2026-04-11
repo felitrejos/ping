@@ -27,11 +27,13 @@
 		5898EF408143E7AFAB4977F1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 176762DDF2DAB962A2A7BC27 /* ContentView.swift */; };
 		58E00F9A5919CD6E8B8061EC /* SharedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C003CED32F99747E111DD59C /* SharedSettingsView.swift */; };
 		599C39559C717A168F978C73 /* MakoLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD6518104687B3357731A4C /* MakoLiveActivity.swift */; };
+		5A00B1135AB485F53CD71E52 /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 88A67AA16C67A537FF189617 /* google_transit.zip */; };
 		635A9FA1F385DE069F5445A3 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF11C3AF25C42E5139C208 /* CalendarService.swift */; };
 		68D1E9D598A4EAEA2CAB5560 /* MakoWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A9FB4B4291E0819A61392517 /* MakoWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		71682BD2C17FCB3B7BCF4B9B /* FGCRealtimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35E2C65F4DFE4C61818BB910 /* FGCRealtimeService.swift */; };
 		770EF53C094214730FDEE9E2 /* SharedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C003CED32F99747E111DD59C /* SharedSettingsView.swift */; };
 		782A44CCD701D458C99DD69A /* MakoMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BAA95661A1DBA9FFFFDF23 /* MakoMacApp.swift */; };
+		7B152A177E6C8AB644687756 /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 88A67AA16C67A537FF189617 /* google_transit.zip */; };
 		7CAA73E4DC6DCF9D179329D7 /* MakoWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA06F4A076F658330EF05902 /* MakoWidgetsBundle.swift */; };
 		7DB297542756B3995E36E9B8 /* MakoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83028A8FF7E754F3F8DF763 /* MakoStore.swift */; };
 		8696DB6B63687664796E7DE3 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 8A2667697955DE568E350A23 /* ZIPFoundation */; };
@@ -97,6 +99,7 @@
 		6F818535CA4A0F47CBF4BAAC /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
 		71CF253A1C18D60F29EE320A /* gtfs-realtime.pb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "gtfs-realtime.pb.swift"; sourceTree = "<group>"; };
 		8247A900571F1459CE4E7445 /* GTFSCSVParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSCSVParser.swift; sourceTree = "<group>"; };
+		88A67AA16C67A537FF189617 /* google_transit.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = google_transit.zip; sourceTree = "<group>"; };
 		917F89A9054E15D29ED0450C /* MakoiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoiOSApp.swift; sourceTree = "<group>"; };
 		A651325604ADE9D97A1A76C0 /* Mako macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mako macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9FB4B4291E0819A61392517 /* MakoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MakoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -179,6 +182,7 @@
 			children = (
 				FB4C211AD4A11EC2C0577610 /* iOS */,
 				52D4F3A09DF2B1D64DF971CF /* macOS */,
+				9574F55654E84E93F8FA9849 /* Resources */,
 				C7A3653FAE3041BF1A669EA7 /* Shared */,
 				C61F236B95E95F94574CE139 /* Widgets */,
 				0AC91FC10D787ABDF31BC4B3 /* Products */,
@@ -193,6 +197,14 @@
 				6F818535CA4A0F47CBF4BAAC /* SharedContainer.swift */,
 			);
 			path = Engine;
+			sourceTree = "<group>";
+		};
+		9574F55654E84E93F8FA9849 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				88A67AA16C67A537FF189617 /* google_transit.zip */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		B4C910BA5BA8E62A3400641C /* Generated */ = {
@@ -268,6 +280,7 @@
 			buildConfigurationList = 8A8BB7E4B1AD74F938879E95 /* Build configuration list for PBXNativeTarget "Mako iOS" */;
 			buildPhases = (
 				C281CEA379CFCC0122BF5A58 /* Sources */,
+				CD28169AD47AE2358BDFA8BB /* Resources */,
 				F3F0F1593532ED6F29096E36 /* Frameworks */,
 				ECE41136A0FCD8F65B5E89E3 /* Embed Foundation Extensions */,
 			);
@@ -290,6 +303,7 @@
 			buildConfigurationList = 253B8E2AAFDA5466942C8B0A /* Build configuration list for PBXNativeTarget "Mako macOS" */;
 			buildPhases = (
 				6731904933E64F3F60F6C0E3 /* Sources */,
+				0B95DCA5D7B81C69D1EC79E4 /* Resources */,
 				D0FCC0B56FEC55AEC6801CA5 /* Frameworks */,
 			);
 			buildRules = (
@@ -360,6 +374,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0B95DCA5D7B81C69D1EC79E4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B152A177E6C8AB644687756 /* google_transit.zip in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CD28169AD47AE2358BDFA8BB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5A00B1135AB485F53CD71E52 /* google_transit.zip in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6731904933E64F3F60F6C0E3 /* Sources */ = {

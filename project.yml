@@ -24,8 +24,8 @@ targets:
     sources:
       - path: Shared
       - path: iOS
-    resources:
-      - path: Resources/google_transit.zip
+      - path: Resources
+        buildPhase: resources
     dependencies:
       - package: SwiftProtobuf
       - package: ZIPFoundation
@@ -47,8 +47,8 @@ targets:
     sources:
       - path: Shared
       - path: macOS
-    resources:
-      - path: Resources/google_transit.zip
+      - path: Resources
+        buildPhase: resources
     dependencies:
       - package: SwiftProtobuf
       - package: ZIPFoundation

@@ -5,11 +5,7 @@ struct MakoMacApp: App {
     @State private var store = MacContainer.shared.store
 
     init() {
-        let store = MacContainer.shared.store
-        store.start()
-        Task {
-            await store.refresh()
-        }
+        MacContainer.shared.store.start()
     }
 
     var body: some Scene {
@@ -21,9 +17,11 @@ struct MakoMacApp: App {
         }
 
         Settings {
-            SharedSettingsView()
-                .environment(store)
-                .frame(minWidth: 360, minHeight: 420)
+            NavigationStack {
+                SharedSettingsView()
+            }
+            .environment(store)
+            .frame(minWidth: 420, minHeight: 460)
         }
     }
 
