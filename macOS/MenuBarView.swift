@@ -5,35 +5,50 @@ struct MenuBarView: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             header
             Divider()
-            nextTrainSection
-            Divider()
-            commuteSection
+
+            if !store.hasConfiguredRoute {
+                MenuNoticeView(
+                    title: "Finish setup",
+                    message: "Choose your origin and destination.",
+                    systemImage: "location.fill"
+                )
+            } else if let error = store.lastErrorMessage {
+                MenuNoticeView(
+                    title: "Could not refresh",
+                    message: error,
+                    systemImage: "exclamationmark.triangle.fill"
+                )
+            } else {
+                trainSection
+            }
+
+            if !store.commutePlans.isEmpty {
+                Divider()
+                commuteSection
+            }
+
             Divider()
             footer
         }
-        .padding(16)
-        .frame(width: 360)
+        .padding(14)
+        .frame(width: 320)
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Image(systemName: "tram.fill")
-                .font(.title2)
+                .font(.title3)
                 .foregroundStyle(.blue)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text("Mako")
                     .font(.headline)
                 if let lastUpdated = store.lastUpdated {
                     Text("Updated \(lastUpdated, style: .relative)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Ready")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -48,74 +63,75 @@ struct MenuBarView: View {
     }
 
     @ViewBuilder
-    private var nextTrainSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Next train")
-                .font(.headline)
-
-            if !store.hasConfiguredRoute {
-                MenuNoticeView(
-                    title: "Finish setup",
-                    message: "Choose your origin and destination stations.",
-                    systemImage: "location.fill"
-                )
-            } else if let departure = store.nextDeparture {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("\(departure.minutesUntilDeparture)")
-                            .font(.system(size: 38, weight: .bold, design: .rounded))
+    private var trainSection: some View {
+        if store.upcomingTrains.isEmpty {
+            Text("No upcoming departures")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                // Hero: first train
+                if let next = store.upcomingTrains.first {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("\(next.minutesUntilDeparture)")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
                         Text("min")
-                            .font(.headline)
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(.secondary)
                         Spacer()
-                        StatusPill(departure: departure)
+                        StatusPill(departure: next)
                     }
-
-                    Text(departure.trainLabel)
-                        .font(.subheadline.weight(.semibold))
-                    Text("Train at \(departure.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text(next.trainLabel)
+                            .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                        Spacer()
+                        Text(next.effectiveDepartureTime, style: .time)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            } else if let error = store.lastErrorMessage {
-                MenuNoticeView(
-                    title: "Could not refresh",
-                    message: error,
-                    systemImage: "exclamationmark.triangle.fill"
-                )
-            } else {
-                MenuNoticeView(
-                    title: "No departures found",
-                    message: "Try refreshing or check your route settings.",
-                    systemImage: "calendar"
-                )
-            }
 
-            ForEach(store.upcomingTrains.dropFirst().prefix(2)) { departure in
-                DepartureRow(departure: departure)
+                // Following trains — compact rows
+                let following = Array(store.upcomingTrains.dropFirst().prefix(3))
+                if !following.isEmpty {
+                    Divider()
+                    ForEach(following) { departure in
+                        HStack(spacing: 6) {
+                            Text("\(departure.minutesUntilDeparture) min")
+                                .font(.caption.weight(.semibold))
+                                .monospacedDigit()
+                                .frame(width: 44, alignment: .leading)
+                            Text(departure.trainLabel)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(departure.effectiveDepartureTime, style: .time)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
             }
         }
     }
 
     private var commuteSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Today's commutes")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Commutes")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
 
-            if store.commutePlans.isEmpty {
-                Text("No commute plans")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(store.commutePlans.prefix(4)) { plan in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(plan.calendarEvent.title)
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                        Text("Leave by \(plan.recommendedDeparture.formatted(date: .omitted, time: .shortened))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            ForEach(store.commutePlans.prefix(3)) { plan in
+                HStack(spacing: 6) {
+                    Text(plan.calendarEvent.title)
+                        .font(.caption)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("Leave \(plan.recommendedDeparture, style: .time)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -124,38 +140,22 @@ struct MenuBarView: View {
     private var footer: some View {
         HStack {
             Button {
-                Task {
-                    await store.refresh()
-                }
+                Task { await store.refresh() }
             } label: {
                 Label("Refresh", systemImage: "arrow.clockwise")
+                    .font(.caption)
             }
+            .buttonStyle(.plain)
 
             Spacer()
 
-            Button("Settings") {
+            Button {
                 openSettings()
+            } label: {
+                Text("Settings")
+                    .font(.caption)
             }
-            .buttonStyle(.borderedProminent)
-        }
-    }
-}
-
-private struct DepartureRow: View {
-    let departure: LiveDeparture
-
-    var body: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(departure.trainLabel)
-                    .font(.caption.weight(.semibold))
-                    .lineLimit(1)
-                Text(departure.effectiveDepartureTime, style: .time)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            StatusPill(departure: departure)
+            .buttonStyle(.plain)
         }
     }
 }
@@ -165,9 +165,9 @@ private struct StatusPill: View {
 
     var body: some View {
         Text(departure.statusText)
-            .font(.caption.bold())
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .font(.caption2.bold())
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
             .foregroundStyle(departure.isDelayed ? .orange : .green)
             .background(
                 (departure.isDelayed ? Color.orange : Color.green).opacity(0.12),
@@ -182,21 +182,21 @@ private struct MenuNoticeView: View {
     let systemImage: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: 8) {
             Image(systemName: systemImage)
                 .foregroundStyle(.secondary)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 3) {
+                .frame(width: 16)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.caption.weight(.semibold))
                 Text(message)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(10)
+        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
     }
 }

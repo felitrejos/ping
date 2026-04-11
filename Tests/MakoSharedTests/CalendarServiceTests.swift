@@ -71,6 +71,14 @@ private actor StubStaticService: StaticServiceProviding {
         ]
     }
 
+    func availableLines() async throws -> [String] {
+        ["S1"]
+    }
+
+    func stopsForLine(_ lineName: String) async throws -> [Stop] {
+        try await allStops()
+    }
+
     func searchStops(matching query: String) async throws -> [Stop] {
         try await allStops()
     }

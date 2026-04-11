@@ -19,7 +19,7 @@ struct MakoMacApp: App {
         Settings {
             SharedSettingsView()
                 .environment(store)
-                .frame(width: 340, height: 340)
+                .frame(width: 420, height: 440)
         }
     }
 

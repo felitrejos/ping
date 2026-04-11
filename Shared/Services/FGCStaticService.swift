@@ -24,9 +24,12 @@ public actor FGCStaticService: StaticServiceProviding {
         let stops: [StopID: Stop]
         let stopsSortedByName: [Stop]
         let childStopIDs: [StopID: Set<StopID>]
+        let parentStopID: [StopID: StopID]
         let routes: [String: GTFSRoute]
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
+        let lineNames: [String]
+        let stopsByLine: [String: [Stop]]
     }
 
     private let zipURL: URL
@@ -77,11 +80,26 @@ public actor FGCStaticService: StaticServiceProviding {
             }
         }
 
-        return departures.sorted { $0.departureTime < $1.departureTime }
+        let sorted = departures.sorted { $0.departureTime < $1.departureTime }
+
+        // Deduplicate by departure minute + route to avoid showing the same train multiple times
+        var seen = Set<String>()
+        return sorted.filter { departure in
+            let key = "\(departure.routeShortName)-\(Int(departure.departureTime.timeIntervalSince1970 / 60))"
+            return seen.insert(key).inserted
+        }
     }
 
     public func allStops() async throws -> [Stop] {
         try loadCache().stopsSortedByName
+    }
+
+    public func availableLines() async throws -> [String] {
+        try loadCache().lineNames
+    }
+
+    public func stopsForLine(_ lineName: String) async throws -> [Stop] {
+        try loadCache().stopsByLine[lineName] ?? []
     }
 
     public func searchStops(matching query: String) async throws -> [Stop] {
@@ -192,13 +210,42 @@ extension FGCStaticService {
         let stopTimes = Dictionary(grouping: stopTimePairs, by: { $0.0 })
             .mapValues { $0.map(\.1).sorted { $0.stopSequence < $1.stopSequence } }
 
+        // Build parent lookup (child → parent)
+        var parentStopID: [StopID: StopID] = [:]
+        for (parent, children) in childStopIDs {
+            for child in children {
+                parentStopID[child] = parent
+            }
+        }
+
+        // Build line → parent station IDs mapping
+        var stopIDsByLine: [String: Set<StopID>] = [:]
+        for (tripID, trip) in trips {
+            guard let route = routes[trip.routeID],
+                  let tripStopTimes = stopTimes[tripID] else { continue }
+            for st in tripStopTimes {
+                let parentID = parentStopID[st.stopID] ?? st.stopID
+                stopIDsByLine[route.shortName, default: []].insert(parentID)
+            }
+        }
+
+        let stationStopsByID = Dictionary(uniqueKeysWithValues: stationStops.map { ($0.id, $0) })
+        var stopsByLine: [String: [Stop]] = [:]
+        for (line, ids) in stopIDsByLine {
+            stopsByLine[line] = ids.compactMap { stationStopsByID[$0] }.sorted { $0.name < $1.name }
+        }
+        let lineNames = stopIDsByLine.keys.sorted()
+
         let parsed = ParsedCache(
             stops: stops,
             stopsSortedByName: stationStops,
             childStopIDs: childStopIDs,
+            parentStopID: parentStopID,
             routes: routes,
             trips: trips,
-            stopTimesByTripID: stopTimes
+            stopTimesByTripID: stopTimes,
+            lineNames: lineNames,
+            stopsByLine: stopsByLine
         )
         cache = parsed
         return parsed

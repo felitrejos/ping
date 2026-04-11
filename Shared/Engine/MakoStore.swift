@@ -9,32 +9,26 @@ public final class MakoStore {
     public var commutePlans: [CommutePlan] = []
     public var upcomingTrains: [LiveDeparture] = []
     public var availableStops: [Stop] = []
-    public var filteredStops: [Stop] = []
+    public var availableLines: [String] = []
+    public var lineStops: [Stop] = []
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
     public var lastErrorMessage: String?
-    public var stopSearchText = "" {
+
+    public var selectedLine: String = UserSettings.selectedLine() {
         didSet {
-            searchTask?.cancel()
-            searchTask = Task {
-                try? await Task.sleep(for: .milliseconds(150))
-                guard !Task.isCancelled else {
-                    return
-                }
-                await reloadStopSearch()
-            }
+            UserSettings.setSelectedLine(selectedLine)
+            Task { await reloadLineStops() }
         }
     }
 
     public var hasConfiguredRoute: Bool {
-        UserSettings.isConfiguredStopID(UserDefaults.standard.string(forKey: UserSettings.Keys.homeStationID))
-            || UserSettings.homeStationID() != nil
+        UserSettings.homeStationID() != nil
     }
 
     public var hasConfiguredDestination: Bool {
-        UserSettings.isConfiguredStopID(UserDefaults.standard.string(forKey: UserSettings.Keys.destinationStationID))
-            || UserSettings.destinationStationID() != nil
+        UserSettings.destinationStationID() != nil
     }
 
     public var hasConfiguredDefaultRoute: Bool {
@@ -46,7 +40,6 @@ public final class MakoStore {
     private let calendarService: CalendarServiceProviding
     private let realtimeService: RealtimeServiceProviding
     private var refreshTask: Task<Void, Never>?
-    private var searchTask: Task<Void, Never>?
 
     public init(
         engine: CommuteEngine,
@@ -102,7 +95,8 @@ public final class MakoStore {
         do {
             calendarAuthorization = await calendarService.authorizationStatus()
             availableStops = try await staticService.allStops()
-            filteredStops = try await staticService.searchStops(matching: stopSearchText)
+            availableLines = try await staticService.availableLines()
+            await reloadLineStops()
             commutePlans = try await engine.commutePlans(within: 12)
             nextCommute = commutePlans.first
             nextDeparture = try await defaultNextDeparture()
@@ -160,11 +154,11 @@ public final class MakoStore {
         return try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 5)
     }
 
-    private func reloadStopSearch() async {
+    private func reloadLineStops() async {
         do {
-            filteredStops = try await staticService.searchStops(matching: stopSearchText)
+            lineStops = try await staticService.stopsForLine(selectedLine)
         } catch {
-            filteredStops = []
+            lineStops = []
         }
     }
 }

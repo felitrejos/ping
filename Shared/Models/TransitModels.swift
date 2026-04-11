@@ -161,6 +161,7 @@ public enum UserSettings {
         public static let destinationStationID = "mako.destinationStation"
         public static let walkingMinutes = "mako.walkingMinutes"
         public static let bufferMinutes = "mako.bufferMinutes"
+        public static let selectedLine = "mako.selectedLine"
     }
 
     public static let defaultWalkingMinutes = 8
@@ -200,6 +201,16 @@ public enum UserSettings {
 
     public static func setBufferMinutes(_ minutes: Int, defaults: UserDefaults = .standard) {
         defaults.set(minutes, forKey: Keys.bufferMinutes)
+    }
+
+    public static let defaultSelectedLine = "S2"
+
+    public static func selectedLine(defaults: UserDefaults = .standard) -> String {
+        defaults.string(forKey: Keys.selectedLine) ?? defaultSelectedLine
+    }
+
+    public static func setSelectedLine(_ line: String, defaults: UserDefaults = .standard) {
+        defaults.set(line, forKey: Keys.selectedLine)
     }
 
     public static func isConfiguredStopID(_ stopID: StopID?) -> Bool {

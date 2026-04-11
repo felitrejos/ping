@@ -3,6 +3,8 @@ import Foundation
 public protocol StaticServiceProviding: Sendable {
     func departuresBetween(origin: StopID, destination: StopID, after: Date) async throws -> [TrainDeparture]
     func allStops() async throws -> [Stop]
+    func availableLines() async throws -> [String]
+    func stopsForLine(_ lineName: String) async throws -> [Stop]
     func searchStops(matching query: String) async throws -> [Stop]
 }
 

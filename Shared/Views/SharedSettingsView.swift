@@ -12,6 +12,7 @@ public struct SharedSettingsView: View {
 
     public var body: some View {
         Form {
+            lineSection
             routeSection
             walkingSection
             calendarSection
@@ -35,11 +36,28 @@ public struct SharedSettingsView: View {
         }
     }
 
+    private var lineSection: some View {
+        Section {
+            Picker(selection: Binding(
+                get: { store.selectedLine },
+                set: { store.selectedLine = $0 }
+            )) {
+                ForEach(store.availableLines, id: \.self) { line in
+                    Text(line).tag(line)
+                }
+            } label: {
+                Label("Line", systemImage: "tram")
+            }
+        } header: {
+            Text("FGC Line")
+        }
+    }
+
     private var routeSection: some View {
         Section {
             Picker(selection: $selectedOrigin) {
                 Text("None").tag(StopID?.none)
-                ForEach(store.availableStops) { stop in
+                ForEach(store.lineStops) { stop in
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
@@ -51,7 +69,7 @@ public struct SharedSettingsView: View {
 
             Picker(selection: $selectedDestination) {
                 Text("None").tag(StopID?.none)
-                ForEach(store.availableStops) { stop in
+                ForEach(store.lineStops) { stop in
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
@@ -62,6 +80,8 @@ public struct SharedSettingsView: View {
             }
         } header: {
             Text("Route")
+        } footer: {
+            Text("Stations on the \(store.selectedLine) line.")
         }
     }
 

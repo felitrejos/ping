@@ -103,6 +103,14 @@ private actor EngineStaticService: StaticServiceProviding {
         []
     }
 
+    func availableLines() async throws -> [String] {
+        []
+    }
+
+    func stopsForLine(_ lineName: String) async throws -> [Stop] {
+        []
+    }
+
     func searchStops(matching query: String) async throws -> [Stop] {
         []
     }
