@@ -15,6 +15,7 @@ struct MakoMacApp: App {
         } label: {
             Text(menuBarTitle)
         }
+        .menuBarExtraStyle(.window)
 
         Settings {
             SharedSettingsView()

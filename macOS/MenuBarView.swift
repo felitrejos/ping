@@ -22,13 +22,15 @@ struct MenuBarView: View {
 
             footerRow
         }
-        .frame(width: 260)
+        .frame(width: 300)
     }
 
     // MARK: - Train card
 
     private func trainCard(_ dep: LiveDeparture) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let leaveIn = max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes())
+
+        return VStack(alignment: .leading, spacing: 12) {
             // Header: destination + arrival
             HStack(alignment: .top) {
                 HStack(spacing: 5) {
@@ -44,14 +46,14 @@ struct MenuBarView: View {
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(dep.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
-                        .font(.subheadline.weight(.bold))
+                        .font(.title3.weight(.bold))
                 }
             }
 
             // Big countdown
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text("\(max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes()))")
-                    .font(.system(size: 48, weight: .heavy, design: .rounded))
+                Text("\(leaveIn)")
+                    .font(.system(size: 54, weight: .heavy, design: .rounded))
                 Text("min")
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
@@ -63,38 +65,40 @@ struct MenuBarView: View {
                     .fill(dep.isDelayed ? .orange : .green)
                     .frame(width: 8, height: 8)
                 Text(dep.isDelayed ? "Delayed · \(dep.statusText)" : "On time")
-                    .font(.caption.weight(.medium))
+                    .font(.callout.weight(.medium))
                     .foregroundStyle(dep.isDelayed ? .orange : .green)
-                Text("· departs \(dep.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))")
-                    .font(.caption)
+                Text("·")
+                    .foregroundStyle(.quaternary)
+                Text("departs \(dep.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))")
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
             .background(.fill.quaternary, in: Capsule())
         }
-        .padding(14)
+        .padding(16)
     }
 
     // MARK: - Commute row
 
     private func commuteRow(_ plan: CommutePlan) -> some View {
         VStack(spacing: 0) {
-            Divider().padding(.horizontal, 14)
+            Divider().padding(.horizontal, 16)
             HStack(spacing: 5) {
                 Image(systemName: "calendar")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text(plan.calendarEvent.title)
-                    .font(.caption)
+                    .font(.callout)
                     .lineLimit(1)
                 Spacer()
                 Text("Leave \(plan.recommendedDeparture.formatted(date: .omitted, time: .shortened))")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
     }
 
@@ -102,16 +106,16 @@ struct MenuBarView: View {
 
     private var footerRow: some View {
         VStack(spacing: 0) {
-            Divider().padding(.horizontal, 14)
+            Divider().padding(.horizontal, 16)
             HStack {
                 Spacer()
                 Button("Settings") { openSettings() }
-                    .font(.caption)
+                    .font(.callout)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
                 Spacer()
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
         }
     }
 
@@ -133,16 +137,16 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline)
             }
             Text(message)
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
         }
-        .padding(14)
+        .padding(16)
     }
 
     // MARK: - Helpers
