@@ -37,9 +37,14 @@ struct CalendarServiceTests {
     }
 }
 
-private struct StubCalendarProvider: CalendarEventProviding {
+private final class StubCalendarProvider: CalendarEventProviding {
     let status: CalendarAuthorizationState
     let events: [CalendarEventRecord]
+
+    init(status: CalendarAuthorizationState, events: [CalendarEventRecord]) {
+        self.status = status
+        self.events = events
+    }
 
     func authorizationStatus() -> CalendarAuthorizationState {
         status

@@ -80,14 +80,15 @@ Project defaults live in:
 Shared/Models/Constants.swift
 ```
 
-Replace:
+Default route:
 
-- `PUT_YOUR_HOME_STOP_ID_HERE`
-- `PUT_DESTINATION_STOP_ID_HERE`
+- origin: Volpelleres (`VO`)
+- destination: Sarrià (`SR`)
 
 User settings are stored with `UserDefaults`:
 
-- home station
+- origin station
+- destination station
 - walking minutes to station
 - buffer minutes before departure
 

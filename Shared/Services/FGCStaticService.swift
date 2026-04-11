@@ -106,21 +106,23 @@ extension FGCStaticService {
         let tripsRows = try GTFSCSVParser.parse(text: try readEntry(named: "trips.txt", from: archive))
         let stopTimesRows = try GTFSCSVParser.parse(text: try readEntry(named: "stop_times.txt", from: archive))
 
-        let stops = Dictionary(uniqueKeysWithValues: stopsRows.compactMap { row in
+        let stopPairs: [(String, Stop)] = stopsRows.compactMap { row in
             guard let stopID = row["stop_id"], let stopName = row["stop_name"] else {
                 return nil
             }
             return (stopID, Stop(id: stopID, name: stopName))
-        })
+        }
+        let stops = Dictionary(uniqueKeysWithValues: stopPairs)
 
-        let routes = Dictionary(uniqueKeysWithValues: routesRows.compactMap { row in
+        let routePairs: [(String, GTFSRoute)] = routesRows.compactMap { row in
             guard let routeID = row["route_id"] else {
                 return nil
             }
             return (routeID, GTFSRoute(id: routeID, shortName: row["route_short_name"] ?? routeID))
-        })
+        }
+        let routes = Dictionary(uniqueKeysWithValues: routePairs)
 
-        let trips = Dictionary(uniqueKeysWithValues: tripsRows.compactMap { row in
+        let tripPairs: [(String, GTFSTrip)] = tripsRows.compactMap { row in
             guard let tripID = row["trip_id"], let routeID = row["route_id"] else {
                 return nil
             }
@@ -132,9 +134,10 @@ extension FGCStaticService {
                     headsign: row["trip_headsign"] ?? row["trip_short_name"] ?? routeID
                 )
             )
-        })
+        }
+        let trips = Dictionary(uniqueKeysWithValues: tripPairs)
 
-        let stopTimes = Dictionary(grouping: stopTimesRows.compactMap { row -> (String, GTFSStopTime)? in
+        let stopTimePairs: [(String, GTFSStopTime)] = stopTimesRows.compactMap { row in
             guard
                 let tripID = row["trip_id"],
                 let stopID = row["stop_id"],
@@ -155,8 +158,9 @@ extension FGCStaticService {
                     stopSequence: stopSequence
                 )
             )
-        }) { $0.1 }
-        .mapValues { $0.sorted { $0.stopSequence < $1.stopSequence } }
+        }
+        let stopTimes = Dictionary(grouping: stopTimePairs, by: { $0.0 })
+            .mapValues { $0.map(\.1).sorted { $0.stopSequence < $1.stopSequence } }
 
         let parsed = ParsedCache(
             stops: stops,

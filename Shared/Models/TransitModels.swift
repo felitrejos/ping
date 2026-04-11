@@ -76,6 +76,14 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
         delaySeconds > 0
     }
 
+    public var delayMinutes: Int {
+        max(0, delaySeconds / 60)
+    }
+
+    public var statusText: String {
+        isDelayed ? "+\(delayMinutes) min" : "On time"
+    }
+
     public var id: String {
         "\(tripID)-\(scheduledTime.timeIntervalSince1970)"
     }
@@ -145,24 +153,35 @@ public enum CalendarAuthorizationState: String, Codable, Equatable, Sendable {
 }
 
 public enum UserSettings {
+    public static let defaultHomeStationID = "VO"
+    public static let defaultDestinationStationID = "SR"
+
     public enum Keys {
         public static let homeStationID = "mako.userHomeStation"
+        public static let destinationStationID = "mako.destinationStation"
         public static let walkingMinutes = "mako.walkingMinutes"
         public static let bufferMinutes = "mako.bufferMinutes"
     }
 
-    public static let defaultHomeStationID = "PUT_YOUR_HOME_STOP_ID_HERE"
-    public static let defaultDestinationStopIDs = ["PUT_DESTINATION_STOP_ID_HERE"]
     public static let defaultWalkingMinutes = 8
     public static let defaultBufferMinutes = 3
 
     public static func homeStationID(defaults: UserDefaults = .standard) -> StopID? {
         let value = defaults.string(forKey: Keys.homeStationID) ?? defaultHomeStationID
-        return value.isEmpty ? nil : value
+        return isConfiguredStopID(value) ? value : nil
     }
 
     public static func setHomeStationID(_ stopID: StopID?, defaults: UserDefaults = .standard) {
         defaults.set(stopID, forKey: Keys.homeStationID)
+    }
+
+    public static func destinationStationID(defaults: UserDefaults = .standard) -> StopID? {
+        let value = defaults.string(forKey: Keys.destinationStationID) ?? defaultDestinationStationID
+        return isConfiguredStopID(value) ? value : nil
+    }
+
+    public static func setDestinationStationID(_ stopID: StopID?, defaults: UserDefaults = .standard) {
+        defaults.set(stopID, forKey: Keys.destinationStationID)
     }
 
     public static func walkingMinutes(defaults: UserDefaults = .standard) -> Int {
@@ -181,5 +200,13 @@ public enum UserSettings {
 
     public static func setBufferMinutes(_ minutes: Int, defaults: UserDefaults = .standard) {
         defaults.set(minutes, forKey: Keys.bufferMinutes)
+    }
+
+    public static func isConfiguredStopID(_ stopID: StopID?) -> Bool {
+        guard let stopID else {
+            return false
+        }
+
+        return !stopID.isEmpty
     }
 }

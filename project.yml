@@ -24,6 +24,8 @@ targets:
     sources:
       - path: Shared
       - path: iOS
+    resources:
+      - path: Resources/google_transit.zip
     dependencies:
       - package: SwiftProtobuf
       - package: ZIPFoundation
@@ -32,6 +34,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.mako.ios
+        GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
         INFOPLIST_KEY_NSCalendarsUsageDescription: Mako uses your calendar to suggest when to leave for upcoming commutes.
@@ -44,6 +47,8 @@ targets:
     sources:
       - path: Shared
       - path: macOS
+    resources:
+      - path: Resources/google_transit.zip
     dependencies:
       - package: SwiftProtobuf
       - package: ZIPFoundation
@@ -62,8 +67,11 @@ targets:
       - path: Widgets
     dependencies:
       - package: SwiftProtobuf
+      - package: ZIPFoundation
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.mako.widgets
+        PRODUCT_NAME: MakoWidgets
+        PRODUCT_MODULE_NAME: MakoWidgets
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_NSExtensionPointIdentifier: com.apple.widgetkit-extension

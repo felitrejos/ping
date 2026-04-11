@@ -4,14 +4,18 @@ import SwiftUI
 struct MakoMacApp: App {
     @State private var store = MacContainer.shared.store
 
+    init() {
+        let store = MacContainer.shared.store
+        store.start()
+        Task {
+            await store.refresh()
+        }
+    }
+
     var body: some Scene {
         MenuBarExtra {
             MenuBarView()
                 .environment(store)
-                .task {
-                    store.start()
-                    await store.refresh()
-                }
         } label: {
             Text(menuBarTitle)
         }
@@ -20,14 +24,14 @@ struct MakoMacApp: App {
             SharedSettingsView()
                 .environment(store)
                 .frame(minWidth: 360, minHeight: 420)
-                .task {
-                    store.start()
-                    await store.refresh()
-                }
         }
     }
 
     private var menuBarTitle: String {
+        guard store.hasConfiguredRoute else {
+            return "🚆 Setup"
+        }
+
         if let minutes = store.nextDeparture?.minutesUntilDeparture {
             return "🚆 \(minutes)"
         }

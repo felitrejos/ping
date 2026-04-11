@@ -118,7 +118,7 @@ public actor CommuteEngine {
 }
 
 private extension Sequence {
-    func asyncMap<T>(_ transform: (Element) async throws -> T) async rethrows -> [T] {
+    func asyncMap<T>(_ transform: @Sendable (Element) async throws -> T) async rethrows -> [T] {
         var result: [T] = []
         for element in self {
             let value = try await transform(element)

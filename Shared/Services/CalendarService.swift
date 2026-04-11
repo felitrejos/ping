@@ -1,13 +1,13 @@
-import EventKit
+@preconcurrency import EventKit
 import Foundation
 
 public actor CalendarService: CalendarServiceProviding {
-    private let eventProvider: CalendarEventProviding
+    private let eventProvider: any CalendarEventProviding
     private let staticService: StaticServiceProviding
     private let defaults: UserDefaults
 
     public init(
-        eventProvider: CalendarEventProviding = EventKitCalendarProvider(),
+        eventProvider: any CalendarEventProviding = EventKitCalendarProvider(),
         staticService: StaticServiceProviding,
         defaults: UserDefaults = .standard
     ) {
@@ -56,6 +56,14 @@ public actor CalendarService: CalendarServiceProviding {
         UserSettings.setHomeStationID(stopID, defaults: defaults)
     }
 
+    public func userDestinationStation() async -> StopID? {
+        UserSettings.destinationStationID(defaults: defaults)
+    }
+
+    public func setUserDestinationStation(_ stopID: StopID?) async {
+        UserSettings.setDestinationStationID(stopID, defaults: defaults)
+    }
+
     private func resolveStation(for location: String?, from stops: [Stop]) -> StopID? {
         guard let location, !location.isEmpty else {
             return nil
@@ -76,7 +84,7 @@ public actor CalendarService: CalendarServiceProviding {
     }
 }
 
-public struct EventKitCalendarProvider: CalendarEventProviding {
+public final class EventKitCalendarProvider: @unchecked Sendable, CalendarEventProviding {
     private let eventStore: EKEventStore
 
     public init(eventStore: EKEventStore = EKEventStore()) {
@@ -105,7 +113,7 @@ public struct EventKitCalendarProvider: CalendarEventProviding {
             if #available(macOS 14.0, iOS 17.0, *) {
                 _ = try await eventStore.requestFullAccessToEvents()
             } else {
-                _ = try await withCheckedThrowingContinuation { continuation in
+                _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Bool, Error>) in
                     eventStore.requestAccess(to: .event) { granted, error in
                         if let error {
                             continuation.resume(throwing: error)

@@ -20,6 +20,8 @@ public protocol CalendarServiceProviding: Sendable {
     func upcomingCommutes(within hours: Int) async throws -> [CommuteEvent]
     func userHomeStation() async -> StopID?
     func setUserHomeStation(_ stopID: StopID?) async
+    func userDestinationStation() async -> StopID?
+    func setUserDestinationStation(_ stopID: StopID?) async
 }
 
 public protocol Clock: Sendable {

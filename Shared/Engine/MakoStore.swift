@@ -13,12 +13,32 @@ public final class MakoStore {
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
+    public var lastErrorMessage: String?
     public var stopSearchText = "" {
         didSet {
-            Task {
+            searchTask?.cancel()
+            searchTask = Task {
+                try? await Task.sleep(for: .milliseconds(150))
+                guard !Task.isCancelled else {
+                    return
+                }
                 await reloadStopSearch()
             }
         }
+    }
+
+    public var hasConfiguredRoute: Bool {
+        UserSettings.isConfiguredStopID(UserDefaults.standard.string(forKey: UserSettings.Keys.homeStationID))
+            || UserSettings.homeStationID() != nil
+    }
+
+    public var hasConfiguredDestination: Bool {
+        UserSettings.isConfiguredStopID(UserDefaults.standard.string(forKey: UserSettings.Keys.destinationStationID))
+            || UserSettings.destinationStationID() != nil
+    }
+
+    public var hasConfiguredDefaultRoute: Bool {
+        hasConfiguredRoute && hasConfiguredDestination
     }
 
     private let engine: CommuteEngine
@@ -26,6 +46,7 @@ public final class MakoStore {
     private let calendarService: CalendarServiceProviding
     private let realtimeService: RealtimeServiceProviding
     private var refreshTask: Task<Void, Never>?
+    private var searchTask: Task<Void, Never>?
 
     public init(
         engine: CommuteEngine,
@@ -83,8 +104,10 @@ public final class MakoStore {
             nextCommute = commutePlans.first
             nextDeparture = try await defaultNextDeparture()
             upcomingTrains = try await defaultUpcomingTrains()
+            lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
+            lastErrorMessage = error.localizedDescription
             lastUpdated = Date()
         }
     }
@@ -99,40 +122,39 @@ public final class MakoStore {
         await refresh()
     }
 
+    public func setDestinationStation(_ stopID: StopID?) async {
+        await calendarService.setUserDestinationStation(stopID)
+        await refresh()
+    }
+
     public func selectedHomeStationID() async -> StopID? {
         await calendarService.userHomeStation()
     }
 
+    public func selectedDestinationStationID() async -> StopID? {
+        await calendarService.userDestinationStation()
+    }
+
     private func defaultNextDeparture() async throws -> LiveDeparture? {
-        guard let homeStopID = await calendarService.userHomeStation() else {
+        guard
+            let homeStopID = await calendarService.userHomeStation(),
+            let destination = await calendarService.userDestinationStation()
+        else {
             return nil
         }
 
-        for destination in Constants.destinationStopIDs {
-            if let departure = try await engine.nextDeparture(from: homeStopID, to: destination) {
-                return departure
-            }
-        }
-
-        return nil
+        return try await engine.nextDeparture(from: homeStopID, to: destination)
     }
 
     private func defaultUpcomingTrains() async throws -> [LiveDeparture] {
-        guard let homeStopID = await calendarService.userHomeStation() else {
+        guard
+            let homeStopID = await calendarService.userHomeStation(),
+            let destination = await calendarService.userDestinationStation()
+        else {
             return []
         }
 
-        var departures: [LiveDeparture] = []
-        for destination in Constants.destinationStopIDs {
-            departures.append(
-                contentsOf: try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 5)
-            )
-        }
-
-        return departures
-            .sorted { $0.effectiveDepartureTime < $1.effectiveDepartureTime }
-            .prefix(5)
-            .map { $0 }
+        return try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 5)
     }
 
     private func reloadStopSearch() async {

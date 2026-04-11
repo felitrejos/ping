@@ -13,6 +13,7 @@
 		0CD86467ECE314CD9EC80113 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 28513D3952C73A9561F9B69A /* ZIPFoundation */; };
 		0D963B2D347C4967BCCAABD7 /* GTFSCSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8247A900571F1459CE4E7445 /* GTFSCSVParser.swift */; };
 		12D323D8B071E749F1E93CCA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AAF06A93BCDCBFC80F57A8 /* Constants.swift */; };
+		21E98B53303062E03170263E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 27A8039787617D08305B2D96 /* ZIPFoundation */; };
 		25A749D2BC36F81BC275A05A /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F818535CA4A0F47CBF4BAAC /* SharedContainer.swift */; };
 		26CB5C838DE9AA34342EBE8D /* CommuteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E812D1903C4F7ABA38293E96 /* CommuteEngine.swift */; };
 		2C08A152E16A761B36FBF2ED /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E0AA5F3D017BBF0969E9C3 /* ServiceProtocols.swift */; };
@@ -117,6 +118,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD9DD37373F895447191DA02 /* SwiftProtobuf in Frameworks */,
+				21E98B53303062E03170263E /* ZIPFoundation in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +319,7 @@
 			name = MakoWidgets;
 			packageProductDependencies = (
 				82E90BE5FDBB7C6EC1DB0D66 /* SwiftProtobuf */,
+				27A8039787617D08305B2D96 /* ZIPFoundation */,
 			);
 			productName = MakoWidgets;
 			productReference = A9FB4B4291E0819A61392517 /* MakoWidgets.appex */;
@@ -449,6 +452,8 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.mako.widgets;
+				PRODUCT_MODULE_NAME = MakoWidgets;
+				PRODUCT_NAME = MakoWidgets;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -459,6 +464,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = app.mako.refresh;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Mako uses your calendar to suggest when to leave for upcoming commutes.";
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Mako sends leave-now reminders for upcoming trips.";
@@ -588,6 +594,8 @@
 					"@executable_path/../../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = app.mako.widgets;
+				PRODUCT_MODULE_NAME = MakoWidgets;
+				PRODUCT_NAME = MakoWidgets;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -598,6 +606,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = app.mako.refresh;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Mako uses your calendar to suggest when to leave for upcoming commutes.";
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Mako sends leave-now reminders for upcoming trips.";
@@ -733,6 +742,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		27A8039787617D08305B2D96 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 06E6D1FDCAAD0473DD7D18F2 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		28513D3952C73A9561F9B69A /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 06E6D1FDCAAD0473DD7D18F2 /* XCRemoteSwiftPackageReference "ZIPFoundation" */;

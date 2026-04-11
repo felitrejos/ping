@@ -130,4 +130,10 @@ private actor EngineCalendarService: CalendarServiceProviding {
     }
 
     func setUserHomeStation(_ stopID: StopID?) async {}
+
+    func userDestinationStation() async -> StopID? {
+        "ST_CITY"
+    }
+
+    func setUserDestinationStation(_ stopID: StopID?) async {}
 }
