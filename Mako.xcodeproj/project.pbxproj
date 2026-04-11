@@ -91,7 +91,7 @@
 /* Begin PBXFileReference section */
 		01908C6DBDC90C181F7AC6CA /* MakoActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoActivityAttributes.swift; sourceTree = "<group>"; };
 		176762DDF2DAB962A2A7BC27 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		219D3AB4188E246D66F61846 /* Mako iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Mako iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		219D3AB4188E246D66F61846 /* Mako.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mako.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2268416F18AD0824603CC26A /* FGCStaticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCStaticService.swift; sourceTree = "<group>"; };
 		35E2C65F4DFE4C61818BB910 /* FGCRealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCRealtimeService.swift; sourceTree = "<group>"; };
 		36AAF06A93BCDCBFC80F57A8 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -101,8 +101,8 @@
 		8247A900571F1459CE4E7445 /* GTFSCSVParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSCSVParser.swift; sourceTree = "<group>"; };
 		88A67AA16C67A537FF189617 /* google_transit.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = google_transit.zip; sourceTree = "<group>"; };
 		917F89A9054E15D29ED0450C /* MakoiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoiOSApp.swift; sourceTree = "<group>"; };
-		A651325604ADE9D97A1A76C0 /* Mako macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mako macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A9FB4B4291E0819A61392517 /* MakoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MakoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A651325604ADE9D97A1A76C0 /* Mako macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Mako macOS.app"; path = Mako.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A9FB4B4291E0819A61392517 /* MakoWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MakoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA06F4A076F658330EF05902 /* MakoWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoWidgetsBundle.swift; sourceTree = "<group>"; };
 		B1BAA95661A1DBA9FFFFDF23 /* MakoMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoMacApp.swift; sourceTree = "<group>"; };
 		C003CED32F99747E111DD59C /* SharedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSettingsView.swift; sourceTree = "<group>"; };
@@ -111,6 +111,7 @@
 		D9E0AA5F3D017BBF0969E9C3 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
 		DF3D6A2B3DF76CEC1CDA4022 /* TransitModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitModels.swift; sourceTree = "<group>"; };
 		E522953531D3449824BCCF5B /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		E5F63A290B915E8EBFEBA33B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E812D1903C4F7ABA38293E96 /* CommuteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteEngine.swift; sourceTree = "<group>"; };
 		F83028A8FF7E754F3F8DF763 /* MakoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MakoStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -161,7 +162,7 @@
 		0AC91FC10D787ABDF31BC4B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				219D3AB4188E246D66F61846 /* Mako iOS.app */,
+				219D3AB4188E246D66F61846 /* Mako.app */,
 				A651325604ADE9D97A1A76C0 /* Mako macOS.app */,
 				A9FB4B4291E0819A61392517 /* MakoWidgets.appex */,
 			);
@@ -226,6 +227,7 @@
 		C61F236B95E95F94574CE139 /* Widgets */ = {
 			isa = PBXGroup;
 			children = (
+				E5F63A290B915E8EBFEBA33B /* Info.plist */,
 				6DD6518104687B3357731A4C /* MakoLiveActivity.swift */,
 				AA06F4A076F658330EF05902 /* MakoWidgetsBundle.swift */,
 			);
@@ -295,7 +297,7 @@
 				28513D3952C73A9561F9B69A /* ZIPFoundation */,
 			);
 			productName = "Mako iOS";
-			productReference = 219D3AB4188E246D66F61846 /* Mako iOS.app */;
+			productReference = 219D3AB4188E246D66F61846 /* Mako.app */;
 			productType = "com.apple.product-type.application";
 		};
 		E38A4A58E1D1431E97CD5F54 /* Mako macOS */ = {
@@ -347,8 +349,6 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = EFAE14911A9F376538F2FC85 /* Build configuration list for PBXProject "Mako" */;
 			developmentRegion = en;
@@ -476,8 +476,8 @@
 		2D7F7634D006E465AD922FE4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				DEVELOPMENT_TEAM = WXKM9YZDXT;
+				INFOPLIST_FILE = Widgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -497,11 +497,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = WXKM9YZDXT;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = app.mako.refresh;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Mako uses your calendar to suggest when to leave for upcoming commutes.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Mako sends leave-now reminders for upcoming trips.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -618,8 +621,7 @@
 		BB2AE15338942A7F0E064CBB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				INFOPLIST_FILE = Widgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -642,8 +644,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = app.mako.refresh;
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "Mako uses your calendar to suggest when to leave for upcoming commutes.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Mako sends leave-now reminders for upcoming trips.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (

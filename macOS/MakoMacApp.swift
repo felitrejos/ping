@@ -33,7 +33,7 @@ struct MakoMacApp: App {
             let leaveIn = max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes())
             return "🚆 \(leaveIn) min"
         }
-        return "🚆 --"
+        return "🚆"
     }
 }
 

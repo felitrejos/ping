@@ -21,12 +21,6 @@ public struct SharedSettingsView: View {
         .navigationTitle("Settings")
         #if os(macOS)
         .toolbar(.hidden, for: .automatic)
-        #else
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
-            }
-        }
         #endif
         .task {
             guard !loaded else { return }
@@ -46,8 +40,9 @@ public struct SharedSettingsView: View {
                     Text(line).tag(line)
                 }
             } label: {
-                Label("Line", systemImage: "tram")
+                Text("Line")
             }
+            .pickerStyle(.menu)
         } header: {
             Text("FGC Line")
         }
@@ -61,8 +56,9 @@ public struct SharedSettingsView: View {
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
-                Label("Origin", systemImage: "house")
+                Text("Origin")
             }
+            .pickerStyle(.menu)
             .onChange(of: selectedOrigin) { _, newValue in
                 Task { await store.setHomeStation(newValue) }
             }
@@ -73,8 +69,9 @@ public struct SharedSettingsView: View {
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
-                Label("Destination", systemImage: "mappin.and.ellipse")
+                Text("Destination")
             }
+            .pickerStyle(.menu)
             .onChange(of: selectedDestination) { _, newValue in
                 Task { await store.setDestinationStation(newValue) }
             }

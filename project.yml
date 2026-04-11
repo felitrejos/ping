@@ -37,9 +37,11 @@ targets:
         GENERATE_INFOPLIST_FILE: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_NSCalendarsUsageDescription: Mako uses your calendar to suggest when to leave for upcoming commutes.
         INFOPLIST_KEY_NSUserNotificationsUsageDescription: Mako sends leave-now reminders for upcoming trips.
         INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers: app.mako.refresh
+        INFOPLIST_KEY_NSSupportsLiveActivities: true
   Mako macOS:
     type: application
     platform: macOS
@@ -73,5 +75,4 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.mako.ios.widgets
         PRODUCT_NAME: MakoWidgets
         PRODUCT_MODULE_NAME: MakoWidgets
-        GENERATE_INFOPLIST_FILE: true
-        INFOPLIST_KEY_NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        INFOPLIST_FILE: Widgets/Info.plist
