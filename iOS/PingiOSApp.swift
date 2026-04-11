@@ -2,7 +2,7 @@ import BackgroundTasks
 import SwiftUI
 
 @main
-struct MakoiOSApp: App {
+struct PingiOSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var store = AppContainer.shared.store
     @State private var notificationScheduler = AppContainer.shared.notificationScheduler
@@ -54,7 +54,7 @@ final class IOSContainer {
     let shared = SharedContainer()
     lazy var notificationScheduler = NotificationScheduler(engine: shared.engine)
 
-    var store: MakoStore {
+    var store: PingStore {
         shared.store
     }
 }

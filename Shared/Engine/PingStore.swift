@@ -3,7 +3,7 @@ import Observation
 
 @MainActor
 @Observable
-public final class MakoStore {
+public final class PingStore {
     public var nextDeparture: LiveDeparture?
     public var nextCommute: CommutePlan?
     public var commutePlans: [CommutePlan] = []
@@ -114,14 +114,29 @@ public final class MakoStore {
         await refresh()
     }
 
+    public func searchStops(matching query: String) async -> [Stop] {
+        (try? await staticService.searchStops(matching: query)) ?? []
+    }
+
     public func setHomeStation(_ stopID: StopID?) async {
         await calendarService.setUserHomeStation(stopID)
+        await autoDetectLine()
         await refresh()
     }
 
     public func setDestinationStation(_ stopID: StopID?) async {
         await calendarService.setUserDestinationStation(stopID)
+        await autoDetectLine()
         await refresh()
+    }
+
+    private func autoDetectLine() async {
+        guard
+            let origin = await calendarService.userHomeStation(),
+            let destination = await calendarService.userDestinationStation(),
+            let line = try? await staticService.lineForRoute(origin: origin, destination: destination)
+        else { return }
+        selectedLine = line
     }
 
     public func selectedHomeStationID() async -> StopID? {

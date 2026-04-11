@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import ZIPFoundation
-@testable import MakoShared
+@testable import PingShared
 
 struct StaticServiceTests {
     @Test

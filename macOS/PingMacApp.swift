@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct MakoMacApp: App {
+struct PingMacApp: App {
     @State private var store = MacContainer.shared.store
 
     init() {

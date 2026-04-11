@@ -7,7 +7,7 @@ import UserNotifications
 final class NotificationScheduler {
     private let engine: CommuteEngine
     private let center: UNUserNotificationCenter
-    private var currentActivity: Activity<MakoActivityAttributes>?
+    private var currentActivity: Activity<PingActivityAttributes>?
 
     init(
         engine: CommuteEngine,
@@ -18,7 +18,7 @@ final class NotificationScheduler {
     }
 
     func registerBackgroundTasks() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "app.mako.refresh", using: nil) { [weak self] task in
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: "app.ping.refresh", using: nil) { [weak self] task in
             guard let task = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
                 return
@@ -66,7 +66,7 @@ final class NotificationScheduler {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Mako"
+        content.title = "Ping"
         content.body = "Leave now for \(plan.calendarEvent.title) · Train at \(train.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))"
         content.sound = .default
 
@@ -86,7 +86,7 @@ final class NotificationScheduler {
         let stale = pending
             .map(\.identifier)
             .filter { identifier in
-                identifier.hasPrefix("mako.commute.") && identifier != activeIdentifier
+                identifier.hasPrefix("ping.commute.") && identifier != activeIdentifier
             }
         center.removePendingNotificationRequests(withIdentifiers: stale)
     }
@@ -103,14 +103,20 @@ final class NotificationScheduler {
             return
         }
 
-        let attributes = MakoActivityAttributes(
-            eventTitle: plan.calendarEvent.title,
-            trainLabel: train.trainLabel
+        let walkMin = UserSettings.walkingMinutes()
+        let rideMin = max(1, Int((train.arrivalTime.timeIntervalSince(train.scheduledTime) / 60).rounded()))
+        let attributes = PingActivityAttributes(
+            destinationName: train.destinationStopID,
+            lineName: UserSettings.selectedLine()
         )
-        let contentState = MakoActivityAttributes.ContentState(
+        let contentState = PingActivityAttributes.ContentState(
             minutesUntilDeparture: minutes,
             isDelayed: train.isDelayed,
-            delayMinutes: train.delaySeconds / 60
+            delayMinutes: train.delaySeconds / 60,
+            walkMinutes: walkMin,
+            rideMinutes: rideMin,
+            departureTime: train.effectiveDepartureTime,
+            arrivalTime: train.effectiveArrivalTime
         )
 
         if let currentActivity {
@@ -135,12 +141,12 @@ final class NotificationScheduler {
     }
 
     private func submitBackgroundRefresh() {
-        let request = BGAppRefreshTaskRequest(identifier: "app.mako.refresh")
+        let request = BGAppRefreshTaskRequest(identifier: "app.ping.refresh")
         request.earliestBeginDate = Date().addingTimeInterval(15 * 60)
         try? BGTaskScheduler.shared.submit(request)
     }
 
     private func notificationIdentifier(for plan: CommutePlan) -> String {
-        "mako.commute.\(plan.calendarEvent.id).\(Int(plan.calendarEvent.startDate.timeIntervalSince1970))"
+        "ping.commute.\(plan.calendarEvent.id).\(Int(plan.calendarEvent.startDate.timeIntervalSince1970))"
     }
 }

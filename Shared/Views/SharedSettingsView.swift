@@ -1,19 +1,23 @@
 import SwiftUI
 
 public struct SharedSettingsView: View {
-    @Environment(MakoStore.self) private var store
+    @Environment(PingStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UserSettings.Keys.walkingMinutes) private var walkingMinutes = UserSettings.defaultWalkingMinutes
+
+    #if os(macOS)
     @State private var selectedOrigin: StopID?
     @State private var selectedDestination: StopID?
     @State private var loaded = false
+    #endif
 
     public init() {}
 
     public var body: some View {
         Form {
-            lineSection
+            #if os(macOS)
             routeSection
+            #endif
             walkingSection
             calendarSection
         }
@@ -21,38 +25,21 @@ public struct SharedSettingsView: View {
         .navigationTitle("Settings")
         #if os(macOS)
         .toolbar(.hidden, for: .automatic)
-        #endif
         .task {
             guard !loaded else { return }
             selectedOrigin = await store.selectedHomeStationID()
             selectedDestination = await store.selectedDestinationStationID()
             loaded = true
         }
+        #endif
     }
 
-    private var lineSection: some View {
-        Section {
-            Picker(selection: Binding(
-                get: { store.selectedLine },
-                set: { store.selectedLine = $0 }
-            )) {
-                ForEach(store.availableLines, id: \.self) { line in
-                    Text(line).tag(line)
-                }
-            } label: {
-                Text("Line")
-            }
-            .pickerStyle(.menu)
-        } header: {
-            Text("FGC Line")
-        }
-    }
-
+    #if os(macOS)
     private var routeSection: some View {
         Section {
             Picker(selection: $selectedOrigin) {
                 Text("None").tag(StopID?.none)
-                ForEach(store.lineStops) { stop in
+                ForEach(store.availableStops) { stop in
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
@@ -65,7 +52,7 @@ public struct SharedSettingsView: View {
 
             Picker(selection: $selectedDestination) {
                 Text("None").tag(StopID?.none)
-                ForEach(store.lineStops) { stop in
+                ForEach(store.availableStops) { stop in
                     Text(stop.name).tag(StopID?.some(stop.id))
                 }
             } label: {
@@ -77,10 +64,9 @@ public struct SharedSettingsView: View {
             }
         } header: {
             Text("Route")
-        } footer: {
-            Text("Stations on the \(store.selectedLine) line.")
         }
     }
+    #endif
 
     private var walkingSection: some View {
         Section {
@@ -144,7 +130,7 @@ public struct SharedSettingsView: View {
         } header: {
             Text("Calendar")
         } footer: {
-            Text("Mako uses your calendar to suggest when to leave for upcoming commutes.")
+            Text("Ping uses your calendar to suggest when to leave for upcoming commutes.")
         }
     }
 }

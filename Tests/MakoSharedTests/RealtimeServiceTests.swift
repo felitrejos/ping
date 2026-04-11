@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import MakoShared
+@testable import PingShared
 
 @Suite(.serialized)
 struct RealtimeServiceTests {

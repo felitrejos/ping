@@ -1,10 +1,10 @@
-# Mako TODO
+# Ping TODO
 
 ## Done
 
 - Downloaded the current FGC static GTFS ZIP to `Resources/google_transit.zip`.
 - Added `Resources/` as a resource build phase for iOS and macOS targets in `project.yml`.
-- Regenerated `Mako.xcodeproj` from `project.yml`.
+- Regenerated `Ping.xcodeproj` from `project.yml`.
 - Moved default route data out of `Constants.swift` and into mutable user settings.
 - Set default origin to Volpelleres (`VO`), default destination to Sarrià (`SR`).
 - Added user-default backed origin/destination station storage.
@@ -12,7 +12,7 @@
 - Updated iOS and macOS UI to use origin/destination terminology.
 - Fixed GTFS parent/child stop ID resolution — `departuresBetween` now expands parent station IDs (e.g. `VO`) into platform-level child IDs (e.g. `VO1`, `VO2`) so stop_times.txt matches work.
 - Station picker only shows parent stations, not individual platforms.
-- Calendar permission is requested automatically on first launch via `MakoStore.start()`.
+- Calendar permission is requested automatically on first launch via `PingStore.start()`.
 - Fixed all Swift 6 concurrency errors (Sendable closures, type inference, ActivityKit).
 - Fixed widget target module name collision and missing ZIPFoundation dependency.
 - All 11 tests passing (static, realtime, calendar, engine).
@@ -50,4 +50,4 @@ Only the LiveActivity widget exists. Add a small/medium WidgetKit widget showing
 
 - Notifications: verify local notification scheduling and dedupe
 - Live Activity: verify start, update, and end lifecycle
-- Background refresh: verify `app.mako.refresh` task registration and execution
+- Background refresh: verify `app.ping.refresh` task registration and execution

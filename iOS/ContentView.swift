@@ -6,13 +6,24 @@ import ActivityKit
 // MARK: - Home tab
 
 struct ContentView: View {
-    @Environment(MakoStore.self) private var store
+    @Environment(PingStore.self) private var store
     @State private var tracker = CommuteTracker()
-    @State private var showTracking = false
+    @State private var originQuery = ""
+    @State private var destinationQuery = ""
+    @State private var originResults: [Stop] = []
+    @State private var destinationResults: [Stop] = []
+    @State private var isEditingOrigin = false
+    @State private var isEditingDestination = false
+    @State private var selectedOriginName: String?
+    @State private var selectedDestinationName: String?
+    @FocusState private var originFocused: Bool
+    @FocusState private var destinationFocused: Bool
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 14) {
+            VStack(spacing: 20) {
+                makoHeader
+                routeSection
                 statusBanner
                 primaryCard
                 if let plan = store.nextCommute {
@@ -26,28 +37,201 @@ struct ContentView: View {
         }
         .refreshable { await store.refresh() }
         .onChange(of: store.nextDeparture) { _, dep in
-            guard showTracking, let dep else { return }
-            Task { await tracker.update(departure: dep) }
+            guard tracker.isTracking, let dep else { return }
+            Task { await tracker.update(departure: dep, store: store) }
         }
-        .fullScreenCover(isPresented: $showTracking) {
-            TrackingView(tracker: tracker) {
-                Task {
-                    await tracker.stop()
-                    showTracking = false
-                }
+        .onChange(of: store.availableStops) { _, stops in
+            guard !stops.isEmpty else { return }
+            Task { await prefillStationNames(from: stops) }
+        }
+        .task {
+            if !store.availableStops.isEmpty {
+                await prefillStationNames(from: store.availableStops)
             }
-            .environment(store)
         }
     }
 
-    // MARK: Status banner
+    private var makoHeader: some View {
+        VStack(spacing: 2) {
+            Text("Ping")
+                .font(.largeTitle.bold())
+            Text("Never miss your train")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
+    }
+
+    private var routeSection: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Timeline dots + line
+            VStack(spacing: 0) {
+                Circle()
+                    .fill(.blue)
+                    .frame(width: 10, height: 10)
+                    .padding(.top, 30) // label height + gap + center in input
+                Rectangle()
+                    .fill(.blue.opacity(0.3))
+                    .frame(width: 2)
+                Circle()
+                    .fill(.blue)
+                    .frame(width: 10, height: 10)
+                    .padding(.bottom, 19)
+            }
+            .frame(width: 14)
+
+            // Labels + input fields
+            VStack(alignment: .leading, spacing: 0) {
+                Text("ORIGIN")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.3)
+                    .padding(.bottom, 4)
+
+                stationInput(
+                    placeholder: "Search station",
+                    query: $originQuery,
+                    results: $originResults,
+                    isEditing: $isEditingOrigin,
+                    focused: $originFocused,
+                    selectedName: $selectedOriginName
+                ) { stop in
+                    selectedOriginName = stop.name
+                    originQuery = ""
+                    originFocused = false
+                    isEditingOrigin = false
+                    Task { await store.setHomeStation(stop.id) }
+                }
+
+                Text("DESTINATION")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.3)
+                    .padding(.top, 14)
+                    .padding(.bottom, 4)
+
+                stationInput(
+                    placeholder: "Search station",
+                    query: $destinationQuery,
+                    results: $destinationResults,
+                    isEditing: $isEditingDestination,
+                    focused: $destinationFocused,
+                    selectedName: $selectedDestinationName
+                ) { stop in
+                    selectedDestinationName = stop.name
+                    destinationQuery = ""
+                    destinationFocused = false
+                    isEditingDestination = false
+                    Task { await store.setDestinationStation(stop.id) }
+                }
+            }
+        }
+        .padding(.bottom, 6)
+    }
+
+    private func stationInput(
+        placeholder: String,
+        query: Binding<String>,
+        results: Binding<[Stop]>,
+        isEditing: Binding<Bool>,
+        focused: FocusState<Bool>.Binding,
+        selectedName: Binding<String?>,
+        onSelect: @escaping (Stop) -> Void
+    ) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 8) {
+                TextField(placeholder, text: query)
+                    .textFieldStyle(.plain)
+                    .font(.title3)
+                    .autocorrectionDisabled()
+                    .focused(focused)
+                    .onChange(of: query.wrappedValue) { _, newValue in
+                        Task {
+                            if newValue.isEmpty {
+                                results.wrappedValue = []
+                            } else {
+                                results.wrappedValue = await store.searchStops(matching: newValue)
+                            }
+                        }
+                    }
+                    .onSubmit {
+                        isEditing.wrappedValue = false
+                    }
+                    .onChange(of: focused.wrappedValue) { _, isFocused in
+                        if isFocused {
+                            isEditing.wrappedValue = true
+                            if query.wrappedValue.isEmpty, let name = selectedName.wrappedValue {
+                                query.wrappedValue = name
+                            }
+                        } else {
+                            isEditing.wrappedValue = false
+                            if let name = selectedName.wrappedValue, query.wrappedValue != name {
+                                query.wrappedValue = name
+                            }
+                        }
+                    }
+                if focused.wrappedValue && !query.wrappedValue.isEmpty {
+                    Button {
+                        query.wrappedValue = ""
+                        selectedName.wrappedValue = nil
+                        results.wrappedValue = []
+                    } label: {
+                        Image(systemName: "multiply.circle.fill")
+                            .foregroundStyle(.placeholder)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+
+            if isEditing.wrappedValue && !results.wrappedValue.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(results.wrappedValue.prefix(5)) { stop in
+                        Button {
+                            onSelect(stop)
+                            focused.wrappedValue = false
+                        } label: {
+                            HStack {
+                                Text(stop.name)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                        }
+                        if stop.id != results.wrappedValue.prefix(5).last?.id {
+                            Divider().padding(.leading, 16)
+                        }
+                    }
+                }
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private func prefillStationNames(from stops: [Stop]) async {
+        let originID = await store.selectedHomeStationID() ?? UserSettings.defaultHomeStationID
+        let destID = await store.selectedDestinationStationID() ?? UserSettings.defaultDestinationStationID
+        if selectedOriginName == nil, let name = stops.first(where: { $0.id == originID })?.name {
+            selectedOriginName = name
+            originQuery = name
+        }
+        if selectedDestinationName == nil, let name = stops.first(where: { $0.id == destID })?.name {
+            selectedDestinationName = name
+            destinationQuery = name
+        }
+    }
 
     @ViewBuilder
     private var statusBanner: some View {
         if !store.hasConfiguredRoute {
             NoticeCard(
                 title: "Setup needed",
-                message: "Choose your origin and destination in Settings.",
+                message: "Choose your origin and destination above.",
                 systemImage: "location.fill",
                 tint: .blue
             )
@@ -61,8 +245,6 @@ struct ContentView: View {
         }
     }
 
-    // MARK: Primary card
-
     @ViewBuilder
     private var primaryCard: some View {
         if let dep = store.nextDeparture {
@@ -71,8 +253,6 @@ struct ContentView: View {
             NoTrainsCard()
         }
     }
-
-    // MARK: Commute row
 
     private func commuteRow(_ plan: CommutePlan) -> some View {
         HStack(spacing: 10) {
@@ -91,62 +271,36 @@ struct ContentView: View {
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: Track button
-
     @ViewBuilder
     private var trackButton: some View {
         if let dep = store.nextDeparture {
-            Button {
-                Task {
-                    await tracker.start(departure: dep)
-                    showTracking = true
+            if tracker.isTracking {
+                Button {
+                    Task { await tracker.stop() }
+                } label: {
+                    Label("Stop Tracking", systemImage: "stop.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
                 }
-            } label: {
-                Label("Track Commute", systemImage: "location.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .tint(.red)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            } else {
+                Button {
+                    Task { await tracker.start(departure: dep, store: store) }
+                } label: {
+                    Label("Track Train", systemImage: "location.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .tint(.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .tint(.blue)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-        }
-    }
-}
-
-// MARK: - Tracking view (full screen cover)
-
-private struct TrackingView: View {
-    @Environment(MakoStore.self) private var store
-    let tracker: CommuteTracker
-    let onStop: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            if let dep = store.nextDeparture {
-                TrainHeroCard(departure: dep)
-                    .padding(.horizontal, 16)
-            }
-
-            Spacer()
-
-            Button(role: .destructive) {
-                onStop()
-            } label: {
-                Label("Stop Tracking", systemImage: "stop.circle")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(.bordered)
-            .tint(.red)
-            .controlSize(.large)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .padding(.horizontal, 16)
-            .padding(.bottom, 32)
         }
     }
 }
@@ -159,18 +313,29 @@ final class CommuteTracker {
     var isTracking = false
 
     #if canImport(ActivityKit)
-    @ObservationIgnored nonisolated(unsafe) private var activity: Activity<MakoActivityAttributes>?
+    @ObservationIgnored nonisolated(unsafe) private var activity: Activity<PingActivityAttributes>?
     #endif
 
-    func start(departure: LiveDeparture) async {
+    func start(departure: LiveDeparture, store: PingStore) async {
         isTracking = true
         #if canImport(ActivityKit)
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-        let attrs = MakoActivityAttributes(eventTitle: "Commute", trainLabel: departure.trainLabel)
-        let state = MakoActivityAttributes.ContentState(
+        let destName = store.availableStops.first(where: { $0.id == departure.destinationStopID })?.name
+            ?? departure.destinationStopID
+        let walkMin = UserSettings.walkingMinutes()
+        let rideMin = max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
+        let attrs = PingActivityAttributes(
+            destinationName: destName,
+            lineName: store.selectedLine
+        )
+        let state = PingActivityAttributes.ContentState(
             minutesUntilDeparture: departure.minutesUntilDeparture,
             isDelayed: departure.isDelayed,
-            delayMinutes: departure.delayMinutes
+            delayMinutes: departure.delayMinutes,
+            walkMinutes: walkMin,
+            rideMinutes: rideMin,
+            departureTime: departure.effectiveDepartureTime,
+            arrivalTime: departure.effectiveArrivalTime
         )
         activity = try? Activity.request(
             attributes: attrs,
@@ -179,13 +344,19 @@ final class CommuteTracker {
         #endif
     }
 
-    func update(departure: LiveDeparture) async {
+    func update(departure: LiveDeparture, store: PingStore) async {
         guard isTracking else { return }
         #if canImport(ActivityKit)
-        let state = MakoActivityAttributes.ContentState(
+        let walkMin = UserSettings.walkingMinutes()
+        let rideMin = max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
+        let state = PingActivityAttributes.ContentState(
             minutesUntilDeparture: departure.minutesUntilDeparture,
             isDelayed: departure.isDelayed,
-            delayMinutes: departure.delayMinutes
+            delayMinutes: departure.delayMinutes,
+            walkMinutes: walkMin,
+            rideMinutes: rideMin,
+            departureTime: departure.effectiveDepartureTime,
+            arrivalTime: departure.effectiveArrivalTime
         )
         await activity?.update(.init(state: state, staleDate: nil))
         #endif
@@ -204,7 +375,7 @@ final class CommuteTracker {
 
 private struct TrainHeroCard: View {
     let departure: LiveDeparture
-    @Environment(MakoStore.self) private var store
+    @Environment(PingStore.self) private var store
     @AppStorage(UserSettings.Keys.walkingMinutes) private var walkingMinutes = UserSettings.defaultWalkingMinutes
 
     private var leaveIn: Int { max(0, departure.minutesUntilDeparture - walkingMinutes) }

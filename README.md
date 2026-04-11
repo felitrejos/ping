@@ -1,7 +1,7 @@
-<h1 align="center">Mako</h1>
+<h1 align="center">Ping</h1>
 
 <p align="center">
-  <strong>Multiplatform FGC commute assistant for iPhone, Mac, and Live Activities</strong>
+  <strong>Never miss your train — FGC commute assistant for iPhone, Mac, and Live Activities</strong>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 ## What It Does
 
-`Mako` helps you decide when to leave home for an upcoming FGC commute.
+`Ping` helps you decide when to leave home for an upcoming FGC commute.
 
 - Parse bundled FGC GTFS static data from a local ZIP
 - Fetch FGC GTFS Realtime Trip Updates and keep the last known snapshot
@@ -37,10 +37,10 @@
 Requires: Xcode with iOS 26+ and macOS 26+ SDKs, `xcodegen`, `protoc`
 
 ```bash
-git clone https://github.com/felitrejos/mako.git
-cd mako
+git clone https://github.com/felitrejos/ping.git
+cd ping
 xcodegen generate
-open Mako.xcodeproj
+open Ping.xcodeproj
 ```
 
 Before running the app:
@@ -61,7 +61,7 @@ Dependencies:
 
 ```bash
 xcodegen generate
-open Mako.xcodeproj
+open Ping.xcodeproj
 ```
 
 1. Open the project in Xcode.
@@ -83,7 +83,7 @@ Shared/Models/Constants.swift
 Default route:
 
 - origin: Volpelleres (`VO`)
-- destination: Sarrià (`SR`)
+- destination: Sarria (`SR`)
 
 User settings are stored with `UserDefaults`:
 
@@ -111,7 +111,7 @@ protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
 ## Project Layout
 
 ```text
-mako/
+ping/
 ├── Shared/
 │   ├── Models/       # shared models, constants, ActivityKit attributes
 │   ├── Services/     # GTFS static, GTFS-RT, calendar services

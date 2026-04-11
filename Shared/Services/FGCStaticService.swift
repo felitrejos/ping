@@ -112,6 +112,17 @@ public actor FGCStaticService: StaticServiceProviding {
             normalize(stop.name).localizedStandardContains(normalizedQuery)
         }
     }
+
+    public func lineForRoute(origin: StopID, destination: StopID) async throws -> String? {
+        let cache = try loadCache()
+        for (line, stops) in cache.stopsByLine {
+            let ids = Set(stops.map(\.id))
+            if ids.contains(origin) && ids.contains(destination) {
+                return line
+            }
+        }
+        return nil
+    }
 }
 
 // MARK: - Parsing

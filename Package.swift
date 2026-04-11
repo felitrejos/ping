@@ -2,15 +2,15 @@
 import PackageDescription
 
 let package = Package(
-    name: "Mako",
+    name: "Ping",
     platforms: [
         .macOS("15.0"),
         .iOS("18.0"),
     ],
     products: [
         .library(
-            name: "MakoShared",
-            targets: ["MakoShared"]
+            name: "PingShared",
+            targets: ["PingShared"]
         ),
     ],
     dependencies: [
@@ -19,7 +19,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "MakoShared",
+            name: "PingShared",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
@@ -28,9 +28,9 @@ let package = Package(
             sources: ["Shared"]
         ),
         .testTarget(
-            name: "MakoSharedTests",
+            name: "PingSharedTests",
             dependencies: [
-                "MakoShared",
+                "PingShared",
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
             ],
             path: "Tests/MakoSharedTests"

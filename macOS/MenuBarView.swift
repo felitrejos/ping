@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MenuBarView: View {
-    @Environment(MakoStore.self) private var store
+    @Environment(PingStore.self) private var store
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {

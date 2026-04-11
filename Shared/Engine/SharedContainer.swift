@@ -6,7 +6,7 @@ public final class SharedContainer {
     public let realtimeService: FGCRealtimeService
     public let calendarService: CalendarService
     public let engine: CommuteEngine
-    public let store: MakoStore
+    public let store: PingStore
 
     public init(bundle: Bundle = .main) {
         let zipURL = bundle.url(
@@ -22,7 +22,7 @@ public final class SharedContainer {
             realtimeService: realtimeService,
             calendarService: calendarService
         )
-        store = MakoStore(
+        store = PingStore(
             engine: engine,
             staticService: staticService,
             calendarService: calendarService,

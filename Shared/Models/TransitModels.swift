@@ -164,11 +164,11 @@ public enum UserSettings {
     public static let defaultDestinationStationID = "SR"
 
     public enum Keys {
-        public static let homeStationID = "mako.userHomeStation"
-        public static let destinationStationID = "mako.destinationStation"
-        public static let walkingMinutes = "mako.walkingMinutes"
-        public static let bufferMinutes = "mako.bufferMinutes"
-        public static let selectedLine = "mako.selectedLine"
+        public static let homeStationID = "ping.userHomeStation"
+        public static let destinationStationID = "ping.destinationStation"
+        public static let walkingMinutes = "ping.walkingMinutes"
+        public static let bufferMinutes = "ping.bufferMinutes"
+        public static let selectedLine = "ping.selectedLine"
     }
 
     public static let defaultWalkingMinutes = 8

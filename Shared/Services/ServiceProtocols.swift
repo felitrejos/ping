@@ -6,6 +6,7 @@ public protocol StaticServiceProviding: Sendable {
     func availableLines() async throws -> [String]
     func stopsForLine(_ lineName: String) async throws -> [Stop]
     func searchStops(matching query: String) async throws -> [Stop]
+    func lineForRoute(origin: StopID, destination: StopID) async throws -> String?
 }
 
 public protocol RealtimeServiceProviding: Sendable {

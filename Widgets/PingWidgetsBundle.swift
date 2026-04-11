@@ -3,9 +3,9 @@ import SwiftUI
 import WidgetKit
 
 @main
-struct MakoWidgetsBundle: WidgetBundle {
+struct PingWidgetsBundle: WidgetBundle {
     var body: some Widget {
-        MakoLiveActivityWidget()
+        PingLiveActivityWidget()
     }
 }
 #endif
