@@ -42,12 +42,26 @@ public actor CommuteEngine {
             let minutes = max(0, Int((effectiveTime.timeIntervalSince(now) / 60.0).rounded(.awayFromZero)))
             return LiveDeparture(
                 scheduledTime: departure.departureTime,
+                arrivalTime: departure.arrivalTime,
                 delaySeconds: delaySeconds,
                 trainLabel: "\(departure.routeShortName) \(departure.headsign)",
                 minutesUntilDeparture: minutes,
                 tripID: departure.tripID,
                 destinationStopID: destination
             )
+        }
+    }
+
+    /// Returns the next train you can actually catch given walking + buffer time.
+    public func bestCatchableDeparture(from origin: StopID, to destination: StopID) async throws -> LiveDeparture? {
+        let now = clock.now
+        let walkingSeconds = TimeInterval(walkingMinutesProvider() * 60)
+        let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
+        let leaveNowCutoff = walkingSeconds + bufferSeconds
+
+        let candidates = try await upcomingDepartures(from: origin, to: destination, limit: 10)
+        return candidates.first { dep in
+            dep.effectiveDepartureTime.timeIntervalSince(now) >= leaveNowCutoff
         }
     }
 
@@ -88,6 +102,7 @@ public actor CommuteEngine {
             liveOptions.append(
                 LiveDeparture(
                     scheduledTime: departure.departureTime,
+                    arrivalTime: departure.arrivalTime,
                     delaySeconds: delaySeconds,
                     trainLabel: "\(departure.routeShortName) \(departure.headsign)",
                     minutesUntilDeparture: minutesUntil,

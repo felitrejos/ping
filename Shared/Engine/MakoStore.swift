@@ -7,7 +7,6 @@ public final class MakoStore {
     public var nextDeparture: LiveDeparture?
     public var nextCommute: CommutePlan?
     public var commutePlans: [CommutePlan] = []
-    public var upcomingTrains: [LiveDeparture] = []
     public var availableStops: [Stop] = []
     public var availableLines: [String] = []
     public var lineStops: [Stop] = []
@@ -101,8 +100,7 @@ public final class MakoStore {
             await reloadLineStops()
             commutePlans = try await engine.commutePlans(within: 12)
             nextCommute = commutePlans.first
-            nextDeparture = try await defaultNextDeparture()
-            upcomingTrains = try await defaultUpcomingTrains()
+            nextDeparture = try await defaultBestDeparture()
             lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
@@ -134,7 +132,7 @@ public final class MakoStore {
         await calendarService.userDestinationStation()
     }
 
-    private func defaultNextDeparture() async throws -> LiveDeparture? {
+    private func defaultBestDeparture() async throws -> LiveDeparture? {
         guard
             let homeStopID = await calendarService.userHomeStation(),
             let destination = await calendarService.userDestinationStation()
@@ -142,18 +140,7 @@ public final class MakoStore {
             return nil
         }
 
-        return try await engine.nextDeparture(from: homeStopID, to: destination)
-    }
-
-    private func defaultUpcomingTrains() async throws -> [LiveDeparture] {
-        guard
-            let homeStopID = await calendarService.userHomeStation(),
-            let destination = await calendarService.userDestinationStation()
-        else {
-            return []
-        }
-
-        return try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 5)
+        return try await engine.bestCatchableDeparture(from: homeStopID, to: destination)
     }
 
     private func reloadLineStops() async {

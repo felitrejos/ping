@@ -62,6 +62,7 @@ public struct CommuteEvent: Codable, Equatable, Identifiable, Sendable {
 
 public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
     public let scheduledTime: Date
+    public let arrivalTime: Date
     public let delaySeconds: Int
     public let trainLabel: String
     public let minutesUntilDeparture: Int
@@ -70,6 +71,10 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
 
     public var effectiveDepartureTime: Date {
         scheduledTime.addingTimeInterval(TimeInterval(delaySeconds))
+    }
+
+    public var effectiveArrivalTime: Date {
+        arrivalTime.addingTimeInterval(TimeInterval(delaySeconds))
     }
 
     public var isDelayed: Bool {
@@ -90,6 +95,7 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
 
     public init(
         scheduledTime: Date,
+        arrivalTime: Date,
         delaySeconds: Int,
         trainLabel: String,
         minutesUntilDeparture: Int,
@@ -97,6 +103,7 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
         destinationStopID: StopID
     ) {
         self.scheduledTime = scheduledTime
+        self.arrivalTime = arrivalTime
         self.delaySeconds = delaySeconds
         self.trainLabel = trainLabel
         self.minutesUntilDeparture = minutesUntilDeparture

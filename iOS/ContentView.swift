@@ -78,7 +78,7 @@ struct ContentView: View {
     private var upcomingTrainsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Upcoming trains")
+                Text("Next train")
                     .font(.headline)
                 Spacer()
                 if store.isRefreshing {
@@ -87,24 +87,15 @@ struct ContentView: View {
                 }
             }
 
-            if store.upcomingTrains.isEmpty {
-                Text(store.hasConfiguredRoute ? "No upcoming trains found." : "Choose an origin and destination to see departures.")
+            if let dep = store.nextDeparture {
+                TrainTileView(departure: dep)
+            } else {
+                Text(store.hasConfiguredRoute ? "No catchable trains right now." : "Choose an origin and destination to see departures.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
                     .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
-            } else {
-                ScrollView(.horizontal) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(store.upcomingTrains) { departure in
-                            TrainTileView(departure: departure)
-                        }
-                    }
-                    .scrollTargetLayout()
-                }
-                .scrollIndicators(.hidden)
-                .scrollTargetBehavior(.viewAligned)
             }
         }
     }
