@@ -28,8 +28,9 @@ struct MakoMacApp: App {
             return "🚆 Setup"
         }
 
-        if let minutes = store.nextDeparture?.minutesUntilDeparture {
-            return "🚆 \(minutes)"
+        if let dep = store.nextDeparture {
+            let leaveIn = max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes())
+            return "🚆 \(leaveIn) min"
         }
         return "🚆 --"
     }

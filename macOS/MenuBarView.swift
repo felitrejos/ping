@@ -31,7 +31,7 @@ struct MenuBarView: View {
 
             if let plan = store.nextCommute {
                 Divider()
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "calendar")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -51,21 +51,29 @@ struct MenuBarView: View {
                 Button("Settings") { openSettings() }
                     .font(.caption)
                     .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(12)
-        .frame(width: 260)
+        .frame(width: 240)
     }
 
     private func trainCard(_ dep: LiveDeparture) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
+            // Destination
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.right")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(destinationName)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+
             // "Leave in X min"
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text("Leave in")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
                 Text("\(max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes()))")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                 Text("min")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
@@ -76,26 +84,27 @@ struct MenuBarView: View {
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
                         .foregroundStyle(.orange)
-                        .background(Color.orange.opacity(0.12), in: Capsule())
+                        .background(Color.orange.opacity(0.15), in: Capsule())
                 }
             }
 
-            // Train info
-            Text(dep.trainLabel)
-                .font(.caption.weight(.medium))
-
-            // Departure → Arrival
-            HStack(spacing: 4) {
-                Text("Departs")
+            // Departs · Arrives
+            HStack(spacing: 0) {
+                Text("Departs ")
                     .foregroundStyle(.secondary)
                 Text(dep.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))
-                Text("·")
+                Text("  ·  ")
                     .foregroundStyle(.tertiary)
-                Text("Arrives")
+                Text("Arrives ")
                     .foregroundStyle(.secondary)
                 Text(dep.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
             }
             .font(.caption)
         }
+    }
+
+    private var destinationName: String {
+        guard let dep = store.nextDeparture else { return "" }
+        return store.availableStops.first(where: { $0.id == dep.destinationStopID })?.name ?? dep.destinationStopID
     }
 }
