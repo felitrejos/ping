@@ -69,7 +69,9 @@ public final class MakoStore {
             await refresh()
             let stream = await realtimeService.updates()
             for await _ in stream {
+                guard !Task.isCancelled else { break }
                 await refresh()
+                try? await Task.sleep(for: .seconds(10))
             }
         }
     }
