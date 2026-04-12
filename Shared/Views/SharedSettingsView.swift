@@ -15,6 +15,8 @@ public struct SharedSettingsView: View {
     @State private var isEditingDestination = false
     @State private var selectedOriginName: String?
     @State private var selectedDestinationName: String?
+    @State private var originSearchTask: Task<Void, Never>?
+    @State private var destinationSearchTask: Task<Void, Never>?
     @FocusState private var originFocused: Bool
     @FocusState private var destinationFocused: Bool
     #endif
@@ -72,15 +74,16 @@ public struct SharedSettingsView: View {
                 isEditing: $isEditingOrigin,
                 focused: $originFocused,
                 selectedName: $selectedOriginName,
+                onQueryChanged: scheduleOriginSearch,
                 onClear: {
                     Task { await store.setHomeStation(nil) }
                 }
             ) { stop in
+                isEditingOrigin = false
+                originFocused = false
                 selectedOriginName = stop.name
                 originQuery = stop.name
                 originResults = []
-                isEditingOrigin = false
-                originFocused = false
                 Task { await store.setHomeStation(stop.id) }
             }
 
@@ -92,15 +95,16 @@ public struct SharedSettingsView: View {
                 isEditing: $isEditingDestination,
                 focused: $destinationFocused,
                 selectedName: $selectedDestinationName,
+                onQueryChanged: scheduleDestinationSearch,
                 onClear: {
                     Task { await store.setDestinationStation(nil) }
                 }
             ) { stop in
+                isEditingDestination = false
+                destinationFocused = false
                 selectedDestinationName = stop.name
                 destinationQuery = stop.name
                 destinationResults = []
-                isEditingDestination = false
-                destinationFocused = false
                 Task { await store.setDestinationStation(stop.id) }
             }
 
@@ -124,6 +128,8 @@ public struct SharedSettingsView: View {
         selectedDestinationName = nil
         originResults = []
         destinationResults = []
+        originSearchTask?.cancel()
+        destinationSearchTask?.cancel()
         originFocused = false
         destinationFocused = false
         isEditingOrigin = false
@@ -138,6 +144,7 @@ public struct SharedSettingsView: View {
         isEditing: Binding<Bool>,
         focused: FocusState<Bool>.Binding,
         selectedName: Binding<String?>,
+        onQueryChanged: @escaping (String) -> Void,
         onClear: @escaping () -> Void,
         onSelect: @escaping (Stop) -> Void
     ) -> some View {
@@ -153,13 +160,8 @@ public struct SharedSettingsView: View {
                     .padding(.trailing, 28)
                     .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 10))
                     .onChange(of: query.wrappedValue) { _, newValue in
-                        Task {
-                            if newValue.isEmpty {
-                                results.wrappedValue = []
-                            } else {
-                                results.wrappedValue = await store.searchStops(matching: newValue)
-                            }
-                        }
+                        guard isEditing.wrappedValue else { return }
+                        onQueryChanged(newValue)
                     }
                     .onChange(of: focused.wrappedValue) { _, isFocused in
                         if isFocused {
@@ -217,6 +219,36 @@ public struct SharedSettingsView: View {
                 }
                 .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 8))
             }
+        }
+    }
+
+    private func scheduleOriginSearch(_ query: String) {
+        originSearchTask?.cancel()
+        originSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(220))
+            guard !Task.isCancelled else { return }
+
+            if query.isEmpty {
+                originResults = []
+                return
+            }
+
+            originResults = await store.searchStops(matching: query)
+        }
+    }
+
+    private func scheduleDestinationSearch(_ query: String) {
+        destinationSearchTask?.cancel()
+        destinationSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(220))
+            guard !Task.isCancelled else { return }
+
+            if query.isEmpty {
+                destinationResults = []
+                return
+            }
+
+            destinationResults = await store.searchStops(matching: query)
         }
     }
 

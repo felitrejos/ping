@@ -24,8 +24,7 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
             ],
-            path: ".",
-            sources: ["Shared"]
+            path: "Shared"
         ),
         .testTarget(
             name: "PingSharedTests",

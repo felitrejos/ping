@@ -27,10 +27,6 @@ public actor CommuteEngine {
         self.originCandidatesProvider = originCandidatesProvider
     }
 
-    public func refresh() async {
-        await realtimeService.refresh()
-    }
-
     public func upcomingDepartures(from origin: StopID, to destination: StopID, limit: Int) async throws -> [LiveDeparture] {
         let now = clock.now
         let scheduled = try await staticService.departuresBetween(origin: origin, destination: destination, after: now)

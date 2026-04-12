@@ -595,7 +595,10 @@ struct ContentView: View {
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
 
-                    if let calendarRouteDetail = calendarRouteDetail(for: plan) {
+                    if let calendarRouteDetail = CommutePresentation.calendarRouteDetail(
+                        for: plan,
+                        availableStops: store.availableStops
+                    ) {
                         Text(calendarRouteDetail)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -681,27 +684,6 @@ struct ContentView: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func calendarRouteDetail(for plan: CommutePlan) -> String? {
-        var parts: [String] = []
-        if let location = plan.calendarEvent.location, !location.isEmpty {
-            parts.append(location)
-        }
-        if let originName = store.availableStops.first(where: { $0.id == plan.originStationID })?.name {
-            parts.append("from \(originName)")
-        }
-        if let stationName = store.availableStops.first(where: { $0.id == plan.destinationStationID })?.name {
-            let nearestResolved = plan.calendarEvent.resolvedStation
-            let isFallbackDestination = nearestResolved != nil && nearestResolved != plan.destinationStationID
-            if isFallbackDestination {
-                parts.append("best reachable station: \(stationName)")
-            } else {
-                parts.append("destination station: \(stationName)")
-            }
-        }
-
-        return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
 
     private func applyCommutePlan(_ plan: CommutePlan) {

@@ -145,7 +145,10 @@ struct MenuBarView: View {
                     Text(plan.calendarEvent.title)
                         .font(.callout)
                         .lineLimit(1)
-                    if let detail = calendarRouteDetail(for: plan) {
+                    if let detail = CommutePresentation.calendarRouteDetail(
+                        for: plan,
+                        availableStops: store.availableStops
+                    ) {
                         Text(detail)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -160,27 +163,6 @@ struct MenuBarView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-    }
-
-    private func calendarRouteDetail(for plan: CommutePlan) -> String? {
-        var parts: [String] = []
-        if let location = plan.calendarEvent.location, !location.isEmpty {
-            parts.append(location)
-        }
-        if let originName = store.availableStops.first(where: { $0.id == plan.originStationID })?.name {
-            parts.append("from \(originName)")
-        }
-        if let stationName = store.availableStops.first(where: { $0.id == plan.destinationStationID })?.name {
-            let nearestResolved = plan.calendarEvent.resolvedStation
-            let isFallbackDestination = nearestResolved != nil && nearestResolved != plan.destinationStationID
-            if isFallbackDestination {
-                parts.append("best reachable station: \(stationName)")
-            } else {
-                parts.append("destination station: \(stationName)")
-            }
-        }
-
-        return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
 
     // MARK: - Footer

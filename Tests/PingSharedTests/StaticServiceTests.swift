@@ -97,7 +97,7 @@ private func makeFixtureZip() throws -> URL {
         try archive.addEntry(
             with: fileName,
             type: .file,
-            uncompressedSize: UInt32(data.count),
+            uncompressedSize: Int64(data.count),
             provider: { position, size in
                 let lowerBound = Int(position)
                 let upperBound = lowerBound + size

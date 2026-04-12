@@ -123,7 +123,7 @@ public final class PingStore {
             if await calendarService.authorizationStatus() == .notDetermined {
                 calendarAuthorization = await calendarService.requestAccess()
             }
-            requestLocationAccess()
+            requestLocationAccess(shouldRefreshAfterAuthorization: false)
             await checkForGTFSUpdate()
             await realtimeService.startPolling()
             await refresh()
@@ -187,11 +187,20 @@ public final class PingStore {
         await refresh()
     }
 
-    public func requestLocationAccess() {
+    public func requestLocationAccess(shouldRefreshAfterAuthorization: Bool = true) {
         Task {
+            let previousStatus = locationAuthorizationStatus
             await locationService?.requestAuthorization()
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
-            await refresh()
+            guard shouldRefreshAfterAuthorization else {
+                return
+            }
+
+            // Refresh when authorization changed, or when already authorized so location-dependent
+            // features (e.g. closest-origin automation) can update immediately.
+            if locationAuthorizationStatus != previousStatus || isLocationAccessGranted {
+                await refresh()
+            }
         }
     }
 

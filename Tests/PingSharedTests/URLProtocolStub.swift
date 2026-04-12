@@ -26,7 +26,9 @@ enum StubbedResponse {
 }
 
 final class URLProtocolStub: URLProtocol, @unchecked Sendable {
-    nonisolated(unsafe) static var responses: [URL: StubbedResponse] = [:]
+    fileprivate static let stubIDHeader = "X-URLProtocol-Stub-ID"
+    nonisolated(unsafe) private static var responsesByStubID: [String: [URL: StubbedResponse]] = [:]
+    private static let lock = NSLock()
 
     override class func canInit(with request: URLRequest) -> Bool {
         true
@@ -37,7 +39,11 @@ final class URLProtocolStub: URLProtocol, @unchecked Sendable {
     }
 
     override func startLoading() {
-        guard let url = request.url, let response = Self.responses[url] else {
+        guard
+            let url = request.url,
+            let stubID = request.value(forHTTPHeaderField: Self.stubIDHeader),
+            let response = Self.response(for: stubID, url: url)
+        else {
             client?.urlProtocol(self, didFailWithError: URLError(.badURL))
             return
         }
@@ -54,13 +60,29 @@ final class URLProtocolStub: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+
+    private static func response(for stubID: String, url: URL) -> StubbedResponse? {
+        lock.lock()
+        defer { lock.unlock() }
+        return responsesByStubID[stubID]?[url]
+    }
+
+    fileprivate static func setResponses(_ responses: [URL: StubbedResponse], for stubID: String) {
+        lock.lock()
+        responsesByStubID[stubID] = responses
+        lock.unlock()
+    }
 }
 
 extension URLSession {
     static func stubbed(with responses: [URL: StubbedResponse]) -> URLSession {
-        URLProtocolStub.responses.merge(responses) { _, new in new }
+        let stubID = UUID().uuidString
+        URLProtocolStub.setResponses(responses, for: stubID)
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [URLProtocolStub.self]
+        configuration.httpAdditionalHeaders = [
+            URLProtocolStub.stubIDHeader: stubID,
+        ]
         return URLSession(configuration: configuration)
     }
 }
