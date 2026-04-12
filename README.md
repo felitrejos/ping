@@ -26,7 +26,7 @@
 `Ping` helps you quickly pick an FGC route and decide when to leave.
 
 - Find the best next train between two FGC stations
-- See upcoming departures and real-time delay-aware leave times
+- See upcoming departures (next 12h) and real-time delay-aware leave times
 - Save favorite stations for quick route switching
 - Use calendar-aware commute suggestions in one tap
 - Follow live train positions on the map for your active line
@@ -65,8 +65,8 @@ Dependencies:
 ## Quickstart
 
 1. Launch the app target you want to test (iOS or macOS).
-2. Grant calendar/location permissions when prompted.
-3. Set origin and destination stations.
+2. Grant calendar/location permissions (or use the in-app enable buttons).
+3. Pick origin and destination stations from the station picker.
 4. Tap `Search routes` to load trains.
 5. (Optional) Add favorites in Settings for faster switching.
 
@@ -84,7 +84,7 @@ User settings are stored with `UserDefaults`:
 
 - origin station
 - destination station
-- walking minutes to station
+- favorite stations
 - buffer minutes before departure
 - whether to pick the closest FGC station as the origin on app start
 

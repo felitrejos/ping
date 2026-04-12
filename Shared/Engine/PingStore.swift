@@ -15,6 +15,7 @@ public final class PingStore {
     public var lineStops: [Stop] = []
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
     public var geoTrainUnits: [GeoTrainUnit] = []
+    public var activeServiceAlerts: [ServiceAlert] = []
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
@@ -23,12 +24,11 @@ public final class PingStore {
     public private(set) var homeStationID: StopID?
     public private(set) var destinationStationID: StopID?
     public private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
-    public private(set) var manualWalkingMinutes: Int = UserSettings.walkingMinutes()
 
     /// Dynamic walking ETA in minutes from current location to origin station.
-    /// Falls back to the manual setting when location is unavailable.
+    /// Returns 0 when location-based ETA is unavailable.
     public var walkingMinutes: Int {
-        dynamicWalkingMinutes ?? manualWalkingMinutes
+        dynamicWalkingMinutes ?? 0
     }
 
     /// Whether the walking time is based on live location (true) or the manual fallback (false).
@@ -82,6 +82,7 @@ public final class PingStore {
     private let locationService: LocationProviding?
     private let walkingETAService: WalkingETAProviding?
     private let geoTrainService: GeoTrainServiceProviding?
+    private let serviceAlertsService: ServiceAlertsProviding?
     private let gtfsUpdateService: GTFSUpdateService?
     private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
@@ -95,6 +96,7 @@ public final class PingStore {
         locationService: LocationProviding? = nil,
         walkingETAService: WalkingETAProviding? = nil,
         geoTrainService: GeoTrainServiceProviding? = nil,
+        serviceAlertsService: ServiceAlertsProviding? = nil,
         gtfsUpdateService: GTFSUpdateService? = nil,
         bundledGTFSURL: URL? = nil
     ) {
@@ -105,6 +107,7 @@ public final class PingStore {
         self.locationService = locationService
         self.walkingETAService = walkingETAService
         self.geoTrainService = geoTrainService
+        self.serviceAlertsService = serviceAlertsService
         self.gtfsUpdateService = gtfsUpdateService
         self.bundledGTFSURL = bundledGTFSURL
         Task {
@@ -157,7 +160,6 @@ public final class PingStore {
             homeStationID = await calendarService.userHomeStation()
             destinationStationID = await calendarService.userDestinationStation()
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
-            manualWalkingMinutes = UserSettings.walkingMinutes()
             favoriteStationIDs = UserSettings.favoriteStationIDs()
             availableStops = try await staticService.allStops()
             availableLines = try await staticService.availableLines()
@@ -169,6 +171,7 @@ public final class PingStore {
             upcomingDepartures = try await defaultUpcomingDepartures()
             configuredRouteStopsList = await configuredRouteStops()
             await refreshGeoTrainUnits()
+            await refreshServiceAlerts()
             lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
@@ -176,6 +179,7 @@ public final class PingStore {
             upcomingDepartures = []
             configuredRouteStopsList = []
             geoTrainUnits = []
+            activeServiceAlerts = []
             lastUpdated = Date()
         }
     }
@@ -194,14 +198,6 @@ public final class PingStore {
             await locationService?.requestAuthorization()
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
             await refresh()
-        }
-    }
-
-    public func setManualWalkingMinutes(_ minutes: Int) {
-        UserSettings.setWalkingMinutes(minutes)
-        manualWalkingMinutes = minutes
-        if !isUsingLiveLocation {
-            Task { await refresh() }
         }
     }
 
@@ -245,6 +241,19 @@ public final class PingStore {
         }
     }
 
+    public func refreshServiceAlerts() async {
+        guard let serviceAlertsService else {
+            activeServiceAlerts = []
+            return
+        }
+
+        do {
+            activeServiceAlerts = try await serviceAlertsService.fetchAlerts()
+        } catch {
+            activeServiceAlerts = []
+        }
+    }
+
     public func clearDefaultRoute() async {
         await calendarService.setUserHomeStation(nil)
         await calendarService.setUserDestinationStation(nil)
@@ -257,6 +266,7 @@ public final class PingStore {
         upcomingDepartures = []
         configuredRouteStopsList = []
         geoTrainUnits = []
+        activeServiceAlerts = []
         await refresh()
     }
 
@@ -319,6 +329,10 @@ public final class PingStore {
     }
 
     private func defaultBestDeparture() async throws -> LiveDeparture? {
+        guard isUsingLiveLocation else {
+            return nil
+        }
+
         let resolvedHomeStationID: StopID?
         if let homeStationID {
             resolvedHomeStationID = homeStationID
@@ -344,6 +358,10 @@ public final class PingStore {
     }
 
     private func defaultUpcomingDepartures() async throws -> [LiveDeparture] {
+        guard isUsingLiveLocation else {
+            return []
+        }
+
         let resolvedHomeStationID: StopID?
         if let homeStationID {
             resolvedHomeStationID = homeStationID
@@ -365,7 +383,7 @@ public final class PingStore {
             return []
         }
 
-        let candidates = try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 180)
+        let candidates = try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 500)
         let now = Date()
         let leaveNowCutoff = now.addingTimeInterval(TimeInterval((walkingMinutes + UserSettings.bufferMinutes()) * 60))
         let horizon = now.addingTimeInterval(12 * 60 * 60)

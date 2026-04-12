@@ -325,10 +325,13 @@ extension FGCStaticService {
 
     private func candidateServiceDays(for date: Date) -> [Date] {
         let startOfToday = calendar.startOfDay(for: date)
-        guard let previousDay = calendar.date(byAdding: .day, value: -1, to: startOfToday) else {
+        guard
+            let previousDay = calendar.date(byAdding: .day, value: -1, to: startOfToday),
+            let nextDay = calendar.date(byAdding: .day, value: 1, to: startOfToday)
+        else {
             return [startOfToday]
         }
-        return [previousDay, startOfToday]
+        return [previousDay, startOfToday, nextDay]
     }
 
     private func parseGTFSSeconds(from time: String) -> Int {

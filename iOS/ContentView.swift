@@ -2,11 +2,15 @@ import SwiftUI
 #if canImport(ActivityKit)
 import ActivityKit
 #endif
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Home tab
 
 struct ContentView: View {
     @Environment(PingStore.self) private var store
+    @Environment(\.openURL) private var openURL
     @State private var tracker = CommuteTracker()
     @State private var originQuery = ""
     @State private var destinationQuery = ""
@@ -21,26 +25,44 @@ struct ContentView: View {
     @FocusState private var originFocused: Bool
     @FocusState private var destinationFocused: Bool
     @State private var activeFavoritePopoverStopID: StopID?
+    @State private var activeStationPicker: StationPickerTarget?
     @State private var routeSearchCommitted = false
     @State private var isSearchingRoute = false
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                pingHeader
-                routeSection
-                quickSwitchSection
-                searchRoutesButton
-                statusBanner
-                primaryCard
-                upcomingDeparturesSection
-                if let plan = nextCalendarCommute {
-                    commuteRow(plan)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    pingHeader
+                    routeSection
+                    quickSwitchSection
+                    searchRoutesButton
+                    serviceAlertsSection
+                    statusBanner
+                    calendarSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
+            }
+            .navigationDestination(isPresented: $routeSearchCommitted) {
+                resultsScreen
+            }
+        }
+        .sheet(item: $activeStationPicker) { target in
+            NavigationStack {
+                StationPickerSheet(
+                    stops: store.availableStops,
+                    title: target == .origin ? "Choose Origin" : "Choose Destination"
+                ) { stop in
+                    if target == .origin {
+                        setPendingOrigin(stop.id)
+                    } else {
+                        setPendingDestination(stop.id)
+                    }
+                    activeStationPicker = nil
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
         }
         .gesture(
             TapGesture().onEnded { dismissStationFocus() },
@@ -66,6 +88,21 @@ struct ContentView: View {
         }
     }
 
+    private var resultsScreen: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                serviceAlertsSection
+                primaryCard
+                upcomingDeparturesSection
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
+        }
+        .navigationTitle("Results")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
     private var pingHeader: some View {
         HStack(alignment: .center, spacing: 8) {
             headerIcon
@@ -81,17 +118,6 @@ struct ContentView: View {
 
             Spacer()
 
-            if store.hasConfiguredDefaultRoute {
-                Button(role: .destructive) {
-                    clearRouteFields()
-                    Task { await store.clearDefaultRoute() }
-                } label: {
-                    Label("Clear route", systemImage: "xmark.circle")
-                        .font(.subheadline.weight(.semibold))
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.regular)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 2)
@@ -109,53 +135,19 @@ struct ContentView: View {
         VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 10) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("ORIGIN")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .tracking(0.3)
-                        .padding(.bottom, 4)
-
-                    stationInput(
-                        placeholder: "Search station",
-                        query: $originQuery,
-                        results: $originResults,
-                        isEditing: $isEditingOrigin,
-                        focused: $originFocused,
-                        selectedName: $selectedOriginName,
-                        onClear: {
-                            selectedOriginID = nil
-                        }
-                    ) { stop in
-                        selectedOriginID = stop.id
-                        selectedOriginName = stop.name
-                        originQuery = stop.name
-                        originFocused = false
-                        isEditingOrigin = false
+                    stationPickerField(
+                        title: "ORIGIN",
+                        value: selectedOriginName ?? "Choose station"
+                    ) {
+                        activeStationPicker = .origin
                     }
 
-                    Text("DESTINATION")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .tracking(0.3)
-                        .padding(.top, 14)
-                        .padding(.bottom, 4)
-
-                    stationInput(
-                        placeholder: "Search station",
-                        query: $destinationQuery,
-                        results: $destinationResults,
-                        isEditing: $isEditingDestination,
-                        focused: $destinationFocused,
-                        selectedName: $selectedDestinationName,
-                        onClear: {
-                            selectedDestinationID = nil
-                        }
-                    ) { stop in
-                        selectedDestinationID = stop.id
-                        selectedDestinationName = stop.name
-                        destinationQuery = stop.name
-                        destinationFocused = false
-                        isEditingDestination = false
+                    stationPickerField(
+                        title: "DESTINATION",
+                        value: selectedDestinationName ?? "Choose station",
+                        topPadding: 14
+                    ) {
+                        activeStationPicker = .destination
                     }
                 }
 
@@ -181,12 +173,12 @@ struct ContentView: View {
 
     @ViewBuilder
     private var quickSwitchSection: some View {
-        if !store.favoriteStations.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Favorites")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Favorites")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
 
+            if !store.favoriteStations.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         ForEach(store.favoriteStations) { stop in
@@ -239,28 +231,68 @@ struct ContentView: View {
                     .padding(.horizontal, 16)
                 }
                 .padding(.horizontal, -16)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "star")
+                        .foregroundStyle(.secondary)
+                    Text("Add favorite stations in Settings for quick route switching.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
             }
-            .padding(.top, -2)
         }
+        .padding(.top, -2)
     }
 
     private var searchRoutesButton: some View {
-        Button {
-            Task { await searchRoutes() }
-        } label: {
-            HStack {
-                if isSearchingRoute {
-                    ProgressView()
-                        .controlSize(.small)
+        VStack(spacing: 10) {
+            Button {
+                if !store.isUsingLiveLocation {
+                    if store.isLocationAccessDenied {
+                        openAppSettings()
+                    } else {
+                        store.requestLocationAccess()
+                    }
+                    return
                 }
-                Text(isSearchingRoute ? "Searching..." : "Search routes")
+                Task { await searchRoutes() }
+            } label: {
+                HStack {
+                    if isSearchingRoute {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                    Text(searchRoutesButtonTitle)
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
             }
-            .font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity)
+            .buttonStyle(.borderedProminent)
+            .tint(store.isUsingLiveLocation ? .blue : .orange)
+            .controlSize(.large)
+            .disabled(isSearchingRoute || (store.isUsingLiveLocation && !hasPendingDefaultRoute))
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(!hasPendingDefaultRoute || isSearchingRoute)
+    }
+
+    private var searchRoutesButtonTitle: String {
+        if isSearchingRoute {
+            return "Searching..."
+        }
+        if !store.isUsingLiveLocation {
+            return store.isLocationAccessDenied ? "Open settings to enable location" : "Enable location to search routes"
+        }
+        return "Search routes"
+    }
+
+    private func openAppSettings() {
+        #if canImport(UIKit)
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
+        }
+        #endif
     }
 
     private func favoritePopoverBinding(for stopID: StopID) -> Binding<Bool> {
@@ -437,6 +469,42 @@ struct ContentView: View {
         }
     }
 
+    private func stationPickerField(
+        title: String,
+        value: String,
+        topPadding: CGFloat = 0,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.3)
+                .padding(.top, topPadding)
+                .padding(.bottom, 4)
+
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Text(value)
+                        .font(.title3)
+                        .foregroundStyle(selectedLabelColor(for: value))
+                        .lineLimit(1)
+                    Spacer()
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func selectedLabelColor(for value: String) -> Color {
+        value == "Choose station" ? .secondary : .primary
+    }
+
     private func prefillStationNames(from stops: [Stop]) async {
         let originID = await store.selectedHomeStationID()
         let destID = await store.selectedDestinationStationID()
@@ -466,20 +534,116 @@ struct ContentView: View {
 
     @ViewBuilder
     private var statusBanner: some View {
-        if !routeSearchCommitted {
-            NoticeCard(
-                title: "Set your origin and destination, then tap Search routes.",
-                message: nil,
-                systemImage: "magnifyingglass",
-                tint: .blue
-            )
-        } else if let msg = store.lastErrorMessage {
+        if let msg = store.lastErrorMessage {
             NoticeCard(
                 title: "Could not refresh",
                 message: msg,
                 systemImage: "exclamationmark.triangle.fill",
                 tint: .orange
             )
+        }
+    }
+
+    @ViewBuilder
+    private var serviceAlertsSection: some View {
+        let alerts = actionableServiceAlerts
+        if !alerts.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                if let primaryAlert = alerts.max(by: { severityRank($0.severity) < severityRank($1.severity) }) {
+                    NoticeCard(
+                        title: primaryAlert.title,
+                        message: primaryAlert.details,
+                        systemImage: "exclamationmark.triangle.fill",
+                        tint: severityColor(primaryAlert.severity)
+                    )
+                }
+
+                if !lineStatusRows.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(lineStatusRows) { row in
+                                HStack(spacing: 6) {
+                                    Text(row.line)
+                                        .font(.caption2.weight(.bold))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 28, height: 20)
+                                        .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                                    Text(severityLabel(row.severity))
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(severityColor(row.severity))
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                                .background(Color(.secondarySystemBackground), in: Capsule())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var lineStatusRows: [LineStatusRow] {
+        var severityByLine: [String: ServiceAlertSeverity] = [:]
+        for alert in actionableServiceAlerts {
+            for line in alert.affectedLines {
+                let current = severityByLine[line]
+                if let current {
+                    if severityRank(alert.severity) > severityRank(current) {
+                        severityByLine[line] = alert.severity
+                    }
+                } else {
+                    severityByLine[line] = alert.severity
+                }
+            }
+        }
+
+        return severityByLine
+            .map { LineStatusRow(line: $0.key, severity: $0.value) }
+            .sorted { $0.line.localizedStandardCompare($1.line) == .orderedAscending }
+    }
+
+    private var actionableServiceAlerts: [ServiceAlert] {
+        store.activeServiceAlerts.filter { $0.severity != .info }
+    }
+
+    private func severityRank(_ severity: ServiceAlertSeverity) -> Int {
+        switch severity {
+        case .info:
+            0
+        case .minor:
+            1
+        case .major:
+            2
+        case .closure:
+            3
+        }
+    }
+
+    private func severityColor(_ severity: ServiceAlertSeverity) -> Color {
+        switch severity {
+        case .info:
+            .blue
+        case .minor:
+            .yellow
+        case .major:
+            .orange
+        case .closure:
+            .red
+        }
+    }
+
+    private func severityLabel(_ severity: ServiceAlertSeverity) -> String {
+        switch severity {
+        case .info:
+            "Info"
+        case .minor:
+            "Minor"
+        case .major:
+            "Major"
+        case .closure:
+            "Closure"
         }
     }
 
@@ -518,7 +682,7 @@ struct ContentView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 260)
+                .frame(maxHeight: 420)
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
             }
         }
@@ -604,6 +768,67 @@ struct ContentView: View {
             .controlSize(.small)
         }
         .padding(14)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var calendarSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Calendar")
+                .font(.headline)
+
+            if !store.calendarAuthorization.isAuthorized {
+                calendarAccessCard
+            } else if let plan = nextCalendarCommute {
+                commuteRow(plan)
+            } else {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("No upcoming calendar commutes")
+                            .font(.subheadline.weight(.semibold))
+                        Text("Add events with a location to see route suggestions here.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    private var calendarAccessCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "calendar.badge.exclamationmark")
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Enable calendar access")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Allow calendar access to get commute suggestions from your upcoming events.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Button {
+                if store.calendarAuthorization == .denied || store.calendarAuthorization == .restricted {
+                    openAppSettings()
+                } else {
+                    Task { await store.requestCalendarAccess() }
+                }
+            } label: {
+                Text(store.calendarAuthorization == .denied || store.calendarAuthorization == .restricted ? "Open settings" : "Enable calendar")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.regular)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
@@ -949,6 +1174,65 @@ private struct NoTrainsCard: View {
         .frame(maxWidth: .infinity)
         .padding(32)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+private struct LineStatusRow: Identifiable {
+    let line: String
+    let severity: ServiceAlertSeverity
+
+    var id: String {
+        line
+    }
+}
+
+private enum StationPickerTarget: String, Identifiable {
+    case origin
+    case destination
+
+    var id: String {
+        rawValue
+    }
+}
+
+private struct StationPickerSheet: View {
+    let stops: [Stop]
+    let title: String
+    let onSelect: (Stop) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+
+    private var filteredStops: [Stop] {
+        stops
+            .filter { query.isEmpty || $0.name.localizedStandardContains(query) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        List {
+            ForEach(filteredStops) { stop in
+                Button {
+                    onSelect(stop)
+                    dismiss()
+                } label: {
+                    Text(stop.name)
+                        .foregroundStyle(.primary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $query, prompt: "Search station")
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                }
+            }
+        }
     }
 }
 

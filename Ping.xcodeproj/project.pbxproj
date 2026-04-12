@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01743C27B00F7D9D46FC522D /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
+		08B813432A1CE2F8EA021B5E /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		0974690191FE6BA0E491752A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
 		19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C9F3AD2BEE5C5DE7E3367E /* PingLiveActivity.swift */; };
 		1A2DEDBDEDF7C64547B74F5E /* PingWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -39,6 +41,7 @@
 		815989C40377D6065C717827 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 81D935DD02BA4651DE209140 /* ZIPFoundation */; };
 		852B191579D98F352FC69946 /* CalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0848B20C357FCC356EF7F3B6 /* CalendarService.swift */; };
 		8582B6EBD0FC12A522D15129 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28051C0A3FAE0625158FBF62 /* MenuBarView.swift */; };
+		8BB4ADD3B4174225A3005E31 /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		8F38E3A3850FBC1E9F0B178F /* SharedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09116DEBE6559278706A92A0 /* SharedSettingsView.swift */; };
 		929A9F3E79937E91910628FC /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 0C956243B7E2E4347C7324A8 /* google_transit.zip */; };
 		932EC972ED8C347EFC8E8A61 /* PingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D1B6EF5FF939EBFCA0274A /* PingStore.swift */; };
@@ -125,6 +128,7 @@
 		785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCRealtimeService.swift; sourceTree = "<group>"; };
 		7E7C8DDDED26E37FAA6DC31C /* Ping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ping.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
+		8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCServiceAlertsService.swift; sourceTree = "<group>"; };
 		936C59BAA7286F130195CDB1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AB7D09DE8E676407C04F9A77 /* FGCMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCMapView.swift; sourceTree = "<group>"; };
 		AC31FED7C10F1A506C456CC1 /* PingiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingiOSApp.swift; sourceTree = "<group>"; };
@@ -276,6 +280,7 @@
 			children = (
 				0848B20C357FCC356EF7F3B6 /* CalendarService.swift */,
 				785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */,
+				8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */,
 				6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */,
 				6103487323ABD9F8E2F4958D /* GeoTrainService.swift */,
 				DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */,
@@ -436,6 +441,7 @@
 				A19389CEAAF931F5AFC229C0 /* CommuteEngine.swift in Sources */,
 				702F8F1DFD9972AED6A0A01F /* Constants.swift in Sources */,
 				76AC8ACEFF042639315506B9 /* FGCRealtimeService.swift in Sources */,
+				01743C27B00F7D9D46FC522D /* FGCServiceAlertsService.swift in Sources */,
 				98F9F485C9A67DF2B11369CA /* FGCStaticService.swift in Sources */,
 				5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */,
 				E0621CD31CA0B191A677B05F /* GTFSUpdateService.swift in Sources */,
@@ -464,6 +470,7 @@
 				3C2A81BEAB593F72099C43E7 /* ContentView.swift in Sources */,
 				A1EAFBCBAE9B54813B007D85 /* FGCMapView.swift in Sources */,
 				75E6D413E297F0B77363A7EB /* FGCRealtimeService.swift in Sources */,
+				8BB4ADD3B4174225A3005E31 /* FGCServiceAlertsService.swift in Sources */,
 				FCE4BAF831EBDA74EB187ED4 /* FGCStaticService.swift in Sources */,
 				7CDA7B097F8D7942C533FBFB /* GTFSCSVParser.swift in Sources */,
 				2534C877459955F6AF577722 /* GTFSUpdateService.swift in Sources */,
@@ -490,6 +497,7 @@
 				E309FDA8BA288ED387C1E7B7 /* CommuteEngine.swift in Sources */,
 				0974690191FE6BA0E491752A /* Constants.swift in Sources */,
 				20D8F966A0C611A0FE03DD1F /* FGCRealtimeService.swift in Sources */,
+				08B813432A1CE2F8EA021B5E /* FGCServiceAlertsService.swift in Sources */,
 				E7FD7B7038A90727A9616E87 /* FGCStaticService.swift in Sources */,
 				7F460E20D1ADA8EA3005603C /* GTFSCSVParser.swift in Sources */,
 				A60C9CB08B2F776AF9B5BB59 /* GTFSUpdateService.swift in Sources */,

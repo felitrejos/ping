@@ -191,6 +191,41 @@ public struct GeoTrainUnit: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+public enum ServiceAlertSeverity: String, Codable, Equatable, Sendable {
+    case info
+    case minor
+    case major
+    case closure
+}
+
+public struct ServiceAlert: Codable, Equatable, Identifiable, Sendable {
+    public let id: String
+    public let title: String
+    public let details: String?
+    public let affectedLines: [String]
+    public let severity: ServiceAlertSeverity
+    public let startDate: Date?
+    public let endDate: Date?
+
+    public init(
+        id: String,
+        title: String,
+        details: String?,
+        affectedLines: [String],
+        severity: ServiceAlertSeverity,
+        startDate: Date?,
+        endDate: Date?
+    ) {
+        self.id = id
+        self.title = title
+        self.details = details
+        self.affectedLines = affectedLines
+        self.severity = severity
+        self.startDate = startDate
+        self.endDate = endDate
+    }
+}
+
 public struct CalendarEventRecord: Equatable, Sendable {
     public let id: String
     public let title: String

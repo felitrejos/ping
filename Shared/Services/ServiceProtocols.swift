@@ -32,6 +32,10 @@ public protocol GeoTrainServiceProviding: Sendable {
     func fetchUnits(limit: Int) async throws -> [GeoTrainUnit]
 }
 
+public protocol ServiceAlertsProviding: Sendable {
+    func fetchAlerts() async throws -> [ServiceAlert]
+}
+
 public protocol Clock: Sendable {
     var now: Date { get }
 }

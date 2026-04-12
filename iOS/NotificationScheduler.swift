@@ -17,7 +17,7 @@ final class NotificationScheduler {
     init(
         engine: CommuteEngine,
         center: UNUserNotificationCenter = .current(),
-        walkingMinutesProvider: @escaping () -> Int = { UserSettings.walkingMinutes() }
+        walkingMinutesProvider: @escaping () -> Int = { 0 }
     ) {
         self.engine = engine
         self.center = center

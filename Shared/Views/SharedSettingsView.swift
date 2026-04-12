@@ -3,7 +3,6 @@ import SwiftUI
 public struct SharedSettingsView: View {
     @Environment(PingStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UserSettings.Keys.walkingMinutes) private var manualWalkingMinutes = UserSettings.defaultWalkingMinutes
     @AppStorage(UserSettings.Keys.autoSelectClosestOrigin) private var autoSelectClosestOrigin = false
     @State private var isFavoritePickerPresented = false
 
@@ -323,29 +322,33 @@ public struct SharedSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if store.isLocationAccessDenied {
-                Stepper(value: $manualWalkingMinutes, in: 1...30) {
-                    LabeledContent {
-                        Text("\(manualWalkingMinutes) min")
-                            .monospacedDigit()
-                    } label: {
-                        Label("To station", systemImage: "figure.walk")
-                    }
-                }
-                .onChange(of: manualWalkingMinutes) { _, newValue in
-                    store.setManualWalkingMinutes(newValue)
-                }
-                Text("Location access is denied, so Ping uses manual walking time.")
+                Text("Location access is required to calculate walking time.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                #if os(macOS)
+                Button("Open System Settings") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .font(.subheadline)
+                #elseif canImport(UIKit) && !os(watchOS)
+                OpenSettingsButton()
+                    .font(.subheadline)
+                #endif
             } else {
                 if store.isLocationAccessGranted && !store.hasConfiguredRoute {
                     Text("Set an origin station to calculate walking time.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Enable location access for automatic walking time.")
+                    Text("Enable location access to calculate walking time.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Button("Enable location access") {
+                        store.requestLocationAccess()
+                    }
+                    .font(.subheadline.weight(.semibold))
                 }
             }
         } header: {
@@ -439,9 +442,12 @@ private struct FavoriteStationPickerView: View {
                 }
             }
             .navigationTitle("Add Favorite")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .searchable(text: $query, prompt: Text("Search").bold())
             .toolbar {
+#if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         dismiss()
@@ -449,6 +455,15 @@ private struct FavoriteStationPickerView: View {
                         Image(systemName: "xmark")
                     }
                 }
+#else
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+#endif
             }
         }
     }

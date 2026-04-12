@@ -10,10 +10,44 @@ struct FGCMapView: View {
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
     @State private var destinationID: StopID?
-    @State private var isGeoTrainOverlayEnabled = true
+    @State private var isGeoTrainOverlayEnabled = false
+    @State private var shouldShowAllStations = false
+    @State private var displayedGeoTrainCoordinates: [String: TransitCoordinate] = [:]
+    @State private var previousGeoTrainCoordinates: [String: TransitCoordinate] = [:]
+    @State private var targetGeoTrainCoordinates: [String: TransitCoordinate] = [:]
+    @State private var geoTrainInterpolationStart = Date()
+
+    private let geoTrainPollInterval: TimeInterval = 10
+    private let geoTrainInterpolationDuration: TimeInterval = 10
 
     private var stationsWithCoordinates: [Stop] {
         store.availableStops.filter { $0.coordinate != nil }
+    }
+
+    private var visibleStations: [Stop] {
+        guard !shouldShowAllStations else {
+            return stationsWithCoordinates
+        }
+
+        var prioritized: [Stop] = []
+        var seen = Set<StopID>()
+        let anchors = [originStop, destinationStop] + routeStops + closestStations
+        for station in anchors.compactMap({ $0 }) where seen.insert(station.id).inserted {
+            prioritized.append(station)
+        }
+
+        if prioritized.count >= 40 {
+            return prioritized
+        }
+
+        for station in stationsWithCoordinates where seen.insert(station.id).inserted {
+            prioritized.append(station)
+            if prioritized.count >= 40 {
+                break
+            }
+        }
+
+        return prioritized
     }
 
     private var userCoordinate: CLLocationCoordinate2D? {
@@ -43,6 +77,21 @@ struct FGCMapView: View {
 
         let directionUnits = lineUnits.filter { $0.direction.uppercased() == expectedDirection }
         return directionUnits.isEmpty ? lineUnits : directionUnits
+    }
+
+    private var renderedGeoTrainUnits: [GeoTrainUnit] {
+        visibleGeoTrainUnits.map { unit in
+            let coordinate = displayedGeoTrainCoordinates[unit.id] ?? unit.coordinate
+            return GeoTrainUnit(
+                id: unit.id,
+                line: unit.line,
+                direction: unit.direction,
+                originStopID: unit.originStopID,
+                destinationStopID: unit.destinationStopID,
+                coordinate: coordinate,
+                isOnTime: unit.isOnTime
+            )
+        }
     }
 
     private var expectedRouteDirection: String? {
@@ -81,7 +130,7 @@ struct FGCMapView: View {
                     .stroke(.blue, lineWidth: 5)
             }
 
-            ForEach(stationsWithCoordinates) { station in
+            ForEach(visibleStations) { station in
                 if let coordinate = station.coordinate?.mapCoordinate {
                     Annotation(station.name, coordinate: coordinate) {
                         Button {
@@ -99,7 +148,7 @@ struct FGCMapView: View {
             }
 
             if isGeoTrainOverlayEnabled {
-                ForEach(visibleGeoTrainUnits) { unit in
+                ForEach(renderedGeoTrainUnits) { unit in
                     Annotation("", coordinate: unit.coordinate.mapCoordinate) {
                         GeoTrainMarker(unit: unit)
                     }
@@ -108,7 +157,7 @@ struct FGCMapView: View {
 
             UserAnnotation()
         }
-        .mapStyle(.standard(elevation: .realistic, emphasis: .muted))
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .including([.publicTransport]), showsTraffic: false))
         .mapControls {
             MapCompass()
             MapUserLocationButton()
@@ -119,7 +168,7 @@ struct FGCMapView: View {
                 .padding(.top, 12)
                 .padding(.leading, 14)
         }
-        .animation(.linear(duration: 6.0), value: visibleGeoTrainUnits)
+        .animation(.linear(duration: 1.0), value: renderedGeoTrainUnits)
         .safeAreaInset(edge: .bottom) {
             MapStatusPanel(
                 origin: originStop,
@@ -128,7 +177,6 @@ struct FGCMapView: View {
                 walkMinutes: store.walkingMinutes,
                 isUsingLiveLocation: store.isUsingLiveLocation,
                 routeStops: routeStops,
-                geoTrainCount: visibleGeoTrainUnits.count,
                 closestStations: closestStations,
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
@@ -146,33 +194,48 @@ struct FGCMapView: View {
                         await store.setDestinationStation(station.id)
                         await reloadMapData()
                     }
-                },
-                onRequestLocation: {
-                    store.requestLocationAccess()
                 }
             )
         }
         .task {
             await reloadMapData()
-            await store.refreshGeoTrainUnits()
+            scheduleFullStationLoad()
+            if isGeoTrainOverlayEnabled {
+                await store.refreshGeoTrainUnits()
+                resetGeoTrainInterpolation(with: store.geoTrainUnits)
+            }
         }
         .task(id: isGeoTrainOverlayEnabled) {
             guard isGeoTrainOverlayEnabled else {
                 return
             }
 
+            var lastRefresh = Date.distantPast
             while !Task.isCancelled, isGeoTrainOverlayEnabled {
-                await store.refreshGeoTrainUnits()
-                try? await Task.sleep(for: .seconds(6))
+                let now = Date()
+                if now.timeIntervalSince(lastRefresh) >= geoTrainPollInterval {
+                    await store.refreshGeoTrainUnits()
+                    lastRefresh = Date()
+                }
+
+                advanceGeoTrainInterpolation(at: now)
+                try? await Task.sleep(for: .seconds(1))
             }
         }
         .refreshable {
             await store.refresh()
             await reloadMapData()
-            await store.refreshGeoTrainUnits()
+            scheduleFullStationLoad()
+            if isGeoTrainOverlayEnabled {
+                await store.refreshGeoTrainUnits()
+            }
         }
         .onChange(of: store.availableStops) { _, _ in
-            Task { await reloadMapData() }
+            shouldShowAllStations = false
+            Task {
+                await reloadMapData()
+                scheduleFullStationLoad()
+            }
         }
         .onChange(of: store.userLocation) { _, _ in
             Task { await updateWalkingRoute() }
@@ -180,6 +243,66 @@ struct FGCMapView: View {
         .onChange(of: store.nextDeparture) { _, _ in
             Task { await updateWalkingRoute() }
         }
+        .onChange(of: store.geoTrainUnits) { _, units in
+            updateGeoTrainInterpolationTargets(with: units)
+        }
+    }
+
+    private func scheduleFullStationLoad() {
+        Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else {
+                return
+            }
+            await MainActor.run {
+                shouldShowAllStations = true
+            }
+        }
+    }
+
+    private func resetGeoTrainInterpolation(with units: [GeoTrainUnit]) {
+        let coordinates = Dictionary(uniqueKeysWithValues: units.map { ($0.id, $0.coordinate) })
+        displayedGeoTrainCoordinates = coordinates
+        previousGeoTrainCoordinates = coordinates
+        targetGeoTrainCoordinates = coordinates
+        geoTrainInterpolationStart = Date()
+    }
+
+    private func updateGeoTrainInterpolationTargets(with units: [GeoTrainUnit]) {
+        let nextTargets = Dictionary(uniqueKeysWithValues: units.map { ($0.id, $0.coordinate) })
+        if targetGeoTrainCoordinates.isEmpty {
+            resetGeoTrainInterpolation(with: units)
+            return
+        }
+
+        previousGeoTrainCoordinates = displayedGeoTrainCoordinates
+        targetGeoTrainCoordinates = nextTargets
+        geoTrainInterpolationStart = Date()
+
+        for id in displayedGeoTrainCoordinates.keys where nextTargets[id] == nil {
+            displayedGeoTrainCoordinates.removeValue(forKey: id)
+            previousGeoTrainCoordinates.removeValue(forKey: id)
+        }
+    }
+
+    private func advanceGeoTrainInterpolation(at now: Date) {
+        guard !targetGeoTrainCoordinates.isEmpty else {
+            return
+        }
+
+        let progress = min(1, now.timeIntervalSince(geoTrainInterpolationStart) / geoTrainInterpolationDuration)
+        let easedProgress = progress * progress * (3 - 2 * progress)
+        var nextDisplayed: [String: TransitCoordinate] = [:]
+
+        for (id, target) in targetGeoTrainCoordinates {
+            let start = previousGeoTrainCoordinates[id] ?? target
+            nextDisplayed[id] = TransitCoordinate(
+                latitude: start.latitude + (target.latitude - start.latitude) * easedProgress,
+                longitude: start.longitude + (target.longitude - start.longitude) * easedProgress
+            )
+        }
+
+        displayedGeoTrainCoordinates = nextDisplayed
     }
 
     @ViewBuilder
@@ -350,14 +473,12 @@ private struct MapStatusPanel: View {
     let walkMinutes: Int
     let isUsingLiveLocation: Bool
     let routeStops: [Stop]
-    let geoTrainCount: Int
     let closestStations: [Stop]
     let hasUserLocation: Bool
     let selectedStation: Stop?
     let onDismissStation: () -> Void
     let onSetOrigin: (Stop) -> Void
     let onSetDestination: (Stop) -> Void
-    let onRequestLocation: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -396,9 +517,6 @@ private struct MapStatusPanel: View {
             Label("\(walkMinutes) min walk", systemImage: isUsingLiveLocation ? "location.fill" : "figure.walk")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -414,9 +532,6 @@ private struct MapStatusPanel: View {
             Text("\(max(routeStops.count - 1, 0)) station hops from GTFS")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -431,9 +546,6 @@ private struct MapStatusPanel: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .allowsHitTesting(false)
-                } else {
-                    Button("Find nearby", action: onRequestLocation)
-                        .font(.subheadline.weight(.semibold))
                 }
             }
             if hasUserLocation {
@@ -447,9 +559,6 @@ private struct MapStatusPanel: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
-            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 

@@ -9,6 +9,7 @@ public final class SharedContainer {
     public let store: PingStore
     public let gtfsUpdateService: GTFSUpdateService
     public let geoTrainService: GeoTrainService
+    public let serviceAlertsService: FGCServiceAlertsService
     public let locationService: LocationService
     public let walkingETAService: WalkingETAService
 
@@ -23,6 +24,7 @@ public final class SharedContainer {
         let updateService = GTFSUpdateService()
         gtfsUpdateService = updateService
         geoTrainService = GeoTrainService()
+        serviceAlertsService = FGCServiceAlertsService()
 
         // Use downloaded ZIP if available, otherwise fall back to bundled
         let zipURL = updateService.bestAvailableZipURL(bundledURL: bundledZipURL)
@@ -41,7 +43,7 @@ public final class SharedContainer {
             realtimeService: realtimeService,
             calendarService: calendarService,
             walkingMinutesProvider: { @Sendable in
-                await MainActor.run { storeRef?.walkingMinutes ?? UserSettings.walkingMinutes() }
+                await MainActor.run { storeRef?.walkingMinutes ?? 0 }
             },
             originCandidatesProvider: { @Sendable in
                 await MainActor.run {
@@ -77,6 +79,7 @@ public final class SharedContainer {
             locationService: locationService,
             walkingETAService: walkingETAService,
             geoTrainService: geoTrainService,
+            serviceAlertsService: serviceAlertsService,
             gtfsUpdateService: updateService,
             bundledGTFSURL: bundledZipURL
         )
