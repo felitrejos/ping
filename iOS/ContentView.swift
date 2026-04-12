@@ -12,18 +12,10 @@ struct ContentView: View {
     @Environment(PingStore.self) private var store
     @Environment(\.openURL) private var openURL
     @State private var tracker = CommuteTracker()
-    @State private var originQuery = ""
-    @State private var destinationQuery = ""
-    @State private var originResults: [Stop] = []
-    @State private var destinationResults: [Stop] = []
-    @State private var isEditingOrigin = false
-    @State private var isEditingDestination = false
     @State private var selectedOriginID: StopID?
     @State private var selectedOriginName: String?
     @State private var selectedDestinationID: StopID?
     @State private var selectedDestinationName: String?
-    @FocusState private var originFocused: Bool
-    @FocusState private var destinationFocused: Bool
     @State private var activeFavoritePopoverStopID: StopID?
     @State private var activeStationPicker: StationPickerTarget?
     @State private var routeSearchCommitted = false
@@ -64,10 +56,6 @@ struct ContentView: View {
                 }
             }
         }
-        .gesture(
-            TapGesture().onEnded { dismissStationFocus() },
-            including: .gesture
-        )
         .refreshable { await store.refresh() }
         .onChange(of: store.nextDeparture) { _, dep in
             guard tracker.isTracking, let dep else { return }
@@ -183,7 +171,6 @@ struct ContentView: View {
                     HStack(spacing: 10) {
                         ForEach(store.favoriteStations) { stop in
                             Button {
-                                dismissStationFocus()
                                 activeFavoritePopoverStopID = stop.id
                             } label: {
                                 Text(stop.name)
@@ -311,17 +298,11 @@ struct ContentView: View {
     private func setPendingOrigin(_ stopID: StopID) {
         selectedOriginID = stopID
         selectedOriginName = stationName(for: stopID)
-        if !originFocused {
-            originQuery = selectedOriginName ?? ""
-        }
     }
 
     private func setPendingDestination(_ stopID: StopID) {
         selectedDestinationID = stopID
         selectedDestinationName = stationName(for: stopID)
-        if !destinationFocused {
-            destinationQuery = selectedDestinationName ?? ""
-        }
     }
 
     private func stationName(for stopID: StopID) -> String? {
@@ -338,12 +319,6 @@ struct ContentView: View {
         selectedOriginName = selectedDestinationName
         selectedDestinationID = originID
         selectedDestinationName = originName
-        if !originFocused {
-            originQuery = selectedOriginName ?? ""
-        }
-        if !destinationFocused {
-            destinationQuery = selectedDestinationName ?? ""
-        }
     }
 
     private func searchRoutes() async {
@@ -356,117 +331,6 @@ struct ContentView: View {
 
         await store.setRoute(origin: originID, destination: destinationID)
         routeSearchCommitted = true
-    }
-
-    private func dismissStationFocus() {
-        guard originFocused || destinationFocused else {
-            return
-        }
-
-        originFocused = false
-        destinationFocused = false
-    }
-
-    private func clearRouteFields() {
-        selectedOriginID = nil
-        originQuery = ""
-        selectedDestinationID = nil
-        destinationQuery = ""
-        selectedOriginName = nil
-        selectedDestinationName = nil
-        originResults = []
-        destinationResults = []
-        originFocused = false
-        destinationFocused = false
-        isEditingOrigin = false
-        isEditingDestination = false
-        routeSearchCommitted = false
-        activeFavoritePopoverStopID = nil
-    }
-
-    private func stationInput(
-        placeholder: String,
-        query: Binding<String>,
-        results: Binding<[Stop]>,
-        isEditing: Binding<Bool>,
-        focused: FocusState<Bool>.Binding,
-        selectedName: Binding<String?>,
-        onClear: @escaping () -> Void,
-        onSelect: @escaping (Stop) -> Void
-    ) -> some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 8) {
-                TextField(placeholder, text: query)
-                    .textFieldStyle(.plain)
-                    .font(.title3)
-                    .autocorrectionDisabled()
-                    .focused(focused)
-                    .onChange(of: query.wrappedValue) { _, newValue in
-                        Task {
-                            if newValue.isEmpty {
-                                results.wrappedValue = []
-                            } else {
-                                results.wrappedValue = await store.searchStops(matching: newValue)
-                            }
-                        }
-                    }
-                    .onSubmit {
-                        isEditing.wrappedValue = false
-                    }
-                    .onChange(of: focused.wrappedValue) { _, isFocused in
-                        if isFocused {
-                            isEditing.wrappedValue = true
-                            if query.wrappedValue.isEmpty, let name = selectedName.wrappedValue {
-                                query.wrappedValue = name
-                            }
-                        } else {
-                            isEditing.wrappedValue = false
-                            if let name = selectedName.wrappedValue, query.wrappedValue != name {
-                                query.wrappedValue = name
-                            }
-                        }
-                    }
-                if focused.wrappedValue && !query.wrappedValue.isEmpty {
-                    Button {
-                        query.wrappedValue = ""
-                        selectedName.wrappedValue = nil
-                        results.wrappedValue = []
-                        onClear()
-                    } label: {
-                        Image(systemName: "multiply.circle.fill")
-                            .foregroundStyle(.placeholder)
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
-
-            if isEditing.wrappedValue && !results.wrappedValue.isEmpty {
-                VStack(spacing: 6) {
-                    ForEach(results.wrappedValue.prefix(5)) { stop in
-                        Button {
-                            onSelect(stop)
-                            focused.wrappedValue = false
-                        } label: {
-                            HStack {
-                                Text(stop.name)
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 14)
-                            .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(8)
-                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
-                .padding(.top, 6)
-            }
-        }
     }
 
     private func stationPickerField(
@@ -510,26 +374,8 @@ struct ContentView: View {
         let destID = await store.selectedDestinationStationID()
         selectedOriginID = originID
         selectedDestinationID = destID
-
-        if let originID, let name = stops.first(where: { $0.id == originID })?.name {
-            selectedOriginName = name
-            if !originFocused {
-                originQuery = name
-            }
-        } else if !originFocused {
-            selectedOriginName = nil
-            originQuery = ""
-        }
-
-        if let destID, let name = stops.first(where: { $0.id == destID })?.name {
-            selectedDestinationName = name
-            if !destinationFocused {
-                destinationQuery = name
-            }
-        } else if !destinationFocused {
-            selectedDestinationName = nil
-            destinationQuery = ""
-        }
+        selectedOriginName = originID.flatMap { id in stops.first(where: { $0.id == id })?.name }
+        selectedDestinationName = destID.flatMap { id in stops.first(where: { $0.id == id })?.name }
     }
 
     @ViewBuilder
@@ -910,8 +756,6 @@ final class CommuteTracker {
         )
         let state = PingActivityAttributes.ContentState(
             minutesUntilDeparture: departure.minutesUntilDeparture,
-            isDelayed: departure.isDelayed,
-            delayMinutes: departure.delayMinutes,
             walkMinutes: walkMin,
             rideMinutes: rideMin,
             departureTime: departure.effectiveDepartureTime,
@@ -931,8 +775,6 @@ final class CommuteTracker {
         let rideMin = max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
         let state = PingActivityAttributes.ContentState(
             minutesUntilDeparture: departure.minutesUntilDeparture,
-            isDelayed: departure.isDelayed,
-            delayMinutes: departure.delayMinutes,
             walkMinutes: walkMin,
             rideMinutes: rideMin,
             departureTime: departure.effectiveDepartureTime,

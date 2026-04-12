@@ -9,9 +9,7 @@ public final class PingStore {
     public var upcomingDepartures: [LiveDeparture] = []
     public var nextCommute: CommutePlan?
     public var commutePlans: [CommutePlan] = []
-    public var configuredRouteStopsList: [Stop] = []
     public var availableStops: [Stop] = []
-    public var availableLines: [String] = []
     public var lineStops: [Stop] = []
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
     public var geoTrainUnits: [GeoTrainUnit] = []
@@ -163,14 +161,11 @@ public final class PingStore {
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
             favoriteStationIDs = UserSettings.favoriteStationIDs()
             availableStops = try await staticService.allStops()
-            availableLines = try await staticService.availableLines()
             await reloadLineStops()
             await updateWalkingETA()
             commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
             nextCommute = commutePlans.first
-            nextDeparture = try await defaultBestDeparture()
-            upcomingDepartures = try await defaultUpcomingDepartures()
-            configuredRouteStopsList = await configuredRouteStops()
+            (nextDeparture, upcomingDepartures) = try await defaultDepartures()
             await refreshGeoTrainUnits()
             await refreshServiceAlerts()
             lastErrorMessage = nil
@@ -178,7 +173,6 @@ public final class PingStore {
         } catch {
             lastErrorMessage = error.localizedDescription
             upcomingDepartures = []
-            configuredRouteStopsList = []
             geoTrainUnits = []
             lastUpdated = Date()
         }
@@ -266,14 +260,9 @@ public final class PingStore {
         dynamicWalkingMinutes = nil
         nextDeparture = nil
         upcomingDepartures = []
-        configuredRouteStopsList = []
         geoTrainUnits = []
         activeServiceAlerts = []
         await refresh()
-    }
-
-    public func isFavoriteStation(_ stopID: StopID) -> Bool {
-        favoriteStationIDs.contains(stopID)
     }
 
     public func addFavoriteStation(_ stopID: StopID) {
@@ -288,14 +277,6 @@ public final class PingStore {
     public func removeFavoriteStation(_ stopID: StopID) {
         favoriteStationIDs.removeAll { $0 == stopID }
         UserSettings.setFavoriteStationIDs(favoriteStationIDs)
-    }
-
-    public func toggleFavoriteStation(_ stopID: StopID) {
-        if isFavoriteStation(stopID) {
-            removeFavoriteStation(stopID)
-        } else {
-            addFavoriteStation(stopID)
-        }
     }
 
     public func moveFavoriteStations(fromOffsets: IndexSet, toOffset: Int) {
@@ -330,59 +311,20 @@ public final class PingStore {
         return fetchedDestination
     }
 
-    private func defaultBestDeparture() async throws -> LiveDeparture? {
+    private func defaultDepartures() async throws -> (best: LiveDeparture?, upcoming: [LiveDeparture]) {
         guard isUsingLiveLocation else {
-            return nil
+            return (nil, [])
         }
 
-        let resolvedHomeStationID: StopID?
-        if let homeStationID {
-            resolvedHomeStationID = homeStationID
-        } else {
-            resolvedHomeStationID = await calendarService.userHomeStation()
+        if homeStationID == nil {
+            homeStationID = await calendarService.userHomeStation()
+        }
+        if destinationStationID == nil {
+            destinationStationID = await calendarService.userDestinationStation()
         }
 
-        let resolvedDestinationStationID: StopID?
-        if let destinationStationID {
-            resolvedDestinationStationID = destinationStationID
-        } else {
-            resolvedDestinationStationID = await calendarService.userDestinationStation()
-        }
-
-        homeStationID = resolvedHomeStationID
-        destinationStationID = resolvedDestinationStationID
-
-        guard let homeStopID = resolvedHomeStationID, let destination = resolvedDestinationStationID else {
-            return nil
-        }
-
-        return try await engine.bestCatchableDeparture(from: homeStopID, to: destination)
-    }
-
-    private func defaultUpcomingDepartures() async throws -> [LiveDeparture] {
-        guard isUsingLiveLocation else {
-            return []
-        }
-
-        let resolvedHomeStationID: StopID?
-        if let homeStationID {
-            resolvedHomeStationID = homeStationID
-        } else {
-            resolvedHomeStationID = await calendarService.userHomeStation()
-        }
-
-        let resolvedDestinationStationID: StopID?
-        if let destinationStationID {
-            resolvedDestinationStationID = destinationStationID
-        } else {
-            resolvedDestinationStationID = await calendarService.userDestinationStation()
-        }
-
-        homeStationID = resolvedHomeStationID
-        destinationStationID = resolvedDestinationStationID
-
-        guard let homeStopID = resolvedHomeStationID, let destination = resolvedDestinationStationID else {
-            return []
+        guard let homeStopID = homeStationID, let destination = destinationStationID else {
+            return (nil, [])
         }
 
         let candidates = try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 500)
@@ -390,12 +332,11 @@ public final class PingStore {
         let leaveNowCutoff = now.addingTimeInterval(TimeInterval((walkingMinutes + UserSettings.bufferMinutes()) * 60))
         let horizon = now.addingTimeInterval(12 * 60 * 60)
 
-        return candidates
-            .filter { departure in
-                departure.effectiveDepartureTime >= leaveNowCutoff &&
-                    departure.effectiveDepartureTime <= horizon
-            }
+        let upcoming = candidates
+            .filter { $0.effectiveDepartureTime >= leaveNowCutoff && $0.effectiveDepartureTime <= horizon }
             .sorted { $0.effectiveDepartureTime < $1.effectiveDepartureTime }
+
+        return (upcoming.first, upcoming)
     }
 
     private func updateWalkingETA() async {

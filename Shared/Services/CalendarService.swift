@@ -5,7 +5,6 @@ import MapKit
 
 public actor CalendarService: CalendarServiceProviding {
     private let eventProvider: any CalendarEventProviding
-    private let locationResolver: any CalendarLocationResolving
     private let routeEstimator: any CalendarRouteEstimating
     private let staticService: StaticServiceProviding
     private let defaults: UserDefaults
@@ -14,13 +13,11 @@ public actor CalendarService: CalendarServiceProviding {
 
     public init(
         eventProvider: any CalendarEventProviding = EventKitCalendarProvider(),
-        locationResolver: any CalendarLocationResolving = MapKitCalendarLocationResolver(),
         routeEstimator: any CalendarRouteEstimating = MapKitCalendarRouteEstimator(),
         staticService: StaticServiceProviding,
         defaults: UserDefaults = .standard
     ) {
         self.eventProvider = eventProvider
-        self.locationResolver = locationResolver
         self.routeEstimator = routeEstimator
         self.staticService = staticService
         self.defaults = defaults
@@ -154,42 +151,8 @@ public actor CalendarService: CalendarServiceProviding {
     }
 }
 
-public protocol CalendarLocationResolving: Sendable {
-    func coordinate(for location: String, near stops: [Stop]) async -> TransitCoordinate?
-}
-
 public protocol CalendarRouteEstimating: Sendable {
     func walkingTravelTime(from source: TransitCoordinate, to destination: TransitCoordinate) async -> TimeInterval?
-}
-
-public struct MapKitCalendarLocationResolver: CalendarLocationResolving {
-    public init() {}
-
-    public func coordinate(for location: String, near stops: [Stop]) async -> TransitCoordinate? {
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = location
-        if let region = MKCoordinateRegion(stops: stops) {
-            request.region = region
-        }
-
-        do {
-            let response = try await MKLocalSearch(request: request).start()
-            let coordinate: CLLocationCoordinate2D?
-            if #available(macOS 26.0, iOS 26.0, *) {
-                coordinate = response.mapItems.first?.location.coordinate
-            } else {
-                coordinate = response.mapItems.first?.placemark.coordinate
-            }
-
-            guard let coordinate else {
-                return nil
-            }
-
-            return TransitCoordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        } catch {
-            return nil
-        }
-    }
 }
 
 private struct StationResolutionCacheKey: Hashable {
@@ -245,19 +208,6 @@ public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
 }
 
 private extension [Stop] {
-    func closest(to coordinate: TransitCoordinate, maxDistance: CLLocationDistance) -> Stop? {
-        let candidates = compactMap { stop -> (stop: Stop, distance: CLLocationDistance)? in
-            guard let stopCoordinate = stop.coordinate else {
-                return nil
-            }
-
-            let distance = stopCoordinate.distance(to: coordinate)
-            return distance <= maxDistance ? (stop, distance) : nil
-        }
-
-        return candidates.min { $0.distance < $1.distance }?.stop
-    }
-
     func closestCandidates(
         to coordinate: TransitCoordinate,
         maxDistance: CLLocationDistance,
@@ -285,32 +235,6 @@ private extension TransitCoordinate {
     func distance(to other: TransitCoordinate) -> CLLocationDistance {
         CLLocation(latitude: latitude, longitude: longitude)
             .distance(from: CLLocation(latitude: other.latitude, longitude: other.longitude))
-    }
-}
-
-private extension MKCoordinateRegion {
-    init?(stops: [Stop]) {
-        let coordinates = stops.compactMap(\.coordinate)
-        guard !coordinates.isEmpty else {
-            return nil
-        }
-
-        let latitudes = coordinates.map(\.latitude)
-        let longitudes = coordinates.map(\.longitude)
-        let minLatitude = latitudes.min() ?? 41.387
-        let maxLatitude = latitudes.max() ?? 41.387
-        let minLongitude = longitudes.min() ?? 2.17
-        let maxLongitude = longitudes.max() ?? 2.17
-        let center = CLLocationCoordinate2D(
-            latitude: (minLatitude + maxLatitude) / 2,
-            longitude: (minLongitude + maxLongitude) / 2
-        )
-        let span = MKCoordinateSpan(
-            latitudeDelta: max((maxLatitude - minLatitude) + 0.2, 0.2),
-            longitudeDelta: max((maxLongitude - minLongitude) + 0.2, 0.2)
-        )
-
-        self.init(center: center, span: span)
     }
 }
 

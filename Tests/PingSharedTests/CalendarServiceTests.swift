@@ -5,7 +5,6 @@ import Testing
 struct CalendarServiceTests {
     @Test
     func upcomingCommutesIgnoresEventsWithoutStructuredCoordinate() async throws {
-        let staticService = StubStaticService()
         let provider = StubCalendarProvider(
             status: .fullAccess,
             events: [
@@ -19,13 +18,8 @@ struct CalendarServiceTests {
         )
         let service = CalendarService(
             eventProvider: provider,
-            locationResolver: StubLocationResolver(
-                coordinates: [
-                    "Placa Catalunya office": TransitCoordinate(latitude: 41.386, longitude: 2.17),
-                ]
-            ),
             routeEstimator: StubRouteEstimator(),
-            staticService: staticService
+            staticService: StubStaticService()
         )
 
         let commutes = try await service.upcomingCommutes(within: 2)
@@ -34,8 +28,7 @@ struct CalendarServiceTests {
     }
 
     @Test
-    func upcomingCommutesUsesStructuredEventCoordinateBeforeLocationSearch() async throws {
-        let staticService = StubStaticService()
+    func upcomingCommutesResolvesStructuredEventCoordinateToNearestStation() async throws {
         let provider = StubCalendarProvider(
             status: .fullAccess,
             events: [
@@ -50,9 +43,8 @@ struct CalendarServiceTests {
         )
         let service = CalendarService(
             eventProvider: provider,
-            locationResolver: StubLocationResolver(coordinates: [:]),
             routeEstimator: StubRouteEstimator(),
-            staticService: staticService
+            staticService: StubStaticService()
         )
 
         let commutes = try await service.upcomingCommutes(within: 2)
@@ -103,14 +95,6 @@ private final class StubCalendarProvider: CalendarEventProviding {
     }
 }
 
-private struct StubLocationResolver: CalendarLocationResolving {
-    let coordinates: [String: TransitCoordinate]
-
-    func coordinate(for location: String, near stops: [Stop]) async -> TransitCoordinate? {
-        coordinates[location]
-    }
-}
-
 private actor StubStaticService: StaticServiceProviding {
     func departuresBetween(origin: StopID, destination: StopID, after: Date) async throws -> [TrainDeparture] {
         []
@@ -121,10 +105,6 @@ private actor StubStaticService: StaticServiceProviding {
             Stop(id: "ST_HOME", name: "Sant Cugat Centre", latitude: 41.47, longitude: 2.08),
             Stop(id: "ST_CITY", name: "Placa Catalunya", latitude: 41.386, longitude: 2.17),
         ]
-    }
-
-    func availableLines() async throws -> [String] {
-        ["S1"]
     }
 
     func stopsForLine(_ lineName: String) async throws -> [Stop] {

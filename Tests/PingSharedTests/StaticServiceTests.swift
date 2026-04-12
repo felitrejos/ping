@@ -17,8 +17,6 @@ struct StaticServiceTests {
 
         #expect(departures.count >= 1)
         #expect(departures.first?.tripID == "TRIP_1")
-        // First result should be today's departure at 07:10
-        #expect(departures.first?.headsign == "Placa Catalunya")
         #expect(departures.first?.headsign == "Placa Catalunya")
         #expect(departures.first?.routeShortName == "S1")
     }

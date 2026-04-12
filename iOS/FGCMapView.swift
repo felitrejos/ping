@@ -421,28 +421,14 @@ private enum StationRole {
 
     var tint: Color {
         switch self {
-        case .origin:
-            .blue
-        case .destination:
-            .green
-        case .route:
-            .green
-        case .nearby:
-            .white
+        case .origin: .blue
+        case .destination, .route: .green
+        case .nearby: .white
         }
     }
 
     var symbol: String {
-        switch self {
-        case .origin:
-            "mappin.circle.fill"
-        case .destination:
-            "mappin.circle.fill"
-        case .route:
-            "mappin.circle.fill"
-        case .nearby:
-            "mappin.circle"
-        }
+        self == .nearby ? "mappin.circle" : "mappin.circle.fill"
     }
 }
 
@@ -602,34 +588,14 @@ private struct MapStatusPanel: View {
         isPrimary: Bool,
         action: @escaping () -> Void
     ) -> some View {
+        let button = Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .frame(maxWidth: .infinity)
+        }
         if #available(iOS 26.0, *) {
-            if isPrimary {
-                Button(action: action) {
-                    Label(title, systemImage: systemImage)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glassProminent)
-            } else {
-                Button(action: action) {
-                    Label(title, systemImage: systemImage)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glass)
-            }
+            if isPrimary { button.buttonStyle(.glassProminent) } else { button.buttonStyle(.glass) }
         } else {
-            if isPrimary {
-                Button(action: action) {
-                    Label(title, systemImage: systemImage)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-            } else {
-                Button(action: action) {
-                    Label(title, systemImage: systemImage)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-            }
+            if isPrimary { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
         }
     }
 }

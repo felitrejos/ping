@@ -35,8 +35,6 @@ public final class SharedContainer {
         locationService = LocationService()
         walkingETAService = WalkingETAService()
 
-        // The store owns the dynamic walking ETA. The engine reads it via a closure
-        // so that bestCatchableDeparture and commute plans use the live value.
         var storeRef: PingStore?
         engine = CommuteEngine(
             staticService: staticService,

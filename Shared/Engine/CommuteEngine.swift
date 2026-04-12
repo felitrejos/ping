@@ -31,10 +31,6 @@ public actor CommuteEngine {
         await realtimeService.refresh()
     }
 
-    public func nextDeparture(from origin: StopID, to destination: StopID) async throws -> LiveDeparture? {
-        try await upcomingDepartures(from: origin, to: destination, limit: 1).first
-    }
-
     public func upcomingDepartures(from origin: StopID, to destination: StopID, limit: Int) async throws -> [LiveDeparture] {
         let now = clock.now
         let scheduled = try await staticService.departuresBetween(origin: origin, destination: destination, after: now)
@@ -52,19 +48,6 @@ public actor CommuteEngine {
                 tripID: departure.tripID,
                 destinationStopID: destination
             )
-        }
-    }
-
-    /// Returns the next train you can actually catch given walking + buffer time.
-    public func bestCatchableDeparture(from origin: StopID, to destination: StopID) async throws -> LiveDeparture? {
-        let now = clock.now
-        let walkingSeconds = TimeInterval(await walkingMinutesProvider() * 60)
-        let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
-        let leaveNowCutoff = walkingSeconds + bufferSeconds
-
-        let candidates = try await upcomingDepartures(from: origin, to: destination, limit: 10)
-        return candidates.first { dep in
-            dep.effectiveDepartureTime.timeIntervalSince(now) >= leaveNowCutoff
         }
     }
 
@@ -167,16 +150,8 @@ public actor CommuteEngine {
         var ordered: [StopID] = []
         var seen = Set<StopID>()
 
-        if let home, !home.isEmpty {
-            if !seen.contains(home) {
-                ordered.append(home)
-                seen.insert(home)
-            }
-        }
-
-        for origin in additional where !origin.isEmpty && !seen.contains(origin) {
+        for origin in ([home].compactMap { $0 } + additional) where !origin.isEmpty && seen.insert(origin).inserted {
             ordered.append(origin)
-            seen.insert(origin)
         }
 
         return ordered
@@ -217,21 +192,10 @@ public actor CommuteEngine {
     ) -> [StopID] {
         var ordered: [StopID] = []
         var seen = Set<StopID>()
-
-        for destination in eventCandidates where !destination.isEmpty && !seen.contains(destination) {
+        for destination in eventCandidates + nearbyDestinations + [fallback]
+            where !destination.isEmpty && seen.insert(destination).inserted {
             ordered.append(destination)
-            seen.insert(destination)
         }
-
-        for destination in nearbyDestinations where !destination.isEmpty && !seen.contains(destination) {
-            ordered.append(destination)
-            seen.insert(destination)
-        }
-
-        if !fallback.isEmpty && !seen.contains(fallback) {
-            ordered.append(fallback)
-        }
-
         return ordered
     }
 }

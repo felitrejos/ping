@@ -29,7 +29,6 @@ public actor FGCStaticService: StaticServiceProviding {
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
         let stationStopsByID: [StopID: Stop]
-        let lineNames: [String]
         let stopsByLine: [String: [Stop]]
     }
 
@@ -100,10 +99,6 @@ public actor FGCStaticService: StaticServiceProviding {
 
     public func allStops() async throws -> [Stop] {
         try loadCache().stopsSortedByName
-    }
-
-    public func availableLines() async throws -> [String] {
-        try loadCache().lineNames
     }
 
     public func stopsForLine(_ lineName: String) async throws -> [Stop] {
@@ -289,7 +284,6 @@ extension FGCStaticService {
         for (line, ids) in stopIDsByLine {
             stopsByLine[line] = ids.compactMap { stationStopsByID[$0] }.sorted { $0.name < $1.name }
         }
-        let lineNames = stopIDsByLine.keys.sorted()
 
         let parsed = ParsedCache(
             stops: stops,
@@ -300,7 +294,6 @@ extension FGCStaticService {
             trips: trips,
             stopTimesByTripID: stopTimes,
             stationStopsByID: stationStopsByID,
-            lineNames: lineNames,
             stopsByLine: stopsByLine
         )
         cache = parsed

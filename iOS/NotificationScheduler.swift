@@ -100,12 +100,7 @@ final class NotificationScheduler {
 
     private func updateLiveActivity(for plan: CommutePlan, train: LiveDeparture) async {
         let minutes = train.minutesUntilDeparture
-        guard minutes > 0 else {
-            await endLiveActivity()
-            return
-        }
-
-        guard minutes <= 30 else {
+        guard (1...30).contains(minutes) else {
             await endLiveActivity()
             return
         }
@@ -118,8 +113,6 @@ final class NotificationScheduler {
         )
         let contentState = PingActivityAttributes.ContentState(
             minutesUntilDeparture: minutes,
-            isDelayed: train.isDelayed,
-            delayMinutes: train.delaySeconds / 60,
             walkMinutes: walkMin,
             rideMinutes: rideMin,
             departureTime: train.effectiveDepartureTime,

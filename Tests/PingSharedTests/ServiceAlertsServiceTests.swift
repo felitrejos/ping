@@ -9,7 +9,7 @@ struct ServiceAlertsServiceTests {
         let feedURL = URL(string: "https://example.com/alerts/records")!
         let pbURL = URL(string: "https://example.com/alerts/feed.pb")!
         let now = UInt64(Date().timeIntervalSince1970)
-        let session = URLSession.alertStubbed(with: [
+        let session = URLSession.stubbed(with: [
             feedURL: .jsonRecords(fileURL: pbURL),
             pbURL: .protobuf(
                 try makeAlertsFeedData(alerts: [
@@ -43,7 +43,7 @@ struct ServiceAlertsServiceTests {
     func fetchAlertsSortsBySeverityDescending() async throws {
         let feedURL = URL(string: "https://example.com/alerts2/records")!
         let pbURL = URL(string: "https://example.com/alerts2/feed.pb")!
-        let session = URLSession.alertStubbed(with: [
+        let session = URLSession.stubbed(with: [
             feedURL: .jsonRecords(fileURL: pbURL),
             pbURL: .protobuf(
                 try makeAlertsFeedData(alerts: [
@@ -138,67 +138,3 @@ private func makeAlertsFeedData(alerts: [AlertFixture]) throws -> Data {
     return try feed.serializedData()
 }
 
-private enum AlertsStubbedResponse {
-    case protobuf(Data)
-    case jsonRecords(fileURL: URL)
-
-    var body: Data {
-        switch self {
-        case let .protobuf(data):
-            data
-        case let .jsonRecords(fileURL):
-            """
-            {"results":[{"file":{"url":"\(fileURL.absoluteString)"}}]}
-            """.data(using: .utf8) ?? Data()
-        }
-    }
-
-    var contentType: String {
-        switch self {
-        case .protobuf:
-            "application/octet-stream"
-        case .jsonRecords:
-            "application/json"
-        }
-    }
-}
-
-private final class AlertsURLProtocolStub: URLProtocol, @unchecked Sendable {
-    nonisolated(unsafe) static var responses: [URL: AlertsStubbedResponse] = [:]
-
-    override class func canInit(with request: URLRequest) -> Bool {
-        true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        guard let url = request.url, let response = Self.responses[url] else {
-            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
-            return
-        }
-
-        let httpResponse = HTTPURLResponse(
-            url: url,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: ["Content-Type": response.contentType]
-        )!
-        client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: response.body)
-        client?.urlProtocolDidFinishLoading(self)
-    }
-
-    override func stopLoading() {}
-}
-
-private extension URLSession {
-    static func alertStubbed(with responses: [URL: AlertsStubbedResponse]) -> URLSession {
-        AlertsURLProtocolStub.responses = responses
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [AlertsURLProtocolStub.self]
-        return URLSession(configuration: configuration)
-    }
-}
