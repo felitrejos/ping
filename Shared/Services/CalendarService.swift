@@ -60,8 +60,7 @@ public actor CalendarService: CalendarServiceProviding {
                     startDate: record.startDate,
                     location: record.location,
                     resolvedStation: resolution.stationID,
-                    stationCandidateIDs: resolution.candidateStationIDs,
-                    stationCandidatesDebug: resolution.candidateDebugLines
+                    stationCandidateIDs: resolution.candidateStationIDs
                 )
             )
         }
@@ -92,8 +91,7 @@ public actor CalendarService: CalendarServiceProviding {
         guard let coordinate else {
             return .init(
                 stationID: nil,
-                candidateStationIDs: [],
-                candidateDebugLines: ["No structured coordinate on event."]
+                candidateStationIDs: []
             )
         }
 
@@ -102,8 +100,7 @@ public actor CalendarService: CalendarServiceProviding {
            Date().timeIntervalSince(cached.timestamp) < stationResolutionCacheTTL {
             return .init(
                 stationID: cached.stationID,
-                candidateStationIDs: cached.candidateStationIDs,
-                candidateDebugLines: cached.candidateDebugLines + ["(cached)"]
+                candidateStationIDs: cached.candidateStationIDs
             )
         }
 
@@ -111,8 +108,7 @@ public actor CalendarService: CalendarServiceProviding {
         guard !candidates.isEmpty else {
             return .init(
                 stationID: nil,
-                candidateStationIDs: [],
-                candidateDebugLines: ["No stations found within 2.5 km."]
+                candidateStationIDs: []
             )
         }
 
@@ -145,31 +141,15 @@ public actor CalendarService: CalendarServiceProviding {
 
         let candidateStationIDs = orderedResults.map(\.stop.id)
         let resolvedStationID = orderedResults.first?.stop.id ?? candidates.first?.id
-        var debugLines: [String] = []
-        if let resolvedStationID, let station = stops.first(where: { $0.id == resolvedStationID }) {
-            debugLines.insert("Selected: \(station.name) (\(resolvedStationID))", at: 0)
-        } else {
-            debugLines.insert("Selected: none", at: 0)
-        }
-        for result in orderedResults {
-            if let travelTime = result.travelTime {
-                let walkMinutes = Int((travelTime / 60).rounded())
-                debugLines.append("\(result.stop.name): \(walkMinutes)m (\(result.stop.id))")
-            } else {
-                debugLines.append("\(result.stop.name): no walking route (\(result.stop.id))")
-            }
-        }
 
         stationResolutionCache[cacheKey] = StationResolutionCacheValue(
             stationID: resolvedStationID,
             candidateStationIDs: candidateStationIDs,
-            candidateDebugLines: debugLines,
             timestamp: Date()
         )
         return .init(
             stationID: resolvedStationID,
-            candidateStationIDs: candidateStationIDs,
-            candidateDebugLines: debugLines
+            candidateStationIDs: candidateStationIDs
         )
     }
 }
@@ -225,14 +205,12 @@ private struct StationResolutionCacheKey: Hashable {
 private struct StationResolutionCacheValue {
     let stationID: StopID?
     let candidateStationIDs: [StopID]
-    let candidateDebugLines: [String]
     let timestamp: Date
 }
 
 private struct StationResolutionResult {
     let stationID: StopID?
     let candidateStationIDs: [StopID]
-    let candidateDebugLines: [String]
 }
 
 public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
@@ -245,7 +223,10 @@ public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
         request.transportType = .walking
 
         do {
-            return try await MKDirections(request: request).calculate().routes.first?.expectedTravelTime
+            guard let route = try await MKDirections(request: request).calculate().routes.first else {
+                return nil
+            }
+            return route.expectedTravelTime
         } catch {
             return nil
         }

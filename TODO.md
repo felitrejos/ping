@@ -13,3 +13,6 @@ Add a small/medium WidgetKit widget showing next train at a glance (currently on
 
 ### Map polish
 - Show service alerts directly on affected route segments once alerts are supported
+
+### Upcoming departures list
+Show multiple upcoming trains for the configured route (not only the very next departure), similar to FGC app behavior so users can plan around the next few options.

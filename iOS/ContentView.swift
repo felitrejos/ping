@@ -333,18 +333,6 @@ struct ContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-
-            if !plan.calendarEvent.stationCandidatesDebug.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(plan.calendarEvent.stationCandidatesDebug, id: \.self) { line in
-                        Text(line)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-                .padding(.top, 2)
-            }
         }
         .padding(14)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
