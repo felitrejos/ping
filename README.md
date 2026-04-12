@@ -19,18 +19,16 @@
 
 ## What It Does
 
-`Ping` helps you decide when to leave home for an upcoming FGC commute.
+`Ping` helps you quickly pick an FGC route and decide when to leave.
 
-- Parse bundled FGC GTFS static data from a local ZIP
-- Fetch FGC GTFS Realtime Trip Updates and keep the last known snapshot
-- Match calendar event locations against known FGC station names
-- Compute leave-by times from walking minutes, buffer minutes, and realtime delays
-- Estimate walking time from your live location to the origin station with MapKit
-- Show nearby FGC stations, selected station routes, and walking guidance on the iOS map
-- Show upcoming departures in a macOS menu bar app
-- Show commute plans and next trains in an iOS app
-- Schedule leave-now notifications for upcoming calendar commutes
-- Start and update Live Activities for tracked departures
+- Choose origin and destination stations with fast search
+- Save favorite stations and quickly apply them from chips on Home
+- Tap `Search routes` to load the latest departures only when you want
+- See the next best train and an upcoming departures board
+- Get leave-by guidance based on walking time and realtime delays
+- Get calendar commute suggestions and apply them in one tap
+- Track your current trip with Live Activities on iPhone
+- Use a lightweight macOS menu bar view for quick departure checks
 
 ---
 
@@ -47,10 +45,10 @@ open Ping.xcodeproj
 
 Before running the app:
 
-1. Add the FGC GTFS static ZIP to the app target resources as `google_transit.zip`.
-2. Replace the placeholder stop IDs in `Shared/Models/Constants.swift`.
-3. Let Xcode resolve Swift Package Manager dependencies.
-4. Run the macOS or iOS target from Xcode.
+1. Open the project in Xcode.
+2. Let Swift Package Manager finish resolving dependencies.
+3. Make sure the GTFS ZIP is available in app resources as `google_transit.zip`.
+4. Run either the iOS app or macOS app target.
 
 Dependencies:
 
@@ -91,6 +89,7 @@ User settings are stored with `UserDefaults`:
 - whether to pick the closest FGC station as the origin on app start
 
 Ping starts without a default route. The next-train card appears after both an origin and destination are configured.
+You can change stations freely, then tap `Search routes` to refresh results when ready.
 
 ---
 

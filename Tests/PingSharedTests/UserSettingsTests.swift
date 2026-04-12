@@ -36,4 +36,17 @@ struct UserSettingsTests {
         #expect(UserSettings.homeStationID(defaults: defaults) == "PC")
         #expect(UserSettings.destinationStationID(defaults: defaults) == "SC")
     }
+
+    @Test
+    func favoriteStationsPersistenceDeduplicatesAndSkipsInvalidValues() {
+        let suiteName = "UserSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        UserSettings.setFavoriteStationIDs(["VO", "", "SR", "VO"], defaults: defaults)
+
+        #expect(UserSettings.favoriteStationIDs(defaults: defaults) == ["VO", "SR"])
+    }
 }

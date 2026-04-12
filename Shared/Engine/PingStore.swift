@@ -13,6 +13,7 @@ public final class PingStore {
     public var availableStops: [Stop] = []
     public var availableLines: [String] = []
     public var lineStops: [Stop] = []
+    public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
@@ -65,6 +66,12 @@ public final class PingStore {
 
     public var hasConfiguredDefaultRoute: Bool {
         hasConfiguredRoute && hasConfiguredDestination
+    }
+
+    public var favoriteStations: [Stop] {
+        favoriteStationIDs.compactMap { stopID in
+            availableStops.first(where: { $0.id == stopID })
+        }
     }
 
     private let engine: CommuteEngine
@@ -147,6 +154,7 @@ public final class PingStore {
             destinationStationID = await calendarService.userDestinationStation()
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
             manualWalkingMinutes = UserSettings.walkingMinutes()
+            favoriteStationIDs = UserSettings.favoriteStationIDs()
             availableStops = try await staticService.allStops()
             availableLines = try await staticService.availableLines()
             await reloadLineStops()
@@ -209,17 +217,58 @@ public final class PingStore {
         await refresh()
     }
 
+    public func setRoute(origin: StopID, destination: StopID) async {
+        await calendarService.setUserHomeStation(origin)
+        await calendarService.setUserDestinationStation(destination)
+        homeStationID = origin
+        destinationStationID = destination
+        await autoDetectLine()
+        await refresh()
+    }
+
     public func clearDefaultRoute() async {
         await calendarService.setUserHomeStation(nil)
         await calendarService.setUserDestinationStation(nil)
         homeStationID = nil
         destinationStationID = nil
-        didAutoSelectClosestOriginThisSession = false
+        // Avoid immediately re-selecting nearest origin right after manual clear.
+        didAutoSelectClosestOriginThisSession = true
         dynamicWalkingMinutes = nil
         nextDeparture = nil
         upcomingDepartures = []
         configuredRouteStopsList = []
         await refresh()
+    }
+
+    public func isFavoriteStation(_ stopID: StopID) -> Bool {
+        favoriteStationIDs.contains(stopID)
+    }
+
+    public func addFavoriteStation(_ stopID: StopID) {
+        guard UserSettings.isConfiguredStopID(stopID), !favoriteStationIDs.contains(stopID) else {
+            return
+        }
+
+        favoriteStationIDs.append(stopID)
+        UserSettings.setFavoriteStationIDs(favoriteStationIDs)
+    }
+
+    public func removeFavoriteStation(_ stopID: StopID) {
+        favoriteStationIDs.removeAll { $0 == stopID }
+        UserSettings.setFavoriteStationIDs(favoriteStationIDs)
+    }
+
+    public func toggleFavoriteStation(_ stopID: StopID) {
+        if isFavoriteStation(stopID) {
+            removeFavoriteStation(stopID)
+        } else {
+            addFavoriteStation(stopID)
+        }
+    }
+
+    public func moveFavoriteStations(fromOffsets: IndexSet, toOffset: Int) {
+        favoriteStationIDs.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        UserSettings.setFavoriteStationIDs(favoriteStationIDs)
     }
 
     private func autoDetectLine() async {

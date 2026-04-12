@@ -206,6 +206,7 @@ public enum UserSettings {
         public static let bufferMinutes = "ping.bufferMinutes"
         public static let selectedLine = "ping.selectedLine"
         public static let autoSelectClosestOrigin = "ping.autoSelectClosestOrigin"
+        public static let favoriteStationIDs = "ping.favoriteStationIDs"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
     }
 
@@ -296,6 +297,46 @@ public enum UserSettings {
 
     public static func setAutoSelectClosestOrigin(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(isEnabled, forKey: Keys.autoSelectClosestOrigin)
+    }
+
+    public static func favoriteStationIDs(defaults: UserDefaults = .standard) -> [StopID] {
+        guard let data = defaults.data(forKey: Keys.favoriteStationIDs) else {
+            return []
+        }
+
+        let decoded = (try? JSONDecoder().decode([StopID].self, from: data)) ?? []
+        var seen: Set<StopID> = []
+        return decoded.filter { stopID in
+            guard isConfiguredStopID(stopID) else {
+                return false
+            }
+
+            if seen.contains(stopID) {
+                return false
+            }
+
+            seen.insert(stopID)
+            return true
+        }
+    }
+
+    public static func setFavoriteStationIDs(_ stopIDs: [StopID], defaults: UserDefaults = .standard) {
+        let cleaned = stopIDs
+            .filter { isConfiguredStopID($0) }
+            .reduce(into: [StopID]()) { result, stopID in
+                if !result.contains(stopID) {
+                    result.append(stopID)
+                }
+            }
+
+        if cleaned.isEmpty {
+            defaults.removeObject(forKey: Keys.favoriteStationIDs)
+            return
+        }
+
+        if let encoded = try? JSONEncoder().encode(cleaned) {
+            defaults.set(encoded, forKey: Keys.favoriteStationIDs)
+        }
     }
 
     public static func gtfsLastFetched(defaults: UserDefaults = .standard) -> Date? {

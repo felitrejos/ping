@@ -14,17 +14,24 @@ struct ContentView: View {
     @State private var destinationResults: [Stop] = []
     @State private var isEditingOrigin = false
     @State private var isEditingDestination = false
+    @State private var selectedOriginID: StopID?
     @State private var selectedOriginName: String?
+    @State private var selectedDestinationID: StopID?
     @State private var selectedDestinationName: String?
     @FocusState private var originFocused: Bool
     @FocusState private var destinationFocused: Bool
     @State private var departuresExpanded = false
+    @State private var activeFavoritePopoverStopID: StopID?
+    @State private var routeSearchCommitted = false
+    @State private var isSearchingRoute = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 pingHeader
                 routeSection
+                quickSwitchSection
+                searchRoutesButton
                 statusBanner
                 primaryCard
                 upcomingDeparturesSection
@@ -36,6 +43,10 @@ struct ContentView: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
+        .gesture(
+            TapGesture().onEnded { dismissStationFocus() },
+            including: .gesture
+        )
         .refreshable { await store.refresh() }
         .onChange(of: store.nextDeparture) { _, dep in
             guard tracker.isTracking, let dep else { return }
@@ -96,61 +107,246 @@ struct ContentView: View {
     }
 
     private var routeSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("ORIGIN")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.3)
-                .padding(.bottom, 4)
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("ORIGIN")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.3)
+                        .padding(.bottom, 4)
 
-            stationInput(
-                placeholder: "Search station",
-                query: $originQuery,
-                results: $originResults,
-                isEditing: $isEditingOrigin,
-                focused: $originFocused,
-                selectedName: $selectedOriginName,
-                onClear: {
-                    Task { await store.setHomeStation(nil) }
+                    stationInput(
+                        placeholder: "Search station",
+                        query: $originQuery,
+                        results: $originResults,
+                        isEditing: $isEditingOrigin,
+                        focused: $originFocused,
+                        selectedName: $selectedOriginName,
+                        onClear: {
+                            selectedOriginID = nil
+                            routeSearchCommitted = false
+                        }
+                    ) { stop in
+                        selectedOriginID = stop.id
+                        selectedOriginName = stop.name
+                        originQuery = stop.name
+                        originFocused = false
+                        isEditingOrigin = false
+                        routeSearchCommitted = false
+                    }
+
+                    Text("DESTINATION")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .tracking(0.3)
+                        .padding(.top, 14)
+                        .padding(.bottom, 4)
+
+                    stationInput(
+                        placeholder: "Search station",
+                        query: $destinationQuery,
+                        results: $destinationResults,
+                        isEditing: $isEditingDestination,
+                        focused: $destinationFocused,
+                        selectedName: $selectedDestinationName,
+                        onClear: {
+                            selectedDestinationID = nil
+                            routeSearchCommitted = false
+                        }
+                    ) { stop in
+                        selectedDestinationID = stop.id
+                        selectedDestinationName = stop.name
+                        destinationQuery = stop.name
+                        destinationFocused = false
+                        isEditingDestination = false
+                        routeSearchCommitted = false
+                    }
                 }
-            ) { stop in
-                selectedOriginName = stop.name
-                originQuery = ""
-                originFocused = false
-                isEditingOrigin = false
-                Task { await store.setHomeStation(stop.id) }
-            }
 
-            Text("DESTINATION")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.3)
-                .padding(.top, 14)
-                .padding(.bottom, 4)
-
-            stationInput(
-                placeholder: "Search station",
-                query: $destinationQuery,
-                results: $destinationResults,
-                isEditing: $isEditingDestination,
-                focused: $destinationFocused,
-                selectedName: $selectedDestinationName,
-                onClear: {
-                    Task { await store.setDestinationStation(nil) }
+                Button {
+                    guard hasPendingDefaultRoute else {
+                        return
+                    }
+                    swapPendingRoute()
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.headline.weight(.semibold))
+                        .frame(width: 34, height: 34)
                 }
-            ) { stop in
-                selectedDestinationName = stop.name
-                destinationQuery = ""
-                destinationFocused = false
-                isEditingDestination = false
-                Task { await store.setDestinationStation(stop.id) }
+                .buttonStyle(.bordered)
+                .foregroundStyle(.secondary)
+                .opacity(hasPendingDefaultRoute ? 1 : 0.45)
+                .disabled(!hasPendingDefaultRoute)
+                .accessibilityLabel("Swap origin and destination")
             }
+            .padding(.bottom, 4)
         }
-        .padding(.bottom, 6)
+    }
+
+    @ViewBuilder
+    private var quickSwitchSection: some View {
+        if !store.favoriteStations.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Favorites")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(store.favoriteStations) { stop in
+                            Button {
+                                dismissStationFocus()
+                                activeFavoritePopoverStopID = stop.id
+                            } label: {
+                                Text(stop.name)
+                                    .font(.callout.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 11)
+                                    .background(Color(.secondarySystemBackground), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .popover(
+                                isPresented: favoritePopoverBinding(for: stop.id),
+                                attachmentAnchor: .rect(.bounds),
+                                arrowEdge: .bottom
+                            ) {
+                                VStack(alignment: .leading, spacing: 10) {
+                                    Button {
+                                        setPendingOrigin(stop.id)
+                                        activeFavoritePopoverStopID = nil
+                                    } label: {
+                                        Text("Set as origin")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.blue)
+                                    .controlSize(.large)
+
+                                    Button {
+                                        setPendingDestination(stop.id)
+                                        activeFavoritePopoverStopID = nil
+                                    } label: {
+                                        Text("Set as destination")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.green)
+                                    .controlSize(.large)
+                                }
+                                .frame(minWidth: 180)
+                                .padding()
+                                .presentationCompactAdaptation(.popover)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .padding(.horizontal, -16)
+            }
+            .padding(.top, -2)
+        }
+    }
+
+    private var searchRoutesButton: some View {
+        Button {
+            Task { await searchRoutes() }
+        } label: {
+            HStack {
+                if isSearchingRoute {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                Text(isSearchingRoute ? "Searching..." : "Search routes")
+            }
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .disabled(!hasPendingDefaultRoute || isSearchingRoute)
+    }
+
+    private func favoritePopoverBinding(for stopID: StopID) -> Binding<Bool> {
+        Binding(
+            get: { activeFavoritePopoverStopID == stopID },
+            set: { isPresented in
+                activeFavoritePopoverStopID = isPresented ? stopID : nil
+            }
+        )
+    }
+
+    private var hasPendingDefaultRoute: Bool {
+        selectedOriginID != nil && selectedDestinationID != nil
+    }
+
+    private func setPendingOrigin(_ stopID: StopID) {
+        selectedOriginID = stopID
+        selectedOriginName = stationName(for: stopID)
+        if !originFocused {
+            originQuery = selectedOriginName ?? ""
+        }
+        routeSearchCommitted = false
+    }
+
+    private func setPendingDestination(_ stopID: StopID) {
+        selectedDestinationID = stopID
+        selectedDestinationName = stationName(for: stopID)
+        if !destinationFocused {
+            destinationQuery = selectedDestinationName ?? ""
+        }
+        routeSearchCommitted = false
+    }
+
+    private func stationName(for stopID: StopID) -> String? {
+        store.availableStops.first(where: { $0.id == stopID })?.name
+    }
+
+    private func swapPendingRoute() {
+        guard let originID = selectedOriginID, let destinationID = selectedDestinationID else {
+            return
+        }
+
+        let originName = selectedOriginName
+        selectedOriginID = destinationID
+        selectedOriginName = selectedDestinationName
+        selectedDestinationID = originID
+        selectedDestinationName = originName
+        if !originFocused {
+            originQuery = selectedOriginName ?? ""
+        }
+        if !destinationFocused {
+            destinationQuery = selectedDestinationName ?? ""
+        }
+        routeSearchCommitted = false
+    }
+
+    private func searchRoutes() async {
+        guard let originID = selectedOriginID, let destinationID = selectedDestinationID else {
+            return
+        }
+
+        isSearchingRoute = true
+        defer { isSearchingRoute = false }
+
+        await store.setRoute(origin: originID, destination: destinationID)
+        routeSearchCommitted = true
+    }
+
+    private func dismissStationFocus() {
+        guard originFocused || destinationFocused else {
+            return
+        }
+
+        originFocused = false
+        destinationFocused = false
     }
 
     private func clearRouteFields() {
+        selectedOriginID = nil
         originQuery = ""
+        selectedDestinationID = nil
         destinationQuery = ""
         selectedOriginName = nil
         selectedDestinationName = nil
@@ -160,6 +356,8 @@ struct ContentView: View {
         destinationFocused = false
         isEditingOrigin = false
         isEditingDestination = false
+        routeSearchCommitted = false
+        activeFavoritePopoverStopID = nil
     }
 
     private func stationInput(
@@ -221,7 +419,7 @@ struct ContentView: View {
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
 
             if isEditing.wrappedValue && !results.wrappedValue.isEmpty {
-                VStack(spacing: 0) {
+                VStack(spacing: 6) {
                     ForEach(results.wrappedValue.prefix(5)) { stop in
                         Button {
                             onSelect(stop)
@@ -234,15 +432,15 @@ struct ContentView: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 14)
+                            .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
                         }
-                        if stop.id != results.wrappedValue.prefix(5).last?.id {
-                            Divider().padding(.leading, 16)
-                        }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(8)
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
-                .padding(.top, 4)
+                .padding(.top, 6)
             }
         }
     }
@@ -250,10 +448,14 @@ struct ContentView: View {
     private func prefillStationNames(from stops: [Stop]) async {
         let originID = await store.selectedHomeStationID()
         let destID = await store.selectedDestinationStationID()
+        selectedOriginID = originID
+        selectedDestinationID = destID
 
         if let originID, let name = stops.first(where: { $0.id == originID })?.name {
             selectedOriginName = name
-            originQuery = name
+            if !originFocused {
+                originQuery = name
+            }
         } else if !originFocused {
             selectedOriginName = nil
             originQuery = ""
@@ -261,7 +463,9 @@ struct ContentView: View {
 
         if let destID, let name = stops.first(where: { $0.id == destID })?.name {
             selectedDestinationName = name
-            destinationQuery = name
+            if !destinationFocused {
+                destinationQuery = name
+            }
         } else if !destinationFocused {
             selectedDestinationName = nil
             destinationQuery = ""
@@ -270,11 +474,18 @@ struct ContentView: View {
 
     @ViewBuilder
     private var statusBanner: some View {
-        if !store.hasConfiguredDefaultRoute {
+        if !hasPendingDefaultRoute {
             NoticeCard(
                 title: "Choose your origin and destination above.",
                 message: nil,
                 systemImage: "location.fill",
+                tint: .blue
+            )
+        } else if !routeSearchCommitted {
+            NoticeCard(
+                title: "Tap Search routes to load trains.",
+                message: nil,
+                systemImage: "magnifyingglass",
                 tint: .blue
             )
         } else if let msg = store.lastErrorMessage {
@@ -289,14 +500,14 @@ struct ContentView: View {
 
     @ViewBuilder
     private var primaryCard: some View {
-        if store.hasConfiguredDefaultRoute, let dep = store.nextDeparture {
+        if routeSearchCommitted, store.hasConfiguredDefaultRoute, let dep = store.nextDeparture {
             TrainHeroCard(
                 departure: dep,
                 isTracking: tracker.isTracking,
                 onStartTracking: { Task { await tracker.start(departure: dep, store: store) } },
                 onStopTracking: { Task { await tracker.stop() } }
             )
-        } else if store.hasConfiguredDefaultRoute {
+        } else if routeSearchCommitted, store.hasConfiguredDefaultRoute {
             NoTrainsCard()
         }
     }
@@ -304,7 +515,7 @@ struct ContentView: View {
     @ViewBuilder
     private var upcomingDeparturesSection: some View {
         let departures = upcomingDepartureRows
-        if store.hasConfiguredDefaultRoute, !departures.isEmpty {
+        if routeSearchCommitted, store.hasConfiguredDefaultRoute, !departures.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("Upcoming departures")
@@ -422,7 +633,7 @@ struct ContentView: View {
             }
 
             Button {
-                Task { await applyCommutePlan(plan) }
+                applyCommutePlan(plan)
             } label: {
                 Label("Use this route", systemImage: "arrow.triangle.branch")
                     .font(.subheadline.weight(.semibold))
@@ -455,9 +666,10 @@ struct ContentView: View {
         return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
 
-    private func applyCommutePlan(_ plan: CommutePlan) async {
-        await store.setHomeStation(plan.originStationID)
-        await store.setDestinationStation(plan.destinationStationID)
+    private func applyCommutePlan(_ plan: CommutePlan) {
+        setPendingOrigin(plan.originStationID)
+        setPendingDestination(plan.destinationStationID)
+        routeSearchCommitted = false
     }
 
     private var nextCalendarCommute: CommutePlan? {
@@ -724,7 +936,7 @@ private struct CountdownText: View {
         case .hero:
             return "\(minutes)min"
         case .board:
-            return "\(minutes)min \(seconds)s"
+            return "\(minutes)m \(seconds)s"
         }
     }
 }
@@ -748,7 +960,7 @@ private struct HeroCountdownValue: View {
                         .font(.system(size: 56, weight: .heavy, design: .rounded))
                         .contentTransition(.numericText())
                     Text("min")
-                        .font(.title2)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
             }

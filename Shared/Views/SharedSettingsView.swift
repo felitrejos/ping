@@ -5,6 +5,7 @@ public struct SharedSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UserSettings.Keys.walkingMinutes) private var manualWalkingMinutes = UserSettings.defaultWalkingMinutes
     @AppStorage(UserSettings.Keys.autoSelectClosestOrigin) private var autoSelectClosestOrigin = false
+    @State private var isFavoritePickerPresented = false
 
     #if os(macOS)
     @State private var originQuery = ""
@@ -26,12 +27,23 @@ public struct SharedSettingsView: View {
             #if os(macOS)
             routeSection
             #endif
+            favoritesSection
             originAutomationSection
             walkingSection
             calendarSection
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
+        .sheet(isPresented: $isFavoritePickerPresented) {
+            FavoriteStationPickerView(
+                availableStops: store.availableStops,
+                favoriteStationIDs: Set(store.favoriteStationIDs),
+                onSelect: { stop in
+                    store.addFavoriteStation(stop.id)
+                    isFavoritePickerPresented = false
+                }
+            )
+        }
         #if os(macOS)
         .toolbar(.hidden, for: .automatic)
         .onChange(of: store.availableStops) { _, stops in
@@ -235,6 +247,46 @@ public struct SharedSettingsView: View {
     }
     #endif
 
+    @ViewBuilder
+    private var favoritesSection: some View {
+        Section {
+            if store.favoriteStations.isEmpty {
+                Text("No favorites yet. Add stations you use most for quick switching.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(store.favoriteStations) { stop in
+                    HStack(spacing: 10) {
+                        Text(stop.name)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "line.3.horizontal")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button("Remove", role: .destructive) {
+                                store.removeFavoriteStation(stop.id)
+                            }
+                        }
+                }
+                .onMove(perform: store.moveFavoriteStations(fromOffsets:toOffset:))
+                #if !os(macOS)
+                .environment(\.editMode, .constant(.active))
+                #endif
+            }
+
+            Button("Add new favorite") {
+                isFavoritePickerPresented = true
+            }
+            .foregroundStyle(.blue)
+        } header: {
+            Text("Favorite stations")
+        } footer: {
+            Text("Tap favorite chips on Home to choose origin or destination.")
+        }
+    }
+
     private var originAutomationSection: some View {
         Section {
             Toggle(isOn: $autoSelectClosestOrigin) {
@@ -346,6 +398,58 @@ public struct SharedSettingsView: View {
             Text("Calendar")
         } footer: {
             Text("Ping uses your calendar to suggest when to leave for upcoming commutes.")
+        }
+    }
+}
+
+private struct FavoriteStationPickerView: View {
+    let availableStops: [Stop]
+    let favoriteStationIDs: Set<StopID>
+    let onSelect: (Stop) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+
+    private var filteredStops: [Stop] {
+        availableStops
+            .filter { !favoriteStationIDs.contains($0.id) }
+            .filter { stop in
+                query.isEmpty || stop.name.localizedStandardContains(query)
+            }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Stations") {
+                    ForEach(filteredStops) { stop in
+                        Button {
+                            onSelect(stop)
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(stop.name)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.vertical, 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .navigationTitle("Add Favorite")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, prompt: Text("Search").bold())
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
         }
     }
 }

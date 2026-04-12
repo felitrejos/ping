@@ -4,10 +4,7 @@
 
 ### Now
 
-#### Favorite stations + quick switch
-- Let users pin favorite stations (home, uni, work, etc.)
-- Add one-tap quick switch actions for common origin/destination pairs
-- Keep this as the primary UX instead of separate AM/PM direction presets
+- No immediate items (favorite stations + quick switch shipped)
 
 ### Next
 

@@ -234,11 +234,12 @@ public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
 
     private func mapItem(for coordinate: TransitCoordinate) -> MKMapItem {
         MKMapItem(
-            location: CLLocation(
-                latitude: coordinate.latitude,
-                longitude: coordinate.longitude
-            ),
-            address: nil
+            placemark: MKPlacemark(
+                coordinate: CLLocationCoordinate2D(
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude
+                )
+            )
         )
     }
 }
