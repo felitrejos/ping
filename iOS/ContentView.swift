@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var selectedDestinationName: String?
     @FocusState private var originFocused: Bool
     @FocusState private var destinationFocused: Bool
+    @State private var departuresExpanded = false
 
     var body: some View {
         ScrollView {
@@ -26,6 +27,7 @@ struct ContentView: View {
                 routeSection
                 statusBanner
                 primaryCard
+                upcomingDeparturesSection
                 if let plan = nextCalendarCommute {
                     commuteRow(plan)
                 }
@@ -299,6 +301,100 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private var upcomingDeparturesSection: some View {
+        let departures = upcomingDepartureRows
+        if store.hasConfiguredDefaultRoute, !departures.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Upcoming departures")
+                        .font(.headline)
+                    Spacer()
+                    if departures.count > 3 {
+                        Button {
+                            departuresExpanded.toggle()
+                        } label: {
+                            Label(
+                                departuresExpanded ? "Collapse" : "Expand",
+                                systemImage: departuresExpanded ? "chevron.up" : "chevron.down"
+                            )
+                            .labelStyle(.titleAndIcon)
+                            .font(.caption.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+
+                if departuresExpanded {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(departures) { departure in
+                                departureBoardRow(departure)
+                                if departure.id != departures.last?.id {
+                                    Divider().padding(.leading, 12)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 260)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(departures.prefix(3)) { departure in
+                            departureBoardRow(departure)
+                            if departure.id != departures.prefix(3).last?.id {
+                                Divider().padding(.leading, 12)
+                            }
+                        }
+                    }
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
+        }
+    }
+
+    private func departureBoardRow(_ departure: LiveDeparture) -> some View {
+        let routeCode = departure.trainLabel.split(separator: " ").first.map(String.init) ?? "FGC"
+
+        return HStack(alignment: .center, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Text(routeCode)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 20)
+                        .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+
+                HStack(spacing: 6) {
+                    Text(departure.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))
+                    Text("→")
+                    Text(departure.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
+                }
+                .font(.subheadline.monospacedDigit().weight(.semibold))
+                .foregroundStyle(.primary)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 6) {
+                Text("Leave in")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                CountdownText(targetDate: departure.effectiveDepartureTime, mode: .board)
+                    .font(.subheadline.monospacedDigit().weight(.semibold))
+                if departure.isDelayed {
+                    Text("+\(departure.delayMinutes) min")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+    }
+
     private func commuteRow(_ plan: CommutePlan) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 10) {
@@ -366,6 +462,14 @@ struct ContentView: View {
 
     private var nextCalendarCommute: CommutePlan? {
         store.commutePlans.first { !isCurrentRoutePlan($0) }
+    }
+
+    private var upcomingDepartureRows: [LiveDeparture] {
+        guard let nextDeparture = store.nextDeparture else {
+            return store.upcomingDepartures
+        }
+
+        return store.upcomingDepartures.filter { $0.id != nextDeparture.id }
     }
 
     private func isCurrentRoutePlan(_ plan: CommutePlan) -> Bool {
@@ -454,9 +558,14 @@ private struct TrainHeroCard: View {
     @Environment(PingStore.self) private var store
 
     private var walkMin: Int { store.walkingMinutes }
-    private var leaveIn: Int { max(0, departure.minutesUntilDeparture - walkMin) }
     private var rideMin: Int {
         max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
+    }
+    private var routeCode: String {
+        departure.trainLabel.split(separator: " ").first.map(String.init) ?? store.selectedLine
+    }
+    private var leaveByDate: Date {
+        departure.effectiveDepartureTime.addingTimeInterval(TimeInterval(-walkMin * 60))
     }
 
     var body: some View {
@@ -465,8 +574,10 @@ private struct TrainHeroCard: View {
             Divider().padding(.horizontal, 16)
             heroCountdown
             timelineSection
-            Divider().padding(.horizontal, 16)
-            statusRow
+            if departure.isDelayed {
+                Divider().padding(.horizontal, 16)
+                statusRow
+            }
         }
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
     }
@@ -477,24 +588,27 @@ private struct TrainHeroCard: View {
                 Text("Leave in")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("\(leaveIn)")
-                        .font(.system(size: 72, weight: .heavy, design: .rounded))
-                        .contentTransition(.numericText())
-                    Text("min")
-                        .font(.title2.weight(.medium))
-                        .foregroundStyle(.secondary)
-                }
+                    .padding(.bottom, 2)
+
+                HeroCountdownValue(targetDate: leaveByDate)
             }
 
             Spacer(minLength: 12)
 
-            VStack(alignment: .trailing, spacing: 1) {
-                Text("ARRIVE BY")
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Text(departure.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
-                    .font(.callout.weight(.semibold))
+            VStack(alignment: .trailing, spacing: 6) {
+                HStack(spacing: 5) {
+                    Text(departure.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))
+                    Text("→")
+                        .foregroundStyle(.secondary)
+                    Text(departure.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
+                }
+                .font(.callout.weight(.semibold))
+
+                Text(routeCode)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 18)
+                    .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
         }
         .padding(.horizontal, 16)
@@ -533,19 +647,12 @@ private struct TrainHeroCard: View {
 
     private var statusRow: some View {
         HStack(spacing: 6) {
-            if departure.isDelayed {
-                Circle()
-                    .fill(Color.orange)
-                    .frame(width: 8, height: 8)
-                Text("Delayed · \(departure.statusText)")
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.orange)
-                Text("·")
-                    .foregroundStyle(.quaternary)
-            }
-            Text("departs \(departure.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            Circle()
+                .fill(Color.orange)
+                .frame(width: 8, height: 8)
+            Text("Delayed · \(departure.statusText)")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(.orange)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -587,6 +694,67 @@ private struct TrainHeroCard: View {
 }
 
 // MARK: - Supporting views
+
+private struct CountdownText: View {
+    enum Mode {
+        case hero
+        case board
+    }
+
+    let targetDate: Date
+    let mode: Mode
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            Text(formattedCountdown(from: timeline.date))
+        }
+    }
+
+    private func formattedCountdown(from now: Date) -> String {
+        let remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now)))
+        let hours = remainingSeconds / 3600
+        let minutes = (remainingSeconds % 3600) / 60
+        let seconds = remainingSeconds % 60
+
+        if remainingSeconds >= 3600 {
+            return "\(hours)h \(minutes)min"
+        }
+
+        switch mode {
+        case .hero:
+            return "\(minutes)min"
+        case .board:
+            return "\(minutes)min \(seconds)s"
+        }
+    }
+}
+
+private struct HeroCountdownValue: View {
+    let targetDate: Date
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            let remainingSeconds = max(0, Int(targetDate.timeIntervalSince(timeline.date)))
+            let hours = remainingSeconds / 3600
+            let minutes = (remainingSeconds % 3600) / 60
+
+            if remainingSeconds >= 3600 {
+                Text("\(hours)h \(minutes)min")
+                    .font(.system(size: 50, weight: .heavy, design: .rounded))
+                    .contentTransition(.numericText())
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(minutes)")
+                        .font(.system(size: 56, weight: .heavy, design: .rounded))
+                        .contentTransition(.numericText())
+                    Text("min")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
 
 private struct NoTrainsCard: View {
     var body: some View {

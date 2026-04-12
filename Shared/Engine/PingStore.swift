@@ -6,8 +6,10 @@ import Observation
 @Observable
 public final class PingStore {
     public var nextDeparture: LiveDeparture?
+    public var upcomingDepartures: [LiveDeparture] = []
     public var nextCommute: CommutePlan?
     public var commutePlans: [CommutePlan] = []
+    public var configuredRouteStopsList: [Stop] = []
     public var availableStops: [Stop] = []
     public var availableLines: [String] = []
     public var lineStops: [Stop] = []
@@ -37,7 +39,11 @@ public final class PingStore {
     }
 
     public var isLocationAccessGranted: Bool {
+        #if os(macOS)
+        locationAuthorizationStatus == .authorizedAlways || locationAuthorizationStatus == .authorized
+        #else
         locationAuthorizationStatus == .authorizedAlways || locationAuthorizationStatus == .authorizedWhenInUse
+        #endif
     }
 
     public private(set) var dynamicWalkingMinutes: Int?
@@ -148,10 +154,14 @@ public final class PingStore {
             commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
             nextCommute = commutePlans.first
             nextDeparture = try await defaultBestDeparture()
+            upcomingDepartures = try await defaultUpcomingDepartures()
+            configuredRouteStopsList = await configuredRouteStops()
             lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
             lastErrorMessage = error.localizedDescription
+            upcomingDepartures = []
+            configuredRouteStopsList = []
             lastUpdated = Date()
         }
     }
@@ -207,6 +217,8 @@ public final class PingStore {
         didAutoSelectClosestOriginThisSession = false
         dynamicWalkingMinutes = nil
         nextDeparture = nil
+        upcomingDepartures = []
+        configuredRouteStopsList = []
         await refresh()
     }
 
@@ -260,6 +272,41 @@ public final class PingStore {
         }
 
         return try await engine.bestCatchableDeparture(from: homeStopID, to: destination)
+    }
+
+    private func defaultUpcomingDepartures() async throws -> [LiveDeparture] {
+        let resolvedHomeStationID: StopID?
+        if let homeStationID {
+            resolvedHomeStationID = homeStationID
+        } else {
+            resolvedHomeStationID = await calendarService.userHomeStation()
+        }
+
+        let resolvedDestinationStationID: StopID?
+        if let destinationStationID {
+            resolvedDestinationStationID = destinationStationID
+        } else {
+            resolvedDestinationStationID = await calendarService.userDestinationStation()
+        }
+
+        homeStationID = resolvedHomeStationID
+        destinationStationID = resolvedDestinationStationID
+
+        guard let homeStopID = resolvedHomeStationID, let destination = resolvedDestinationStationID else {
+            return []
+        }
+
+        let candidates = try await engine.upcomingDepartures(from: homeStopID, to: destination, limit: 180)
+        let now = Date()
+        let leaveNowCutoff = now.addingTimeInterval(TimeInterval((walkingMinutes + UserSettings.bufferMinutes()) * 60))
+        let horizon = now.addingTimeInterval(12 * 60 * 60)
+
+        return candidates
+            .filter { departure in
+                departure.effectiveDepartureTime >= leaveNowCutoff &&
+                    departure.effectiveDepartureTime <= horizon
+            }
+            .sorted { $0.effectiveDepartureTime < $1.effectiveDepartureTime }
     }
 
     private func updateWalkingETA() async {
