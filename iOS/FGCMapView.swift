@@ -6,10 +6,13 @@ struct FGCMapView: View {
     @Environment(PingStore.self) private var store
     @State private var position: MapCameraPosition = .automatic
     @State private var routeStops: [Stop] = []
+    @State private var transitRailRoute: MKPolyline?
+    @State private var transitRailRouteKey: String?
     @State private var walkingRoute: MKPolyline?
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
     @State private var destinationID: StopID?
+    @State private var isGeoTrainOverlayEnabled = true
 
     private var stationsWithCoordinates: [Stop] {
         store.availableStops.filter { $0.coordinate != nil }
@@ -29,13 +32,47 @@ struct FGCMapView: View {
         return stationsWithCoordinates.first { $0.id == destinationID }
     }
 
+    private var visibleGeoTrainUnits: [GeoTrainUnit] {
+        guard store.hasConfiguredDefaultRoute else {
+            return store.geoTrainUnits
+        }
+
+        let selectedLine = store.selectedLine.uppercased()
+        let lineUnits = store.geoTrainUnits.filter { $0.line.uppercased() == selectedLine }
+        guard let expectedDirection = expectedRouteDirection, !lineUnits.isEmpty else {
+            return lineUnits
+        }
+
+        let directionUnits = lineUnits.filter { $0.direction.uppercased() == expectedDirection }
+        return directionUnits.isEmpty ? lineUnits : directionUnits
+    }
+
     private var railPolyline: MKPolyline? {
-        let coordinates = routeStops.compactMap { $0.coordinate?.mapCoordinate }
+        transitRailRoute
+    }
+
+    private var selectedLinePolyline: MKPolyline? {
+        let coordinates = store.lineStops.compactMap { $0.coordinate?.mapCoordinate }
         guard coordinates.count >= 2 else {
             return nil
         }
 
         return MKPolyline(coordinates: coordinates, count: coordinates.count)
+    }
+
+    private var expectedRouteDirection: String? {
+        guard
+            let originID,
+            let destinationID,
+            !store.lineStops.isEmpty,
+            let originIndex = store.lineStops.firstIndex(where: { $0.id == originID }),
+            let destinationIndex = store.lineStops.firstIndex(where: { $0.id == destinationID }),
+            originIndex != destinationIndex
+        else {
+            return nil
+        }
+
+        return destinationIndex > originIndex ? "D" : "A"
     }
 
     private var closestStations: [Stop] {
@@ -54,6 +91,11 @@ struct FGCMapView: View {
 
     var body: some View {
         Map(position: $position) {
+            if let selectedLinePolyline {
+                MapPolyline(selectedLinePolyline)
+                    .stroke(.green.opacity(0.45), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+            }
+
             if let walkingRoute {
                 MapPolyline(walkingRoute)
                     .stroke(.blue, lineWidth: 5)
@@ -61,7 +103,7 @@ struct FGCMapView: View {
 
             if let railPolyline {
                 MapPolyline(railPolyline)
-                    .stroke(.green, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
+                    .stroke(.mint, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
             }
 
             ForEach(stationsWithCoordinates) { station in
@@ -81,6 +123,14 @@ struct FGCMapView: View {
                 }
             }
 
+            if isGeoTrainOverlayEnabled {
+                ForEach(visibleGeoTrainUnits) { unit in
+                    Annotation("", coordinate: unit.coordinate.mapCoordinate) {
+                        GeoTrainMarker(unit: unit)
+                    }
+                }
+            }
+
             UserAnnotation()
         }
         .mapControls {
@@ -88,6 +138,12 @@ struct FGCMapView: View {
             MapUserLocationButton()
             MapScaleView()
         }
+        .overlay(alignment: .topLeading) {
+            geoTrainOverlayButton
+                .padding(.top, 12)
+                .padding(.leading, 14)
+        }
+        .animation(.linear(duration: 6.0), value: visibleGeoTrainUnits)
         .safeAreaInset(edge: .bottom) {
             MapStatusPanel(
                 origin: originStop,
@@ -96,17 +152,11 @@ struct FGCMapView: View {
                 walkMinutes: store.walkingMinutes,
                 isUsingLiveLocation: store.isUsingLiveLocation,
                 routeStops: routeStops,
+                geoTrainCount: visibleGeoTrainUnits.count,
                 closestStations: closestStations,
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
                 onDismissStation: clearSelectedStation,
-                onClearRoute: {
-                    clearSelectedStation()
-                    Task {
-                        await store.clearDefaultRoute()
-                        await reloadMapData()
-                    }
-                },
                 onSetOrigin: { station in
                     clearSelectedStation()
                     Task {
@@ -128,10 +178,22 @@ struct FGCMapView: View {
         }
         .task {
             await reloadMapData()
+            await store.refreshGeoTrainUnits()
+        }
+        .task(id: isGeoTrainOverlayEnabled) {
+            guard isGeoTrainOverlayEnabled else {
+                return
+            }
+
+            while !Task.isCancelled, isGeoTrainOverlayEnabled {
+                await store.refreshGeoTrainUnits()
+                try? await Task.sleep(for: .seconds(6))
+            }
         }
         .refreshable {
             await store.refresh()
             await reloadMapData()
+            await store.refreshGeoTrainUnits()
         }
         .onChange(of: store.availableStops) { _, _ in
             Task { await reloadMapData() }
@@ -142,6 +204,30 @@ struct FGCMapView: View {
         .onChange(of: store.nextDeparture) { _, _ in
             Task { await updateWalkingRoute() }
         }
+    }
+
+    @ViewBuilder
+    private var geoTrainOverlayButton: some View {
+        Button {
+            isGeoTrainOverlayEnabled.toggle()
+        } label: {
+            ZStack {
+                Image(systemName: "tram.fill")
+                    .font(.headline.weight(.semibold))
+                    .frame(width: 40, height: 40)
+
+                if !isGeoTrainOverlayEnabled {
+                    Rectangle()
+                        .fill(.red)
+                        .frame(width: 28, height: 2.5)
+                        .rotationEffect(.degrees(-38))
+                }
+            }
+            .foregroundStyle(isGeoTrainOverlayEnabled ? .primary : .secondary)
+        }
+        .accessibilityLabel(isGeoTrainOverlayEnabled ? "Disable GeoTrain overlay" : "Enable GeoTrain overlay")
+        .accessibilityHint("Shows live train positions on the map")
+        .ifAvailableGlassMapButton()
     }
 
     private func clearSelectedStation() {
@@ -170,8 +256,27 @@ struct FGCMapView: View {
         originID = await store.selectedHomeStationID()
         destinationID = await store.selectedDestinationStationID()
         routeStops = await store.configuredRouteStops()
+        await updateRailRoute()
         await updateWalkingRoute()
         updateCamera()
+    }
+
+    private func updateRailRoute() async {
+        guard
+            let originCoordinate = originStop?.coordinate?.mapCoordinate,
+            let destinationCoordinate = destinationStop?.coordinate?.mapCoordinate
+        else {
+            transitRailRoute = nil
+            transitRailRouteKey = nil
+            return
+        }
+
+        let key = "\(originID ?? "")-\(destinationID ?? "")"
+        if transitRailRouteKey == key, transitRailRoute != nil {
+            return
+        }
+        transitRailRouteKey = key
+        transitRailRoute = await Self.transitRailRoute(from: originCoordinate, to: destinationCoordinate)
     }
 
     private func updateWalkingRoute() async {
@@ -222,9 +327,26 @@ struct FGCMapView: View {
         }
     }
 
+    private static func transitRailRoute(
+        from source: CLLocationCoordinate2D,
+        to destination: CLLocationCoordinate2D
+    ) async -> MKPolyline? {
+        let request = MKDirections.Request()
+        request.source = mapItem(for: source)
+        request.destination = mapItem(for: destination)
+        request.transportType = .transit
+        request.requestsAlternateRoutes = true
+        request.departureDate = .now
+
+        do {
+            return try await MKDirections(request: request).calculate().routes.first?.polyline
+        } catch {
+            return nil
+        }
+    }
+
     private static func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        return MKMapItem(location: location, address: nil)
+        MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
     }
 }
 
@@ -288,11 +410,11 @@ private struct MapStatusPanel: View {
     let walkMinutes: Int
     let isUsingLiveLocation: Bool
     let routeStops: [Stop]
+    let geoTrainCount: Int
     let closestStations: [Stop]
     let hasUserLocation: Bool
     let selectedStation: Stop?
     let onDismissStation: () -> Void
-    let onClearRoute: () -> Void
     let onSetOrigin: (Stop) -> Void
     let onSetDestination: (Stop) -> Void
     let onRequestLocation: () -> Void
@@ -321,7 +443,6 @@ private struct MapStatusPanel: View {
                 Label("Go to \(origin?.name ?? "the station")", systemImage: isUsingLiveLocation ? "location.fill" : "figure.walk")
                     .font(.headline)
                 Spacer()
-                clearRouteButton
             }
             HStack {
                 Label("Train departs", systemImage: "tram.fill")
@@ -335,6 +456,9 @@ private struct MapStatusPanel: View {
             Label("\(walkMinutes) min walk", systemImage: isUsingLiveLocation ? "location.fill" : "figure.walk")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -346,22 +470,14 @@ private struct MapStatusPanel: View {
                     .lineLimit(2)
 
                 Spacer()
-
-                clearRouteButton
             }
             Text("\(max(routeStops.count - 1, 0)) station hops from GTFS")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-    }
-
-    private var clearRouteButton: some View {
-        Button(role: .destructive, action: onClearRoute) {
-            Label("Clear route", systemImage: "xmark.circle")
-                .font(.subheadline.weight(.semibold))
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.regular)
     }
 
     private var nearbySummary: some View {
@@ -391,6 +507,9 @@ private struct MapStatusPanel: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+            Label("GeoTrain live: \(geoTrainCount) units", systemImage: "dot.radiowaves.left.and.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -466,6 +585,37 @@ private struct MapStatusPanel: View {
     }
 }
 
+private struct GeoTrainMarker: View {
+    let unit: GeoTrainUnit
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "steeringwheel")
+                .font(.caption.weight(.bold))
+            Text(unit.line)
+                .font(.caption2.weight(.bold))
+                .monospacedDigit()
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .background(unitTint, in: Capsule(style: .continuous))
+        .overlay {
+            Capsule(style: .continuous)
+                .stroke(.white.opacity(0.9), lineWidth: 1.1)
+        }
+        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+        .accessibilityLabel("GeoTrain \(unit.line)")
+    }
+
+    private var unitTint: Color {
+        if let isOnTime = unit.isOnTime {
+            return isOnTime ? .teal : .orange
+        }
+        return .indigo
+    }
+}
+
 private extension Stop {
     func distance(from location: CLLocation) -> CLLocationDistance {
         guard let coordinate else {
@@ -500,5 +650,19 @@ private extension MKCoordinateRegion {
         )
 
         self.init(center: center, span: span)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func ifAvailableGlassMapButton() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .buttonStyle(.glass)
+        } else {
+            self
+                .buttonStyle(.bordered)
+                .background(.regularMaterial, in: Circle())
+        }
     }
 }

@@ -28,6 +28,10 @@ public protocol CalendarServiceProviding: Sendable {
     func setUserDestinationStation(_ stopID: StopID?) async
 }
 
+public protocol GeoTrainServiceProviding: Sendable {
+    func fetchUnits(limit: Int) async throws -> [GeoTrainUnit]
+}
+
 public protocol Clock: Sendable {
     var now: Date { get }
 }

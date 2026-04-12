@@ -44,6 +44,7 @@
 		932EC972ED8C347EFC8E8A61 /* PingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D1B6EF5FF939EBFCA0274A /* PingStore.swift */; };
 		95AEC08B4D11031D852A5A31 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF726A0720C8355B05F9E59 /* NotificationScheduler.swift */; };
 		98F9F485C9A67DF2B11369CA /* FGCStaticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */; };
+		A02D3BCA0D9617E149A5A84F /* GeoTrainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6103487323ABD9F8E2F4958D /* GeoTrainService.swift */; };
 		A19389CEAAF931F5AFC229C0 /* CommuteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADCB994A8C6B7A7D64301D0 /* CommuteEngine.swift */; };
 		A1EAFBCBAE9B54813B007D85 /* FGCMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7D09DE8E676407C04F9A77 /* FGCMapView.swift */; };
 		A252A8504EC3F099DB78CA85 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 74235549CDBFB0043E4B7AEC /* ZIPFoundation */; };
@@ -51,6 +52,7 @@
 		A7787CDE8E7BA4133A06F7EE /* WalkingETAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */; };
 		ABBC85D0544F5FFBA02D1984 /* PingMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7EA5611A04A96CB6C50395 /* PingMacApp.swift */; };
 		AC4AC5B5B45FEB0940182F73 /* PingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D1B6EF5FF939EBFCA0274A /* PingStore.swift */; };
+		ACF25446A2EBF99238C71906 /* GeoTrainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6103487323ABD9F8E2F4958D /* GeoTrainService.swift */; };
 		B4165D0E47C25A6403012345 /* PingiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC31FED7C10F1A506C456CC1 /* PingiOSApp.swift */; };
 		B7C0C2139450C386F3ACE7B6 /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
 		B8F8609DC50FB7853FA024BE /* CommuteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADCB994A8C6B7A7D64301D0 /* CommuteEngine.swift */; };
@@ -72,6 +74,7 @@
 		E75BB5DDF6D2AF7CF44C08A6 /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 0C956243B7E2E4347C7324A8 /* google_transit.zip */; };
 		E7FD7B7038A90727A9616E87 /* FGCStaticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */; };
 		F1C24314D054FF12B3EF291C /* WalkingETAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */; };
+		F58320E804DD603D57CC8CD1 /* GeoTrainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6103487323ABD9F8E2F4958D /* GeoTrainService.swift */; };
 		FCE4BAF831EBDA74EB187ED4 /* FGCStaticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */; };
 		FD0D238CA4614905A5B00910 /* TransitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */; };
 /* End PBXBuildFile section */
@@ -106,6 +109,7 @@
 		086EA666598EBF38A0F20AC4 /* GTFSUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSUpdateService.swift; sourceTree = "<group>"; };
 		09116DEBE6559278706A92A0 /* SharedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSettingsView.swift; sourceTree = "<group>"; };
 		0C956243B7E2E4347C7324A8 /* google_transit.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = google_transit.zip; sourceTree = "<group>"; };
+		0CB73B6EBF36B1A740E0212D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PingWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E7EA5611A04A96CB6C50395 /* PingMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingMacApp.swift; sourceTree = "<group>"; };
 		1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
@@ -115,6 +119,7 @@
 		35D1B6EF5FF939EBFCA0274A /* PingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingStore.swift; sourceTree = "<group>"; };
 		55937ED73F88BD9D5C9B43CC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingETAService.swift; sourceTree = "<group>"; };
+		6103487323ABD9F8E2F4958D /* GeoTrainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTrainService.swift; sourceTree = "<group>"; };
 		6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCStaticService.swift; sourceTree = "<group>"; };
 		71068AB1DAF04AD2B1273F1B /* PingWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingWidgetsBundle.swift; sourceTree = "<group>"; };
 		785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCRealtimeService.swift; sourceTree = "<group>"; };
@@ -183,6 +188,7 @@
 				3416EE5192208E30B00DC270 /* Assets.xcassets */,
 				55937ED73F88BD9D5C9B43CC /* ContentView.swift */,
 				AB7D09DE8E676407C04F9A77 /* FGCMapView.swift */,
+				0CB73B6EBF36B1A740E0212D /* Info.plist */,
 				DCF726A0720C8355B05F9E59 /* NotificationScheduler.swift */,
 				AC31FED7C10F1A506C456CC1 /* PingiOSApp.swift */,
 			);
@@ -271,6 +277,7 @@
 				0848B20C357FCC356EF7F3B6 /* CalendarService.swift */,
 				785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */,
 				6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */,
+				6103487323ABD9F8E2F4958D /* GeoTrainService.swift */,
 				DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */,
 				086EA666598EBF38A0F20AC4 /* GTFSUpdateService.swift */,
 				FE7C0BA5C9E843B26C6646AC /* LocationService.swift */,
@@ -432,6 +439,7 @@
 				98F9F485C9A67DF2B11369CA /* FGCStaticService.swift in Sources */,
 				5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */,
 				E0621CD31CA0B191A677B05F /* GTFSUpdateService.swift in Sources */,
+				A02D3BCA0D9617E149A5A84F /* GeoTrainService.swift in Sources */,
 				3093288F380C97F729815A6F /* LocationService.swift in Sources */,
 				740C00E3A6E1A4270958F7C8 /* PingActivityAttributes.swift in Sources */,
 				19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */,
@@ -459,6 +467,7 @@
 				FCE4BAF831EBDA74EB187ED4 /* FGCStaticService.swift in Sources */,
 				7CDA7B097F8D7942C533FBFB /* GTFSCSVParser.swift in Sources */,
 				2534C877459955F6AF577722 /* GTFSUpdateService.swift in Sources */,
+				ACF25446A2EBF99238C71906 /* GeoTrainService.swift in Sources */,
 				E071F79744758EE7AD9CBE8D /* LocationService.swift in Sources */,
 				95AEC08B4D11031D852A5A31 /* NotificationScheduler.swift in Sources */,
 				6C9FB2712C5D91C9FA190806 /* PingActivityAttributes.swift in Sources */,
@@ -484,6 +493,7 @@
 				E7FD7B7038A90727A9616E87 /* FGCStaticService.swift in Sources */,
 				7F460E20D1ADA8EA3005603C /* GTFSCSVParser.swift in Sources */,
 				A60C9CB08B2F776AF9B5BB59 /* GTFSUpdateService.swift in Sources */,
+				F58320E804DD603D57CC8CD1 /* GeoTrainService.swift in Sources */,
 				2D864BC8AB8865EFBA51D5AF /* LocationService.swift in Sources */,
 				8582B6EBD0FC12A522D15129 /* MenuBarView.swift in Sources */,
 				1D477E9706D39F1A82C5F628 /* PingActivityAttributes.swift in Sources */,

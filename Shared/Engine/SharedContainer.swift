@@ -8,6 +8,7 @@ public final class SharedContainer {
     public let engine: CommuteEngine
     public let store: PingStore
     public let gtfsUpdateService: GTFSUpdateService
+    public let geoTrainService: GeoTrainService
     public let locationService: LocationService
     public let walkingETAService: WalkingETAService
 
@@ -21,6 +22,7 @@ public final class SharedContainer {
 
         let updateService = GTFSUpdateService()
         gtfsUpdateService = updateService
+        geoTrainService = GeoTrainService()
 
         // Use downloaded ZIP if available, otherwise fall back to bundled
         let zipURL = updateService.bestAvailableZipURL(bundledURL: bundledZipURL)
@@ -74,6 +76,7 @@ public final class SharedContainer {
             realtimeService: realtimeService,
             locationService: locationService,
             walkingETAService: walkingETAService,
+            geoTrainService: geoTrainService,
             gtfsUpdateService: updateService,
             bundledGTFSURL: bundledZipURL
         )

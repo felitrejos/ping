@@ -14,6 +14,7 @@ public final class PingStore {
     public var availableLines: [String] = []
     public var lineStops: [Stop] = []
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
+    public var geoTrainUnits: [GeoTrainUnit] = []
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
@@ -80,6 +81,7 @@ public final class PingStore {
     private let realtimeService: RealtimeServiceProviding
     private let locationService: LocationProviding?
     private let walkingETAService: WalkingETAProviding?
+    private let geoTrainService: GeoTrainServiceProviding?
     private let gtfsUpdateService: GTFSUpdateService?
     private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
@@ -92,6 +94,7 @@ public final class PingStore {
         realtimeService: RealtimeServiceProviding,
         locationService: LocationProviding? = nil,
         walkingETAService: WalkingETAProviding? = nil,
+        geoTrainService: GeoTrainServiceProviding? = nil,
         gtfsUpdateService: GTFSUpdateService? = nil,
         bundledGTFSURL: URL? = nil
     ) {
@@ -101,6 +104,7 @@ public final class PingStore {
         self.realtimeService = realtimeService
         self.locationService = locationService
         self.walkingETAService = walkingETAService
+        self.geoTrainService = geoTrainService
         self.gtfsUpdateService = gtfsUpdateService
         self.bundledGTFSURL = bundledGTFSURL
         Task {
@@ -164,12 +168,14 @@ public final class PingStore {
             nextDeparture = try await defaultBestDeparture()
             upcomingDepartures = try await defaultUpcomingDepartures()
             configuredRouteStopsList = await configuredRouteStops()
+            await refreshGeoTrainUnits()
             lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
             lastErrorMessage = error.localizedDescription
             upcomingDepartures = []
             configuredRouteStopsList = []
+            geoTrainUnits = []
             lastUpdated = Date()
         }
     }
@@ -226,6 +232,19 @@ public final class PingStore {
         await refresh()
     }
 
+    public func refreshGeoTrainUnits() async {
+        guard let geoTrainService else {
+            geoTrainUnits = []
+            return
+        }
+
+        do {
+            geoTrainUnits = try await geoTrainService.fetchUnits(limit: 100)
+        } catch {
+            geoTrainUnits = []
+        }
+    }
+
     public func clearDefaultRoute() async {
         await calendarService.setUserHomeStation(nil)
         await calendarService.setUserDestinationStation(nil)
@@ -237,6 +256,7 @@ public final class PingStore {
         nextDeparture = nil
         upcomingDepartures = []
         configuredRouteStopsList = []
+        geoTrainUnits = []
         await refresh()
     }
 

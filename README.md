@@ -31,6 +31,8 @@
 - See the next best train and an upcoming departures board
 - Get leave-by guidance based on walking time and realtime delays
 - Get calendar commute suggestions and apply them in one tap
+- View GeoTrain live units on the map, filtered to your active line/direction
+- Draw route rails using transit map routing geometry when available
 - Track your current trip with Live Activities on iPhone
 - Use a lightweight macOS menu bar view for quick departure checks
 

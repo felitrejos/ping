@@ -11,27 +11,30 @@ struct PingLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "tram.fill")
-                            .font(.system(size: 10))
-                        Text("Take \(context.attributes.lineName)")
-                            .font(.caption.bold())
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Departure")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(context.state.departureTime, style: .time)
+                            .font(.subheadline.weight(.semibold))
+                            .monospacedDigit()
                     }
-                    .foregroundStyle(.blue)
-                    .padding(.leading, 10)
+                    .padding(.leading, 14)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text("Arrive by")
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Arrival")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                         Text(context.state.arrivalTime, style: .time)
-                            .font(.subheadline.bold())
+                        .font(.subheadline.weight(.semibold))
+                        .monospacedDigit()
+                        lineBadge(context.attributes.lineName)
                     }
-                    .padding(.trailing, 6)
+                    .padding(.trailing, 14)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
                             Text("Leave in")
                                 .font(.caption)
@@ -58,16 +61,20 @@ struct PingLiveActivityWidget: Widget {
                             .frame(height: 6)
                         }
                         HStack {
-                            Label("\(context.state.walkMinutes)m walk", systemImage: "figure.walk")
-                                .foregroundStyle(.blue)
+                            HStack(spacing: 4) {
+                                Text("\(context.state.walkMinutes)m walk")
+                                Image(systemName: "figure.walk")
+                            }
+                            .foregroundStyle(.blue)
                             Spacer()
                             Label("\(context.state.rideMinutes)m ride", systemImage: "tram.fill")
                                 .foregroundStyle(.green)
                         }
                         .font(.caption2.weight(.medium))
                     }
-                    .padding(.horizontal, 6)
-                    .padding(.bottom, 2)
+                    .padding(.horizontal, 10)
+                    .padding(.top, 1)
+                    .padding(.bottom, 10)
                 }
             } compactLeading: {
                 Label("\(context.state.leaveInMinutes)m", systemImage: "figure.walk")
@@ -89,22 +96,16 @@ struct PingLiveActivityWidget: Widget {
     private func lockScreenView(context: ActivityViewContext<PingActivityAttributes>) -> some View {
         VStack(spacing: 8) {
             HStack(alignment: .top) {
-                HStack(spacing: 4) {
-                    Image(systemName: "tram.fill")
-                        .font(.caption.weight(.semibold))
-                    Text(context.attributes.lineName)
-                        .font(.caption.bold())
-                    Text("to \(context.attributes.destinationName)")
-                        .font(.caption.weight(.medium))
-                }
-                .foregroundStyle(.blue)
                 Spacer()
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text("Arrive by")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(context.state.arrivalTime, style: .time)
-                        .font(.title3.bold())
+                VStack(alignment: .trailing, spacing: 6) {
+                    HStack(spacing: 5) {
+                        Text(context.state.departureTime, style: .time)
+                        Text("→")
+                            .foregroundStyle(.secondary)
+                        Text(context.state.arrivalTime, style: .time)
+                    }
+                    .font(.title3.bold())
+                    lineBadge(context.attributes.lineName)
                 }
             }
 
@@ -136,8 +137,11 @@ struct PingLiveActivityWidget: Widget {
             }
 
             HStack {
-                Label("\(context.state.walkMinutes) min walk", systemImage: "figure.walk")
-                    .foregroundStyle(.blue)
+                HStack(spacing: 4) {
+                    Text("\(context.state.walkMinutes) min walk")
+                    Image(systemName: "figure.walk")
+                }
+                .foregroundStyle(.blue)
                 Spacer()
                 Label("\(context.state.rideMinutes) min ride", systemImage: "tram.fill")
                     .foregroundStyle(.green)
@@ -145,6 +149,14 @@ struct PingLiveActivityWidget: Widget {
             .font(.caption2.weight(.medium))
         }
         .padding(16)
+    }
+
+    private func lineBadge(_ line: String) -> some View {
+        Text(line)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.white)
+            .frame(width: 28, height: 18)
+            .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
 }

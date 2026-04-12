@@ -163,6 +163,34 @@ public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+public struct GeoTrainUnit: Codable, Equatable, Identifiable, Sendable {
+    public let id: String
+    public let line: String
+    public let direction: String
+    public let originStopID: StopID?
+    public let destinationStopID: StopID?
+    public let coordinate: TransitCoordinate
+    public let isOnTime: Bool?
+
+    public init(
+        id: String,
+        line: String,
+        direction: String,
+        originStopID: StopID?,
+        destinationStopID: StopID?,
+        coordinate: TransitCoordinate,
+        isOnTime: Bool?
+    ) {
+        self.id = id
+        self.line = line
+        self.direction = direction
+        self.originStopID = originStopID
+        self.destinationStopID = destinationStopID
+        self.coordinate = coordinate
+        self.isOnTime = isOnTime
+    }
+}
+
 public struct CalendarEventRecord: Equatable, Sendable {
     public let id: String
     public let title: String
