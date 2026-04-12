@@ -25,16 +25,12 @@
 
 `Ping` helps you quickly pick an FGC route and decide when to leave.
 
-- Choose origin and destination stations with fast search
-- Save favorite stations and quickly apply them from chips on Home
-- Tap `Search routes` to load the latest departures only when you want
-- See the next best train and an upcoming departures board
-- Get leave-by guidance based on walking time and realtime delays
-- Get calendar commute suggestions and apply them in one tap
-- View GeoTrain live units on the map, filtered to your active line/direction
-- Draw route rails using transit map routing geometry when available
-- Track your current trip with Live Activities on iPhone
-- Use a lightweight macOS menu bar view for quick departure checks
+- Find the best next train between two FGC stations
+- See upcoming departures and real-time delay-aware leave times
+- Save favorite stations for quick route switching
+- Use calendar-aware commute suggestions in one tap
+- Follow live train positions on the map for your active line
+- Receive iPhone leave reminders and Live Activity trip tracking
 
 ---
 

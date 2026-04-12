@@ -6,8 +6,6 @@ struct FGCMapView: View {
     @Environment(PingStore.self) private var store
     @State private var position: MapCameraPosition = .automatic
     @State private var routeStops: [Stop] = []
-    @State private var transitRailRoute: MKPolyline?
-    @State private var transitRailRouteKey: String?
     @State private var walkingRoute: MKPolyline?
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
@@ -47,19 +45,6 @@ struct FGCMapView: View {
         return directionUnits.isEmpty ? lineUnits : directionUnits
     }
 
-    private var railPolyline: MKPolyline? {
-        transitRailRoute
-    }
-
-    private var selectedLinePolyline: MKPolyline? {
-        let coordinates = store.lineStops.compactMap { $0.coordinate?.mapCoordinate }
-        guard coordinates.count >= 2 else {
-            return nil
-        }
-
-        return MKPolyline(coordinates: coordinates, count: coordinates.count)
-    }
-
     private var expectedRouteDirection: String? {
         guard
             let originID,
@@ -91,19 +76,9 @@ struct FGCMapView: View {
 
     var body: some View {
         Map(position: $position) {
-            if let selectedLinePolyline {
-                MapPolyline(selectedLinePolyline)
-                    .stroke(.green.opacity(0.45), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-            }
-
             if let walkingRoute {
                 MapPolyline(walkingRoute)
                     .stroke(.blue, lineWidth: 5)
-            }
-
-            if let railPolyline {
-                MapPolyline(railPolyline)
-                    .stroke(.mint, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
             }
 
             ForEach(stationsWithCoordinates) { station in
@@ -133,6 +108,7 @@ struct FGCMapView: View {
 
             UserAnnotation()
         }
+        .mapStyle(.standard(elevation: .realistic, emphasis: .muted))
         .mapControls {
             MapCompass()
             MapUserLocationButton()
@@ -256,27 +232,8 @@ struct FGCMapView: View {
         originID = await store.selectedHomeStationID()
         destinationID = await store.selectedDestinationStationID()
         routeStops = await store.configuredRouteStops()
-        await updateRailRoute()
         await updateWalkingRoute()
         updateCamera()
-    }
-
-    private func updateRailRoute() async {
-        guard
-            let originCoordinate = originStop?.coordinate?.mapCoordinate,
-            let destinationCoordinate = destinationStop?.coordinate?.mapCoordinate
-        else {
-            transitRailRoute = nil
-            transitRailRouteKey = nil
-            return
-        }
-
-        let key = "\(originID ?? "")-\(destinationID ?? "")"
-        if transitRailRouteKey == key, transitRailRoute != nil {
-            return
-        }
-        transitRailRouteKey = key
-        transitRailRoute = await Self.transitRailRoute(from: originCoordinate, to: destinationCoordinate)
     }
 
     private func updateWalkingRoute() async {
@@ -327,26 +284,9 @@ struct FGCMapView: View {
         }
     }
 
-    private static func transitRailRoute(
-        from source: CLLocationCoordinate2D,
-        to destination: CLLocationCoordinate2D
-    ) async -> MKPolyline? {
-        let request = MKDirections.Request()
-        request.source = mapItem(for: source)
-        request.destination = mapItem(for: destination)
-        request.transportType = .transit
-        request.requestsAlternateRoutes = true
-        request.departureDate = .now
-
-        do {
-            return try await MKDirections(request: request).calculate().routes.first?.polyline
-        } catch {
-            return nil
-        }
-    }
-
     private static func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
-        MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        return MKMapItem(location: location, address: nil)
     }
 }
 
@@ -372,13 +312,13 @@ private enum StationRole {
     var symbol: String {
         switch self {
         case .origin:
-            "target"
+            "mappin.circle.fill"
         case .destination:
-            "flag.checkered"
+            "mappin.circle.fill"
         case .route:
-            "tram.fill"
+            "mappin.circle.fill"
         case .nearby:
-            "tram"
+            "mappin.circle"
         }
     }
 }
@@ -589,21 +529,28 @@ private struct GeoTrainMarker: View {
     let unit: GeoTrainUnit
 
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "steeringwheel")
+        VStack(spacing: 2) {
+            Image(systemName: "tram.fill")
                 .font(.caption.weight(.bold))
+                .frame(width: 22, height: 22)
+                .background(unitTint, in: Circle())
+                .overlay {
+                    Circle()
+                        .stroke(.white.opacity(0.9), lineWidth: 1.2)
+                }
+
             Text(unit.line)
                 .font(.caption2.weight(.bold))
                 .monospacedDigit()
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(unitTint, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .stroke(.white.opacity(0.9), lineWidth: 1.1)
+                }
         }
         .foregroundStyle(.white)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 5)
-        .background(unitTint, in: Capsule(style: .continuous))
-        .overlay {
-            Capsule(style: .continuous)
-                .stroke(.white.opacity(0.9), lineWidth: 1.1)
-        }
         .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
         .accessibilityLabel("GeoTrain \(unit.line)")
     }
