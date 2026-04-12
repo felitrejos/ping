@@ -8,11 +8,6 @@
 FGC publishes a GTFS Realtime Service Alerts feed (`alerts-gtfs_realtime`) with strikes, closures, and disruptions. Add support to:
 - Surface active alerts in macOS (compact panel)
 
-### Next
-
-#### Alert UX polish
-- Add “last updated” and stale-state handling for alerts
-
 ### Release readiness
 
 #### macOS parity (without Live Activity)

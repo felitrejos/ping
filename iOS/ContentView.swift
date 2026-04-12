@@ -580,6 +580,11 @@ struct ContentView: View {
                         }
                     }
                 }
+
+                if let lastUpdated = store.serviceAlertsLastUpdated {
+                    AlertsFreshnessCaption(lastUpdated: lastUpdated)
+                        .padding(.horizontal, 4)
+                }
             }
         }
     }
@@ -1174,6 +1179,27 @@ private struct NoTrainsCard: View {
         .frame(maxWidth: .infinity)
         .padding(32)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+private struct AlertsFreshnessCaption: View {
+    let lastUpdated: Date
+    private let staleThreshold: TimeInterval = 15 * 60
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { timeline in
+            let isStale = timeline.date.timeIntervalSince(lastUpdated) >= staleThreshold
+
+            HStack(spacing: 0) {
+                Text("Updated ")
+                Text(lastUpdated, style: .relative)
+                if isStale {
+                    Text(" · may be outdated")
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(isStale ? .orange : .secondary)
+        }
     }
 }
 

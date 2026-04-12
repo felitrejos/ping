@@ -16,6 +16,7 @@ public final class PingStore {
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
     public var geoTrainUnits: [GeoTrainUnit] = []
     public var activeServiceAlerts: [ServiceAlert] = []
+    public var serviceAlertsLastUpdated: Date?
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
     public var isRefreshing = false
     public var lastUpdated: Date?
@@ -179,7 +180,6 @@ public final class PingStore {
             upcomingDepartures = []
             configuredRouteStopsList = []
             geoTrainUnits = []
-            activeServiceAlerts = []
             lastUpdated = Date()
         }
     }
@@ -244,13 +244,15 @@ public final class PingStore {
     public func refreshServiceAlerts() async {
         guard let serviceAlertsService else {
             activeServiceAlerts = []
+            serviceAlertsLastUpdated = nil
             return
         }
 
         do {
             activeServiceAlerts = try await serviceAlertsService.fetchAlerts()
+            serviceAlertsLastUpdated = Date()
         } catch {
-            activeServiceAlerts = []
+            // Keep the previous snapshot and timestamp so UI can show stale state.
         }
     }
 
