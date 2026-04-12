@@ -1,6 +1,10 @@
 <h1 align="center">Ping</h1>
 
 <p align="center">
+  <img src="iOS/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" alt="Ping app icon" width="96" height="96" />
+</p>
+
+<p align="center">
   <strong>Never miss your train — FGC commute assistant for iPhone, Mac, and Live Activities</strong>
 </p>
 
@@ -34,7 +38,11 @@
 
 ## Installation
 
-Requires: Xcode with iOS 26+ and macOS 26+ SDKs, `xcodegen`, `protoc`
+Requirements:
+
+- Xcode with iOS 26+ and macOS 26+ SDKs
+- `xcodegen`
+- `protoc`
 
 ```bash
 git clone https://github.com/felitrejos/ping.git
@@ -43,12 +51,11 @@ xcodegen generate
 open Ping.xcodeproj
 ```
 
-Before running the app:
+Before running:
 
-1. Open the project in Xcode.
-2. Let Swift Package Manager finish resolving dependencies.
-3. Make sure the GTFS ZIP is available in app resources as `google_transit.zip`.
-4. Run either the iOS app or macOS app target.
+1. Let Xcode finish resolving package dependencies.
+2. Confirm `google_transit.zip` is included in app resources.
+3. Pick an iOS or macOS target and run.
 
 Dependencies:
 
@@ -59,16 +66,11 @@ Dependencies:
 
 ## Quickstart
 
-```bash
-xcodegen generate
-open Ping.xcodeproj
-```
-
-1. Open the project in Xcode.
-2. Select the macOS target to test the menu bar app.
-3. Select the iOS target to test the main commute view.
-4. Grant calendar access when prompted.
-5. Configure your origin and destination in the iOS app or macOS Settings.
+1. Launch the app target you want to test (iOS or macOS).
+2. Grant calendar/location permissions when prompted.
+3. Set origin and destination stations.
+4. Tap `Search routes` to load trains.
+5. (Optional) Add favorites in Settings for faster switching.
 
 ---
 

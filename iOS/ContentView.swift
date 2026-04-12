@@ -125,7 +125,6 @@ struct ContentView: View {
                         selectedName: $selectedOriginName,
                         onClear: {
                             selectedOriginID = nil
-                            routeSearchCommitted = false
                         }
                     ) { stop in
                         selectedOriginID = stop.id
@@ -133,7 +132,6 @@ struct ContentView: View {
                         originQuery = stop.name
                         originFocused = false
                         isEditingOrigin = false
-                        routeSearchCommitted = false
                     }
 
                     Text("DESTINATION")
@@ -152,7 +150,6 @@ struct ContentView: View {
                         selectedName: $selectedDestinationName,
                         onClear: {
                             selectedDestinationID = nil
-                            routeSearchCommitted = false
                         }
                     ) { stop in
                         selectedDestinationID = stop.id
@@ -160,7 +157,6 @@ struct ContentView: View {
                         destinationQuery = stop.name
                         destinationFocused = false
                         isEditingDestination = false
-                        routeSearchCommitted = false
                     }
                 }
 
@@ -287,7 +283,6 @@ struct ContentView: View {
         if !originFocused {
             originQuery = selectedOriginName ?? ""
         }
-        routeSearchCommitted = false
     }
 
     private func setPendingDestination(_ stopID: StopID) {
@@ -296,7 +291,6 @@ struct ContentView: View {
         if !destinationFocused {
             destinationQuery = selectedDestinationName ?? ""
         }
-        routeSearchCommitted = false
     }
 
     private func stationName(for stopID: StopID) -> String? {
@@ -319,7 +313,6 @@ struct ContentView: View {
         if !destinationFocused {
             destinationQuery = selectedDestinationName ?? ""
         }
-        routeSearchCommitted = false
     }
 
     private func searchRoutes() async {
@@ -474,16 +467,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var statusBanner: some View {
-        if !hasPendingDefaultRoute {
+        if !routeSearchCommitted {
             NoticeCard(
-                title: "Choose your origin and destination above.",
-                message: nil,
-                systemImage: "location.fill",
-                tint: .blue
-            )
-        } else if !routeSearchCommitted {
-            NoticeCard(
-                title: "Tap Search routes to load trains.",
+                title: "Set your origin and destination, then tap Search routes.",
                 message: nil,
                 systemImage: "magnifyingglass",
                 tint: .blue
@@ -669,7 +655,6 @@ struct ContentView: View {
     private func applyCommutePlan(_ plan: CommutePlan) {
         setPendingOrigin(plan.originStationID)
         setPendingDestination(plan.destinationStationID)
-        routeSearchCommitted = false
     }
 
     private var nextCalendarCommute: CommutePlan? {
