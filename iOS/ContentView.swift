@@ -250,7 +250,7 @@ struct ContentView: View {
     private var searchRoutesButton: some View {
         VStack(spacing: 10) {
             Button {
-                if !store.isUsingLiveLocation {
+                if !store.isLocationAccessGranted {
                     if store.isLocationAccessDenied {
                         openAppSettings()
                     } else {
@@ -271,9 +271,9 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(store.isUsingLiveLocation ? .blue : .orange)
+            .tint(store.isLocationAccessGranted ? .blue : .orange)
             .controlSize(.large)
-            .disabled(isSearchingRoute || (store.isUsingLiveLocation && !hasPendingDefaultRoute))
+            .disabled(isSearchingRoute || (store.isLocationAccessGranted && !hasPendingDefaultRoute))
         }
     }
 
@@ -281,7 +281,7 @@ struct ContentView: View {
         if isSearchingRoute {
             return "Searching..."
         }
-        if !store.isUsingLiveLocation {
+        if !store.isLocationAccessGranted {
             return store.isLocationAccessDenied ? "Open settings to enable location" : "Enable location to search routes"
         }
         return "Search routes"
@@ -1236,15 +1236,17 @@ private struct StationPickerSheet: View {
 
     var body: some View {
         List {
-            ForEach(filteredStops) { stop in
-                Button {
-                    onSelect(stop)
-                    dismiss()
-                } label: {
-                    Text(stop.name)
-                        .foregroundStyle(.primary)
+            Section("Stations") {
+                ForEach(filteredStops) { stop in
+                    Button {
+                        onSelect(stop)
+                        dismiss()
+                    } label: {
+                        Text(stop.name)
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
         .navigationTitle(title)
