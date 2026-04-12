@@ -6,7 +6,7 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !store.hasConfiguredRoute {
+            if !store.hasConfiguredDefaultRoute {
                 setupCard
             } else if let dep = store.nextDeparture {
                 trainCard(dep)
@@ -16,7 +16,7 @@ struct MenuBarView: View {
                 emptyCard
             }
 
-            if let plan = store.nextCommute {
+            if store.hasConfiguredRoute, let plan = store.nextCommute {
                 commuteRow(plan)
             }
 
@@ -28,7 +28,7 @@ struct MenuBarView: View {
     // MARK: - Train card
 
     private func trainCard(_ dep: LiveDeparture) -> some View {
-        let walkMin = UserSettings.walkingMinutes()
+        let walkMin = store.walkingMinutes
         let leaveIn = max(0, dep.minutesUntilDeparture - walkMin)
         let rideMin = max(1, Int((dep.arrivalTime.timeIntervalSince(dep.scheduledTime) / 60).rounded()))
 
@@ -113,7 +113,7 @@ struct MenuBarView: View {
             // Labels
             HStack {
                 HStack(spacing: 3) {
-                    Image(systemName: "figure.walk")
+                    Image(systemName: store.isUsingLiveLocation ? "location.fill" : "figure.walk")
                         .font(.system(size: 9))
                     Text("\(walkMin) min")
                 }
@@ -137,13 +137,21 @@ struct MenuBarView: View {
     private func commuteRow(_ plan: CommutePlan) -> some View {
         VStack(spacing: 0) {
             Divider().padding(.horizontal, 16)
-            HStack(spacing: 5) {
+            HStack(alignment: .top, spacing: 7) {
                 Image(systemName: "calendar")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(plan.calendarEvent.title)
-                    .font(.callout)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(plan.calendarEvent.title)
+                        .font(.callout)
+                        .lineLimit(1)
+                    if let detail = calendarRouteDetail(for: plan) {
+                        Text(detail)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
                 Spacer()
                 Text("Leave \(plan.recommendedDeparture.formatted(date: .omitted, time: .shortened))")
                     .font(.callout)
@@ -152,6 +160,27 @@ struct MenuBarView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
+    }
+
+    private func calendarRouteDetail(for plan: CommutePlan) -> String? {
+        var parts: [String] = []
+        if let location = plan.calendarEvent.location, !location.isEmpty {
+            parts.append(location)
+        }
+        if let originName = store.availableStops.first(where: { $0.id == plan.originStationID })?.name {
+            parts.append("from \(originName)")
+        }
+        if let stationName = store.availableStops.first(where: { $0.id == plan.destinationStationID })?.name {
+            let nearestResolved = plan.calendarEvent.resolvedStation
+            let isFallbackDestination = nearestResolved != nil && nearestResolved != plan.destinationStationID
+            if isFallbackDestination {
+                parts.append("best reachable station: \(stationName)")
+            } else {
+                parts.append("destination station: \(stationName)")
+            }
+        }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
 
     // MARK: - Footer
@@ -174,7 +203,7 @@ struct MenuBarView: View {
     // MARK: - Fallback cards
 
     private var setupCard: some View {
-        fallbackCard("Setup needed", "Open Settings to choose your route.", "location.fill")
+        fallbackCard("Set route", "Choose origin and destination in Settings.", "location.fill")
     }
 
     private var errorCard: some View {

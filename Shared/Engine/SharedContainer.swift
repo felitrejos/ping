@@ -7,26 +7,77 @@ public final class SharedContainer {
     public let calendarService: CalendarService
     public let engine: CommuteEngine
     public let store: PingStore
+    public let gtfsUpdateService: GTFSUpdateService
+    public let locationService: LocationService
+    public let walkingETAService: WalkingETAService
 
     public init(bundle: Bundle = .main) {
-        let zipURL = bundle.url(
+        UserSettings.migrateLegacyDefaultRouteIfNeeded()
+
+        let bundledZipURL = bundle.url(
             forResource: Constants.bundledStaticGTFSName,
             withExtension: Constants.bundledStaticGTFSExtension
         ) ?? URL(fileURLWithPath: "/tmp/google_transit.zip")
 
+        let updateService = GTFSUpdateService()
+        gtfsUpdateService = updateService
+
+        // Use downloaded ZIP if available, otherwise fall back to bundled
+        let zipURL = updateService.bestAvailableZipURL(bundledURL: bundledZipURL)
+
         staticService = FGCStaticService(zipURL: zipURL)
         realtimeService = FGCRealtimeService()
         calendarService = CalendarService(staticService: staticService)
+        locationService = LocationService()
+        walkingETAService = WalkingETAService()
+
+        // The store owns the dynamic walking ETA. The engine reads it via a closure
+        // so that bestCatchableDeparture and commute plans use the live value.
+        var storeRef: PingStore?
         engine = CommuteEngine(
             staticService: staticService,
             realtimeService: realtimeService,
-            calendarService: calendarService
+            calendarService: calendarService,
+            walkingMinutesProvider: { @Sendable in
+                await MainActor.run { storeRef?.walkingMinutes ?? UserSettings.walkingMinutes() }
+            },
+            originCandidatesProvider: { @Sendable in
+                await MainActor.run {
+                    guard
+                        let storeRef,
+                        let userLocation = storeRef.userLocation
+                    else {
+                        return []
+                    }
+
+                    return storeRef.availableStops
+                        .compactMap { stop -> (id: StopID, distanceSquared: Double)? in
+                            guard let coordinate = stop.coordinate else {
+                                return nil
+                            }
+
+                            let latitudeDelta = coordinate.latitude - userLocation.latitude
+                            let longitudeDelta = coordinate.longitude - userLocation.longitude
+                            let distanceSquared = latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta
+                            return (id: stop.id, distanceSquared: distanceSquared)
+                        }
+                        .sorted { $0.distanceSquared < $1.distanceSquared }
+                        .prefix(10)
+                        .map(\.id)
+                }
+            }
         )
-        store = PingStore(
+        let pingStore = PingStore(
             engine: engine,
             staticService: staticService,
             calendarService: calendarService,
-            realtimeService: realtimeService
+            realtimeService: realtimeService,
+            locationService: locationService,
+            walkingETAService: walkingETAService,
+            gtfsUpdateService: updateService,
+            bundledGTFSURL: bundledZipURL
         )
+        store = pingStore
+        storeRef = pingStore
     }
 }

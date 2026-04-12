@@ -28,17 +28,25 @@ public actor FGCStaticService: StaticServiceProviding {
         let routes: [String: GTFSRoute]
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
+        let stationStopsByID: [StopID: Stop]
         let lineNames: [String]
         let stopsByLine: [String: [Stop]]
     }
 
-    private let zipURL: URL
+    private var zipURL: URL
     private let calendar: Calendar
     private var cache: ParsedCache?
 
     public init(zipURL: URL, calendar: Calendar = .autoupdatingCurrent) {
         self.zipURL = zipURL
         self.calendar = calendar
+    }
+
+    /// Swap to a new ZIP URL (e.g. after downloading a fresh GTFS file) and clear the cache.
+    public func updateZipURL(_ url: URL) {
+        guard url != zipURL else { return }
+        zipURL = url
+        cache = nil
     }
 
     public func departuresBetween(origin: StopID, destination: StopID, after: Date) async throws -> [TrainDeparture] {
@@ -123,6 +131,38 @@ public actor FGCStaticService: StaticServiceProviding {
         }
         return nil
     }
+
+    public func routeStops(origin: StopID, destination: StopID) async throws -> [Stop] {
+        let cache = try loadCache()
+        let originIDs = cache.childStopIDs[origin] ?? [origin]
+        let destinationIDs = cache.childStopIDs[destination] ?? [destination]
+
+        for tripID in cache.stopTimesByTripID.keys.sorted() {
+            guard let stopTimes = cache.stopTimesByTripID[tripID] else {
+                continue
+            }
+
+            guard
+                let originIndex = stopTimes.firstIndex(where: { originIDs.contains($0.stopID) }),
+                let destinationIndex = stopTimes[originIndex...].firstIndex(where: { destinationIDs.contains($0.stopID) }),
+                destinationIndex > originIndex
+            else {
+                continue
+            }
+
+            var seen = Set<StopID>()
+            return stopTimes[originIndex...destinationIndex].compactMap { stopTime in
+                let stationID = cache.parentStopID[stopTime.stopID] ?? stopTime.stopID
+                guard seen.insert(stationID).inserted else {
+                    return nil
+                }
+
+                return cache.stationStopsByID[stationID] ?? cache.stops[stationID]
+            }
+        }
+
+        return []
+    }
 }
 
 // MARK: - Parsing
@@ -142,7 +182,9 @@ extension FGCStaticService {
             guard let stopID = row["stop_id"], let stopName = row["stop_name"] else {
                 return nil
             }
-            return (stopID, Stop(id: stopID, name: stopName))
+            let lat = row["stop_lat"].flatMap(Double.init)
+            let lon = row["stop_lon"].flatMap(Double.init)
+            return (stopID, Stop(id: stopID, name: stopName, latitude: lat, longitude: lon))
         }
         let stops = Dictionary(uniqueKeysWithValues: stopPairs)
 
@@ -168,7 +210,9 @@ extension FGCStaticService {
             let parentStation = row["parent_station"] ?? ""
             // Include parent stations (type 1) and standalone stops (type 0 with no parent)
             if locationType == "1" || parentStation.isEmpty {
-                return Stop(id: stopID, name: stopName)
+                let lat = row["stop_lat"].flatMap(Double.init)
+                let lon = row["stop_lon"].flatMap(Double.init)
+                return Stop(id: stopID, name: stopName, latitude: lat, longitude: lon)
             }
             return nil
         }.sorted { $0.name < $1.name }
@@ -255,6 +299,7 @@ extension FGCStaticService {
             routes: routes,
             trips: trips,
             stopTimesByTripID: stopTimes,
+            stationStopsByID: stationStopsByID,
             lineNames: lineNames,
             stopsByLine: stopsByLine
         )

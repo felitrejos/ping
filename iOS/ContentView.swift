@@ -22,14 +22,13 @@ struct ContentView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                makoHeader
+                pingHeader
                 routeSection
                 statusBanner
                 primaryCard
-                if let plan = store.nextCommute {
+                if let plan = nextCalendarCommute {
                     commuteRow(plan)
                 }
-                trackButton
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
@@ -44,6 +43,10 @@ struct ContentView: View {
             guard !stops.isEmpty else { return }
             Task { await prefillStationNames(from: stops) }
         }
+        .onChange(of: store.lastUpdated) { _, _ in
+            guard !store.availableStops.isEmpty else { return }
+            Task { await prefillStationNames(from: store.availableStops) }
+        }
         .task {
             if !store.availableStops.isEmpty {
                 await prefillStationNames(from: store.availableStops)
@@ -51,83 +54,110 @@ struct ContentView: View {
         }
     }
 
-    private var makoHeader: some View {
-        VStack(spacing: 2) {
-            Text("Ping")
-                .font(.largeTitle.bold())
-            Text("Never miss your train")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+    private var pingHeader: some View {
+        HStack(alignment: .center, spacing: 8) {
+            headerIcon
+                .frame(width: 36, height: 36)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Ping")
+                    .font(.title3.weight(.semibold))
+                Text("Never miss your train")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if store.hasConfiguredDefaultRoute {
+                Button(role: .destructive) {
+                    clearRouteFields()
+                    Task { await store.clearDefaultRoute() }
+                } label: {
+                    Label("Clear route", systemImage: "xmark.circle")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
+            }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 2)
+    }
+
+    private var headerIcon: some View {
+        Image("PingHeaderLogo")
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(Color.white)
     }
 
     private var routeSection: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Timeline dots + line
-            VStack(spacing: 0) {
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 10, height: 10)
-                    .padding(.top, 30) // label height + gap + center in input
-                Rectangle()
-                    .fill(.blue.opacity(0.3))
-                    .frame(width: 2)
-                Circle()
-                    .fill(.blue)
-                    .frame(width: 10, height: 10)
-                    .padding(.bottom, 19)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("ORIGIN")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.3)
+                .padding(.bottom, 4)
+
+            stationInput(
+                placeholder: "Search station",
+                query: $originQuery,
+                results: $originResults,
+                isEditing: $isEditingOrigin,
+                focused: $originFocused,
+                selectedName: $selectedOriginName,
+                onClear: {
+                    Task { await store.setHomeStation(nil) }
+                }
+            ) { stop in
+                selectedOriginName = stop.name
+                originQuery = ""
+                originFocused = false
+                isEditingOrigin = false
+                Task { await store.setHomeStation(stop.id) }
             }
-            .frame(width: 14)
 
-            // Labels + input fields
-            VStack(alignment: .leading, spacing: 0) {
-                Text("ORIGIN")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.3)
-                    .padding(.bottom, 4)
+            Text("DESTINATION")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .tracking(0.3)
+                .padding(.top, 14)
+                .padding(.bottom, 4)
 
-                stationInput(
-                    placeholder: "Search station",
-                    query: $originQuery,
-                    results: $originResults,
-                    isEditing: $isEditingOrigin,
-                    focused: $originFocused,
-                    selectedName: $selectedOriginName
-                ) { stop in
-                    selectedOriginName = stop.name
-                    originQuery = ""
-                    originFocused = false
-                    isEditingOrigin = false
-                    Task { await store.setHomeStation(stop.id) }
+            stationInput(
+                placeholder: "Search station",
+                query: $destinationQuery,
+                results: $destinationResults,
+                isEditing: $isEditingDestination,
+                focused: $destinationFocused,
+                selectedName: $selectedDestinationName,
+                onClear: {
+                    Task { await store.setDestinationStation(nil) }
                 }
-
-                Text("DESTINATION")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .tracking(0.3)
-                    .padding(.top, 14)
-                    .padding(.bottom, 4)
-
-                stationInput(
-                    placeholder: "Search station",
-                    query: $destinationQuery,
-                    results: $destinationResults,
-                    isEditing: $isEditingDestination,
-                    focused: $destinationFocused,
-                    selectedName: $selectedDestinationName
-                ) { stop in
-                    selectedDestinationName = stop.name
-                    destinationQuery = ""
-                    destinationFocused = false
-                    isEditingDestination = false
-                    Task { await store.setDestinationStation(stop.id) }
-                }
+            ) { stop in
+                selectedDestinationName = stop.name
+                destinationQuery = ""
+                destinationFocused = false
+                isEditingDestination = false
+                Task { await store.setDestinationStation(stop.id) }
             }
         }
         .padding(.bottom, 6)
+    }
+
+    private func clearRouteFields() {
+        originQuery = ""
+        destinationQuery = ""
+        selectedOriginName = nil
+        selectedDestinationName = nil
+        originResults = []
+        destinationResults = []
+        originFocused = false
+        destinationFocused = false
+        isEditingOrigin = false
+        isEditingDestination = false
     }
 
     private func stationInput(
@@ -137,6 +167,7 @@ struct ContentView: View {
         isEditing: Binding<Bool>,
         focused: FocusState<Bool>.Binding,
         selectedName: Binding<String?>,
+        onClear: @escaping () -> Void,
         onSelect: @escaping (Stop) -> Void
     ) -> some View {
         VStack(spacing: 4) {
@@ -176,6 +207,7 @@ struct ContentView: View {
                         query.wrappedValue = ""
                         selectedName.wrappedValue = nil
                         results.wrappedValue = []
+                        onClear()
                     } label: {
                         Image(systemName: "multiply.circle.fill")
                             .foregroundStyle(.placeholder)
@@ -214,24 +246,32 @@ struct ContentView: View {
     }
 
     private func prefillStationNames(from stops: [Stop]) async {
-        let originID = await store.selectedHomeStationID() ?? UserSettings.defaultHomeStationID
-        let destID = await store.selectedDestinationStationID() ?? UserSettings.defaultDestinationStationID
-        if selectedOriginName == nil, let name = stops.first(where: { $0.id == originID })?.name {
+        let originID = await store.selectedHomeStationID()
+        let destID = await store.selectedDestinationStationID()
+
+        if let originID, let name = stops.first(where: { $0.id == originID })?.name {
             selectedOriginName = name
             originQuery = name
+        } else if !originFocused {
+            selectedOriginName = nil
+            originQuery = ""
         }
-        if selectedDestinationName == nil, let name = stops.first(where: { $0.id == destID })?.name {
+
+        if let destID, let name = stops.first(where: { $0.id == destID })?.name {
             selectedDestinationName = name
             destinationQuery = name
+        } else if !destinationFocused {
+            selectedDestinationName = nil
+            destinationQuery = ""
         }
     }
 
     @ViewBuilder
     private var statusBanner: some View {
-        if !store.hasConfiguredRoute {
+        if !store.hasConfiguredDefaultRoute {
             NoticeCard(
-                title: "Setup needed",
-                message: "Choose your origin and destination above.",
+                title: "Choose your origin and destination above.",
+                message: nil,
                 systemImage: "location.fill",
                 tint: .blue
             )
@@ -247,62 +287,107 @@ struct ContentView: View {
 
     @ViewBuilder
     private var primaryCard: some View {
-        if let dep = store.nextDeparture {
-            TrainHeroCard(departure: dep)
-        } else if store.hasConfiguredRoute {
+        if store.hasConfiguredDefaultRoute, let dep = store.nextDeparture {
+            TrainHeroCard(
+                departure: dep,
+                isTracking: tracker.isTracking,
+                onStartTracking: { Task { await tracker.start(departure: dep, store: store) } },
+                onStopTracking: { Task { await tracker.stop() } }
+            )
+        } else if store.hasConfiguredDefaultRoute {
             NoTrainsCard()
         }
     }
 
     private func commuteRow(_ plan: CommutePlan) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "calendar")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Text(plan.calendarEvent.title)
-                .font(.subheadline)
-                .lineLimit(1)
-            Spacer()
-            Text("Leave \(plan.recommendedDeparture.formatted(date: .omitted, time: .shortened))")
-                .font(.subheadline.monospacedDigit())
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "calendar")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(plan.calendarEvent.title)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+
+                    if let calendarRouteDetail = calendarRouteDetail(for: plan) {
+                        Text(calendarRouteDetail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                Spacer()
+                Text("Leave \(plan.recommendedDeparture.formatted(date: .omitted, time: .shortened))")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            Button {
+                Task { await applyCommutePlan(plan) }
+            } label: {
+                Label("Use this route", systemImage: "arrow.triangle.branch")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+
+            if !plan.calendarEvent.stationCandidatesDebug.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(plan.calendarEvent.stationCandidatesDebug, id: \.self) { line in
+                        Text(line)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+                .padding(.top, 2)
+            }
         }
         .padding(14)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
-    @ViewBuilder
-    private var trackButton: some View {
-        if let dep = store.nextDeparture {
-            if tracker.isTracking {
-                Button {
-                    Task { await tracker.stop() }
-                } label: {
-                    Label("Stop Tracking", systemImage: "stop.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .tint(.red)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+    private func calendarRouteDetail(for plan: CommutePlan) -> String? {
+        var parts: [String] = []
+        if let location = plan.calendarEvent.location, !location.isEmpty {
+            parts.append(location)
+        }
+        if let originName = store.availableStops.first(where: { $0.id == plan.originStationID })?.name {
+            parts.append("from \(originName)")
+        }
+        if let stationName = store.availableStops.first(where: { $0.id == plan.destinationStationID })?.name {
+            let nearestResolved = plan.calendarEvent.resolvedStation
+            let isFallbackDestination = nearestResolved != nil && nearestResolved != plan.destinationStationID
+            if isFallbackDestination {
+                parts.append("best reachable station: \(stationName)")
             } else {
-                Button {
-                    Task { await tracker.start(departure: dep, store: store) }
-                } label: {
-                    Label("Track Train", systemImage: "location.fill")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(.blue)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                parts.append("destination station: \(stationName)")
             }
         }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
+
+    private func applyCommutePlan(_ plan: CommutePlan) async {
+        await store.setHomeStation(plan.originStationID)
+        await store.setDestinationStation(plan.destinationStationID)
+    }
+
+    private var nextCalendarCommute: CommutePlan? {
+        store.commutePlans.first { !isCurrentRoutePlan($0) }
+    }
+
+    private func isCurrentRoutePlan(_ plan: CommutePlan) -> Bool {
+        guard let currentOrigin = store.homeStationID, let currentDestination = store.destinationStationID else {
+            return false
+        }
+
+        return plan.originStationID == currentOrigin && plan.destinationStationID == currentDestination
+    }
+
 }
 
 // MARK: - Commute tracker (manages Live Activity)
@@ -322,7 +407,7 @@ final class CommuteTracker {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let destName = store.availableStops.first(where: { $0.id == departure.destinationStopID })?.name
             ?? departure.destinationStopID
-        let walkMin = UserSettings.walkingMinutes()
+        let walkMin = store.walkingMinutes
         let rideMin = max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
         let attrs = PingActivityAttributes(
             destinationName: destName,
@@ -347,7 +432,7 @@ final class CommuteTracker {
     func update(departure: LiveDeparture, store: PingStore) async {
         guard isTracking else { return }
         #if canImport(ActivityKit)
-        let walkMin = UserSettings.walkingMinutes()
+        let walkMin = store.walkingMinutes
         let rideMin = max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
         let state = PingActivityAttributes.ContentState(
             minutesUntilDeparture: departure.minutesUntilDeparture,
@@ -375,21 +460,20 @@ final class CommuteTracker {
 
 private struct TrainHeroCard: View {
     let departure: LiveDeparture
+    let isTracking: Bool
+    let onStartTracking: () -> Void
+    let onStopTracking: () -> Void
     @Environment(PingStore.self) private var store
-    @AppStorage(UserSettings.Keys.walkingMinutes) private var walkingMinutes = UserSettings.defaultWalkingMinutes
 
-    private var leaveIn: Int { max(0, departure.minutesUntilDeparture - walkingMinutes) }
+    private var walkMin: Int { store.walkingMinutes }
+    private var leaveIn: Int { max(0, departure.minutesUntilDeparture - walkMin) }
     private var rideMin: Int {
         max(1, Int((departure.arrivalTime.timeIntervalSince(departure.scheduledTime) / 60).rounded()))
-    }
-    private var destinationName: String {
-        store.availableStops.first(where: { $0.id == departure.destinationStopID })?.name
-            ?? departure.destinationStopID
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            headerRow
+            liveActivityRow
             Divider().padding(.horizontal, 16)
             heroCountdown
             timelineSection
@@ -399,41 +483,30 @@ private struct TrainHeroCard: View {
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
     }
 
-    private var headerRow: some View {
-        HStack {
-            HStack(spacing: 5) {
-                Image(systemName: "tram.fill")
-                    .font(.caption.weight(.semibold))
-                Text("TO \(destinationName.uppercased())")
-                    .font(.caption.weight(.semibold))
-                    .tracking(0.5)
+    private var heroCountdown: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Leave in")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(leaveIn)")
+                        .font(.system(size: 72, weight: .heavy, design: .rounded))
+                        .contentTransition(.numericText())
+                    Text("min")
+                        .font(.title2.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
             }
-            .foregroundStyle(.blue)
-            Spacer()
+
+            Spacer(minLength: 12)
+
             VStack(alignment: .trailing, spacing: 1) {
                 Text("ARRIVE BY")
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
                 Text(departure.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
-                    .font(.callout.weight(.bold))
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-    }
-
-    private var heroCountdown: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("Leave in")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("\(leaveIn)")
-                    .font(.system(size: 72, weight: .heavy, design: .rounded))
-                    .contentTransition(.numericText())
-                Text("min")
-                    .font(.title2.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(.callout.weight(.semibold))
             }
         }
         .padding(.horizontal, 16)
@@ -442,8 +515,8 @@ private struct TrainHeroCard: View {
     }
 
     private var timelineSection: some View {
-        let total = walkingMinutes + rideMin
-        let walkFraction = CGFloat(walkingMinutes) / CGFloat(total)
+        let total = walkMin + rideMin
+        let walkFraction = CGFloat(walkMin) / CGFloat(total)
 
         return VStack(spacing: 6) {
             GeometryReader { geo in
@@ -458,7 +531,7 @@ private struct TrainHeroCard: View {
             .frame(height: 8)
 
             HStack {
-                Label("\(walkingMinutes) min walk", systemImage: "figure.walk")
+                Label("\(walkMin) min walk", systemImage: store.isUsingLiveLocation ? "location.fill" : "figure.walk")
                     .foregroundStyle(.blue)
                 Spacer()
                 Label("\(rideMin) min ride", systemImage: "tram.fill")
@@ -472,17 +545,53 @@ private struct TrainHeroCard: View {
 
     private var statusRow: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(departure.isDelayed ? Color.orange : Color.green)
-                .frame(width: 8, height: 8)
-            Text(departure.isDelayed ? "Delayed · \(departure.statusText)" : "On time")
-                .font(.callout.weight(.medium))
-                .foregroundStyle(departure.isDelayed ? .orange : .green)
-            Text("·")
-                .foregroundStyle(.quaternary)
+            if departure.isDelayed {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 8, height: 8)
+                Text("Delayed · \(departure.statusText)")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.orange)
+                Text("·")
+                    .foregroundStyle(.quaternary)
+            }
             Text("departs \(departure.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
+
+    private var liveActivityRow: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: isTracking ? "livephoto" : "sparkles")
+                .font(.headline)
+                .foregroundStyle(.blue)
+                .frame(width: 18)
+
+            Text(isTracking ? "Following trip" : "Live Activity")
+                .font(.subheadline.weight(.semibold))
+
+            Spacer(minLength: 8)
+
+            if isTracking {
+                Button(action: onStopTracking) {
+                    Label("Stop", systemImage: "stop.fill")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .tint(.red)
+            } else {
+                Button(action: onStartTracking) {
+                    Label("Follow trip", systemImage: "livephoto")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .tint(.blue)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -499,9 +608,6 @@ private struct NoTrainsCard: View {
                 .foregroundStyle(.secondary)
             Text("No upcoming trains")
                 .font(.headline)
-            Text("Pull to refresh")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(32)
@@ -511,7 +617,7 @@ private struct NoTrainsCard: View {
 
 private struct NoticeCard: View {
     let title: String
-    let message: String
+    let message: String?
     let systemImage: String
     let tint: Color
 
@@ -521,7 +627,11 @@ private struct NoticeCard: View {
                 .foregroundStyle(tint)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.headline)
-                Text(message).font(.subheadline).foregroundStyle(.secondary)
+                if let message, !message.isEmpty {
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(14)

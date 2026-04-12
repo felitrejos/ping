@@ -3,12 +3,20 @@ import SwiftUI
 public struct SharedSettingsView: View {
     @Environment(PingStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UserSettings.Keys.walkingMinutes) private var walkingMinutes = UserSettings.defaultWalkingMinutes
+    @AppStorage(UserSettings.Keys.walkingMinutes) private var manualWalkingMinutes = UserSettings.defaultWalkingMinutes
+    @AppStorage(UserSettings.Keys.autoSelectClosestOrigin) private var autoSelectClosestOrigin = false
 
     #if os(macOS)
-    @State private var selectedOrigin: StopID?
-    @State private var selectedDestination: StopID?
-    @State private var loaded = false
+    @State private var originQuery = ""
+    @State private var destinationQuery = ""
+    @State private var originResults: [Stop] = []
+    @State private var destinationResults: [Stop] = []
+    @State private var isEditingOrigin = false
+    @State private var isEditingDestination = false
+    @State private var selectedOriginName: String?
+    @State private var selectedDestinationName: String?
+    @FocusState private var originFocused: Bool
+    @FocusState private var destinationFocused: Bool
     #endif
 
     public init() {}
@@ -18,6 +26,7 @@ public struct SharedSettingsView: View {
             #if os(macOS)
             routeSection
             #endif
+            originAutomationSection
             walkingSection
             calendarSection
         }
@@ -25,11 +34,18 @@ public struct SharedSettingsView: View {
         .navigationTitle("Settings")
         #if os(macOS)
         .toolbar(.hidden, for: .automatic)
+        .onChange(of: store.availableStops) { _, stops in
+            guard !stops.isEmpty else { return }
+            Task { await prefillStationNames(from: stops) }
+        }
+        .onChange(of: store.lastUpdated) { _, _ in
+            guard !store.availableStops.isEmpty else { return }
+            Task { await prefillStationNames(from: store.availableStops) }
+        }
         .task {
-            guard !loaded else { return }
-            selectedOrigin = await store.selectedHomeStationID()
-            selectedDestination = await store.selectedDestinationStationID()
-            loaded = true
+            if !store.availableStops.isEmpty {
+                await prefillStationNames(from: store.availableStops)
+            }
         }
         #endif
     }
@@ -37,49 +53,248 @@ public struct SharedSettingsView: View {
     #if os(macOS)
     private var routeSection: some View {
         Section {
-            Picker(selection: $selectedOrigin) {
-                Text("None").tag(StopID?.none)
-                ForEach(store.availableStops) { stop in
-                    Text(stop.name).tag(StopID?.some(stop.id))
+            stationInput(
+                title: "Origin",
+                placeholder: "Search station",
+                query: $originQuery,
+                results: $originResults,
+                isEditing: $isEditingOrigin,
+                focused: $originFocused,
+                selectedName: $selectedOriginName,
+                onClear: {
+                    Task { await store.setHomeStation(nil) }
                 }
-            } label: {
-                Text("Origin")
-            }
-            .pickerStyle(.menu)
-            .onChange(of: selectedOrigin) { _, newValue in
-                Task { await store.setHomeStation(newValue) }
+            ) { stop in
+                selectedOriginName = stop.name
+                originQuery = stop.name
+                originResults = []
+                isEditingOrigin = false
+                originFocused = false
+                Task { await store.setHomeStation(stop.id) }
             }
 
-            Picker(selection: $selectedDestination) {
-                Text("None").tag(StopID?.none)
-                ForEach(store.availableStops) { stop in
-                    Text(stop.name).tag(StopID?.some(stop.id))
+            stationInput(
+                title: "Destination",
+                placeholder: "Search station",
+                query: $destinationQuery,
+                results: $destinationResults,
+                isEditing: $isEditingDestination,
+                focused: $destinationFocused,
+                selectedName: $selectedDestinationName,
+                onClear: {
+                    Task { await store.setDestinationStation(nil) }
                 }
-            } label: {
-                Text("Destination")
+            ) { stop in
+                selectedDestinationName = stop.name
+                destinationQuery = stop.name
+                destinationResults = []
+                isEditingDestination = false
+                destinationFocused = false
+                Task { await store.setDestinationStation(stop.id) }
             }
-            .pickerStyle(.menu)
-            .onChange(of: selectedDestination) { _, newValue in
-                Task { await store.setDestinationStation(newValue) }
+
+            if store.hasConfiguredDefaultRoute {
+                Button(role: .destructive) {
+                    clearRouteFields()
+                    Task { await store.clearDefaultRoute() }
+                } label: {
+                    Label("Clear route", systemImage: "xmark.circle")
+                }
             }
         } header: {
             Text("Route")
         }
     }
+
+    private func clearRouteFields() {
+        originQuery = ""
+        destinationQuery = ""
+        selectedOriginName = nil
+        selectedDestinationName = nil
+        originResults = []
+        destinationResults = []
+        originFocused = false
+        destinationFocused = false
+        isEditingOrigin = false
+        isEditingDestination = false
+    }
+
+    private func stationInput(
+        title: String,
+        placeholder: String,
+        query: Binding<String>,
+        results: Binding<[Stop]>,
+        isEditing: Binding<Bool>,
+        focused: FocusState<Bool>.Binding,
+        selectedName: Binding<String?>,
+        onClear: @escaping () -> Void,
+        onSelect: @escaping (Stop) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+            ZStack(alignment: .trailing) {
+                TextField(placeholder, text: query)
+                    .textFieldStyle(.plain)
+                    .multilineTextAlignment(.leading)
+                    .focused(focused)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .padding(.trailing, 28)
+                    .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 10))
+                    .onChange(of: query.wrappedValue) { _, newValue in
+                        Task {
+                            if newValue.isEmpty {
+                                results.wrappedValue = []
+                            } else {
+                                results.wrappedValue = await store.searchStops(matching: newValue)
+                            }
+                        }
+                    }
+                    .onChange(of: focused.wrappedValue) { _, isFocused in
+                        if isFocused {
+                            isEditing.wrappedValue = true
+                            if query.wrappedValue.isEmpty, let selectedName = selectedName.wrappedValue {
+                                query.wrappedValue = selectedName
+                            }
+                        } else {
+                            isEditing.wrappedValue = false
+                            if let selectedName = selectedName.wrappedValue, query.wrappedValue != selectedName {
+                                query.wrappedValue = selectedName
+                            }
+                        }
+                    }
+
+                if focused.wrappedValue && !query.wrappedValue.isEmpty {
+                    Button {
+                        query.wrappedValue = ""
+                        selectedName.wrappedValue = nil
+                        results.wrappedValue = []
+                        onClear()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .contentShape(Rectangle())
+                            .padding(.trailing, 8)
+                            .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear \(title)")
+                }
+            }
+
+            if isEditing.wrappedValue && !results.wrappedValue.isEmpty {
+                VStack(spacing: 0) {
+                    ForEach(results.wrappedValue.prefix(5)) { stop in
+                        Button {
+                            onSelect(stop)
+                        } label: {
+                            HStack {
+                                Text(stop.name)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                        }
+                        .buttonStyle(.plain)
+
+                        if stop.id != results.wrappedValue.prefix(5).last?.id {
+                            Divider()
+                        }
+                    }
+                }
+                .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+    }
+
+    private func prefillStationNames(from stops: [Stop]) async {
+        let originID = await store.selectedHomeStationID()
+        let destinationID = await store.selectedDestinationStationID()
+
+        if let originID, let name = stops.first(where: { $0.id == originID })?.name {
+            selectedOriginName = name
+            if !originFocused {
+                originQuery = name
+            }
+        } else if !originFocused {
+            selectedOriginName = nil
+            originQuery = ""
+        }
+
+        if let destinationID, let name = stops.first(where: { $0.id == destinationID })?.name {
+            selectedDestinationName = name
+            if !destinationFocused {
+                destinationQuery = name
+            }
+        } else if !destinationFocused {
+            selectedDestinationName = nil
+            destinationQuery = ""
+        }
+    }
     #endif
+
+    private var originAutomationSection: some View {
+        Section {
+            Toggle(isOn: $autoSelectClosestOrigin) {
+                Label("Use closest station as origin", systemImage: "location.magnifyingglass")
+            }
+            .onChange(of: autoSelectClosestOrigin) { _, newValue in
+                UserSettings.setAutoSelectClosestOrigin(newValue)
+                store.resetClosestOriginSelectionForCurrentSession()
+                if newValue {
+                    store.requestLocationAccess()
+                } else {
+                    Task { await store.refresh() }
+                }
+            }
+
+            Text("When enabled, Ping picks the nearest FGC station as your origin when the app starts.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } header: {
+            Text("Origin")
+        }
+    }
 
     private var walkingSection: some View {
         Section {
-            Stepper(value: $walkingMinutes, in: 1...30) {
+            if store.isUsingLiveLocation {
                 LabeledContent {
-                    Text("\(walkingMinutes) min")
+                    Text("\(store.walkingMinutes) min")
                         .monospacedDigit()
                 } label: {
-                    Label("To station", systemImage: "figure.walk")
+                    Label("To station", systemImage: "location.fill")
                 }
-            }
-            .onChange(of: walkingMinutes) { _, newValue in
-                UserSettings.setWalkingMinutes(newValue)
+                Text("Based on your current location")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if store.isLocationAccessDenied {
+                Stepper(value: $manualWalkingMinutes, in: 1...30) {
+                    LabeledContent {
+                        Text("\(manualWalkingMinutes) min")
+                            .monospacedDigit()
+                    } label: {
+                        Label("To station", systemImage: "figure.walk")
+                    }
+                }
+                .onChange(of: manualWalkingMinutes) { _, newValue in
+                    store.setManualWalkingMinutes(newValue)
+                }
+                Text("Location access is denied, so Ping uses manual walking time.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                if store.isLocationAccessGranted && !store.hasConfiguredRoute {
+                    Text("Set an origin station to calculate walking time.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Enable location access for automatic walking time.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         } header: {
             Text("Walking time")

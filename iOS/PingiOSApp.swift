@@ -12,7 +12,7 @@ struct PingiOSApp: App {
             TabView {
                 ContentView()
                     .tabItem { Label("Home", systemImage: "tram.fill") }
-                MapPlaceholderView()
+                FGCMapView()
                     .tabItem { Label("Map", systemImage: "map") }
                 NavigationStack {
                     SharedSettingsView()
@@ -38,12 +38,6 @@ struct PingiOSApp: App {
     }
 }
 
-private struct MapPlaceholderView: View {
-    var body: some View {
-        ContentUnavailableView("Map coming soon", systemImage: "map")
-    }
-}
-
 @MainActor
 enum AppContainer {
     static let shared = IOSContainer()
@@ -52,7 +46,10 @@ enum AppContainer {
 @MainActor
 final class IOSContainer {
     let shared = SharedContainer()
-    lazy var notificationScheduler = NotificationScheduler(engine: shared.engine)
+    lazy var notificationScheduler = NotificationScheduler(
+        engine: shared.engine,
+        walkingMinutesProvider: { [shared] in shared.store.walkingMinutes }
+    )
 
     var store: PingStore {
         shared.store

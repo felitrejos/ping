@@ -114,6 +114,14 @@ private actor EngineStaticService: StaticServiceProviding {
     func searchStops(matching query: String) async throws -> [Stop] {
         []
     }
+
+    func lineForRoute(origin: StopID, destination: StopID) async throws -> String? {
+        "S1"
+    }
+
+    func routeStops(origin: StopID, destination: StopID) async throws -> [Stop] {
+        []
+    }
 }
 
 private actor EngineCalendarService: CalendarServiceProviding {

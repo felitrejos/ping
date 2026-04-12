@@ -2,13 +2,35 @@ import Foundation
 
 public typealias StopID = String
 
+public struct TransitCoordinate: Codable, Equatable, Sendable {
+    public let latitude: Double
+    public let longitude: Double
+
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+}
+
 public struct Stop: Codable, Equatable, Identifiable, Sendable {
     public let id: StopID
     public let name: String
+    public let latitude: Double?
+    public let longitude: Double?
 
-    public init(id: StopID, name: String) {
+    public init(id: StopID, name: String, latitude: Double? = nil, longitude: Double? = nil) {
         self.id = id
         self.name = name
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
+    public var coordinate: TransitCoordinate? {
+        guard let latitude, let longitude else {
+            return nil
+        }
+
+        return TransitCoordinate(latitude: latitude, longitude: longitude)
     }
 }
 
@@ -44,19 +66,25 @@ public struct CommuteEvent: Codable, Equatable, Identifiable, Sendable {
     public let startDate: Date
     public let location: String?
     public let resolvedStation: StopID?
+    public let stationCandidateIDs: [StopID]
+    public let stationCandidatesDebug: [String]
 
     public init(
         id: String,
         title: String,
         startDate: Date,
         location: String?,
-        resolvedStation: StopID?
+        resolvedStation: StopID?,
+        stationCandidateIDs: [StopID] = [],
+        stationCandidatesDebug: [String] = []
     ) {
         self.id = id
         self.title = title
         self.startDate = startDate
         self.location = location
         self.resolvedStation = resolvedStation
+        self.stationCandidateIDs = stationCandidateIDs
+        self.stationCandidatesDebug = stationCandidatesDebug
     }
 }
 
@@ -114,6 +142,8 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
 
 public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
     public let calendarEvent: CommuteEvent
+    public let originStationID: StopID
+    public let destinationStationID: StopID
     public let recommendedDeparture: Date
     public let trainOptions: [LiveDeparture]
 
@@ -123,10 +153,14 @@ public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
 
     public init(
         calendarEvent: CommuteEvent,
+        originStationID: StopID,
+        destinationStationID: StopID,
         recommendedDeparture: Date,
         trainOptions: [LiveDeparture]
     ) {
         self.calendarEvent = calendarEvent
+        self.originStationID = originStationID
+        self.destinationStationID = destinationStationID
         self.recommendedDeparture = recommendedDeparture
         self.trainOptions = trainOptions
     }
@@ -137,12 +171,20 @@ public struct CalendarEventRecord: Equatable, Sendable {
     public let title: String
     public let startDate: Date
     public let location: String?
+    public let coordinate: TransitCoordinate?
 
-    public init(id: String, title: String, startDate: Date, location: String?) {
+    public init(
+        id: String,
+        title: String,
+        startDate: Date,
+        location: String?,
+        coordinate: TransitCoordinate? = nil
+    ) {
         self.id = id
         self.title = title
         self.startDate = startDate
         self.location = location
+        self.coordinate = coordinate
     }
 }
 
@@ -160,36 +202,67 @@ public enum CalendarAuthorizationState: String, Codable, Equatable, Sendable {
 }
 
 public enum UserSettings {
-    public static let defaultHomeStationID = "VO"
-    public static let defaultDestinationStationID = "SR"
-
     public enum Keys {
         public static let homeStationID = "ping.userHomeStation"
         public static let destinationStationID = "ping.destinationStation"
         public static let walkingMinutes = "ping.walkingMinutes"
         public static let bufferMinutes = "ping.bufferMinutes"
         public static let selectedLine = "ping.selectedLine"
+        public static let autoSelectClosestOrigin = "ping.autoSelectClosestOrigin"
+        public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
     }
 
     public static let defaultWalkingMinutes = 8
     public static let defaultBufferMinutes = 3
+    private static let legacyDefaultHomeStationID = "VO"
+    private static let legacyDefaultDestinationStationID = "SR"
+
+    public static func migrateLegacyDefaultRouteIfNeeded(defaults: UserDefaults = .standard) {
+        guard !defaults.bool(forKey: Keys.didMigrateLegacyDefaultRoute) else {
+            return
+        }
+
+        if defaults.string(forKey: Keys.homeStationID) == legacyDefaultHomeStationID {
+            defaults.removeObject(forKey: Keys.homeStationID)
+        }
+
+        if defaults.string(forKey: Keys.destinationStationID) == legacyDefaultDestinationStationID {
+            defaults.removeObject(forKey: Keys.destinationStationID)
+        }
+
+        defaults.set(true, forKey: Keys.didMigrateLegacyDefaultRoute)
+    }
 
     public static func homeStationID(defaults: UserDefaults = .standard) -> StopID? {
-        let value = defaults.string(forKey: Keys.homeStationID) ?? defaultHomeStationID
+        guard let value = defaults.string(forKey: Keys.homeStationID) else {
+            return nil
+        }
+
         return isConfiguredStopID(value) ? value : nil
     }
 
     public static func setHomeStationID(_ stopID: StopID?, defaults: UserDefaults = .standard) {
-        defaults.set(stopID, forKey: Keys.homeStationID)
+        if let stopID {
+            defaults.set(stopID, forKey: Keys.homeStationID)
+        } else {
+            defaults.removeObject(forKey: Keys.homeStationID)
+        }
     }
 
     public static func destinationStationID(defaults: UserDefaults = .standard) -> StopID? {
-        let value = defaults.string(forKey: Keys.destinationStationID) ?? defaultDestinationStationID
+        guard let value = defaults.string(forKey: Keys.destinationStationID) else {
+            return nil
+        }
+
         return isConfiguredStopID(value) ? value : nil
     }
 
     public static func setDestinationStationID(_ stopID: StopID?, defaults: UserDefaults = .standard) {
-        defaults.set(stopID, forKey: Keys.destinationStationID)
+        if let stopID {
+            defaults.set(stopID, forKey: Keys.destinationStationID)
+        } else {
+            defaults.removeObject(forKey: Keys.destinationStationID)
+        }
     }
 
     public static func walkingMinutes(defaults: UserDefaults = .standard) -> Int {
@@ -218,6 +291,22 @@ public enum UserSettings {
 
     public static func setSelectedLine(_ line: String, defaults: UserDefaults = .standard) {
         defaults.set(line, forKey: Keys.selectedLine)
+    }
+
+    public static func autoSelectClosestOrigin(defaults: UserDefaults = .standard) -> Bool {
+        defaults.bool(forKey: Keys.autoSelectClosestOrigin)
+    }
+
+    public static func setAutoSelectClosestOrigin(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(isEnabled, forKey: Keys.autoSelectClosestOrigin)
+    }
+
+    public static func gtfsLastFetched(defaults: UserDefaults = .standard) -> Date? {
+        defaults.object(forKey: "ping.gtfsLastFetched") as? Date
+    }
+
+    public static func setGTFSLastFetched(_ date: Date, defaults: UserDefaults = .standard) {
+        defaults.set(date, forKey: "ping.gtfsLastFetched")
     }
 
     public static func isConfiguredStopID(_ stopID: StopID?) -> Bool {

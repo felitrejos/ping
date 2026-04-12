@@ -1,3 +1,4 @@
+import CoreLocation
 import Foundation
 import Observation
 
@@ -14,6 +15,32 @@ public final class PingStore {
     public var isRefreshing = false
     public var lastUpdated: Date?
     public var lastErrorMessage: String?
+    public private(set) var userLocation: TransitCoordinate?
+    public private(set) var homeStationID: StopID?
+    public private(set) var destinationStationID: StopID?
+    public private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
+    public private(set) var manualWalkingMinutes: Int = UserSettings.walkingMinutes()
+
+    /// Dynamic walking ETA in minutes from current location to origin station.
+    /// Falls back to the manual setting when location is unavailable.
+    public var walkingMinutes: Int {
+        dynamicWalkingMinutes ?? manualWalkingMinutes
+    }
+
+    /// Whether the walking time is based on live location (true) or the manual fallback (false).
+    public var isUsingLiveLocation: Bool {
+        dynamicWalkingMinutes != nil
+    }
+
+    public var isLocationAccessDenied: Bool {
+        locationAuthorizationStatus == .denied || locationAuthorizationStatus == .restricted
+    }
+
+    public var isLocationAccessGranted: Bool {
+        locationAuthorizationStatus == .authorizedAlways || locationAuthorizationStatus == .authorizedWhenInUse
+    }
+
+    public private(set) var dynamicWalkingMinutes: Int?
 
     public var selectedLine: String = UserSettings.selectedLine() {
         didSet {
@@ -23,11 +50,11 @@ public final class PingStore {
     }
 
     public var hasConfiguredRoute: Bool {
-        UserSettings.homeStationID() != nil
+        homeStationID != nil
     }
 
     public var hasConfiguredDestination: Bool {
-        UserSettings.destinationStationID() != nil
+        destinationStationID != nil
     }
 
     public var hasConfiguredDefaultRoute: Bool {
@@ -38,18 +65,31 @@ public final class PingStore {
     private let staticService: StaticServiceProviding
     private let calendarService: CalendarServiceProviding
     private let realtimeService: RealtimeServiceProviding
+    private let locationService: LocationProviding?
+    private let walkingETAService: WalkingETAProviding?
+    private let gtfsUpdateService: GTFSUpdateService?
+    private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
+    private var didAutoSelectClosestOriginThisSession = false
 
     public init(
         engine: CommuteEngine,
         staticService: StaticServiceProviding,
         calendarService: CalendarServiceProviding,
-        realtimeService: RealtimeServiceProviding
+        realtimeService: RealtimeServiceProviding,
+        locationService: LocationProviding? = nil,
+        walkingETAService: WalkingETAProviding? = nil,
+        gtfsUpdateService: GTFSUpdateService? = nil,
+        bundledGTFSURL: URL? = nil
     ) {
         self.engine = engine
         self.staticService = staticService
         self.calendarService = calendarService
         self.realtimeService = realtimeService
+        self.locationService = locationService
+        self.walkingETAService = walkingETAService
+        self.gtfsUpdateService = gtfsUpdateService
+        self.bundledGTFSURL = bundledGTFSURL
         Task {
             calendarAuthorization = await calendarService.authorizationStatus()
         }
@@ -64,6 +104,8 @@ public final class PingStore {
             if await calendarService.authorizationStatus() == .notDetermined {
                 calendarAuthorization = await calendarService.requestAccess()
             }
+            requestLocationAccess()
+            await checkForGTFSUpdate()
             await realtimeService.startPolling()
             await refresh()
             let stream = await realtimeService.updates()
@@ -95,10 +137,15 @@ public final class PingStore {
 
         do {
             calendarAuthorization = await calendarService.authorizationStatus()
+            homeStationID = await calendarService.userHomeStation()
+            destinationStationID = await calendarService.userDestinationStation()
+            locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
+            manualWalkingMinutes = UserSettings.walkingMinutes()
             availableStops = try await staticService.allStops()
             availableLines = try await staticService.availableLines()
             await reloadLineStops()
-            commutePlans = try await engine.commutePlans(within: 12)
+            await updateWalkingETA()
+            commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
             nextCommute = commutePlans.first
             nextDeparture = try await defaultBestDeparture()
             lastErrorMessage = nil
@@ -109,9 +156,29 @@ public final class PingStore {
         }
     }
 
+    public func resetClosestOriginSelectionForCurrentSession() {
+        didAutoSelectClosestOriginThisSession = false
+    }
+
     public func requestCalendarAccess() async {
         calendarAuthorization = await calendarService.requestAccess()
         await refresh()
+    }
+
+    public func requestLocationAccess() {
+        Task {
+            await locationService?.requestAuthorization()
+            locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
+            await refresh()
+        }
+    }
+
+    public func setManualWalkingMinutes(_ minutes: Int) {
+        UserSettings.setWalkingMinutes(minutes)
+        manualWalkingMinutes = minutes
+        if !isUsingLiveLocation {
+            Task { await refresh() }
+        }
     }
 
     public func searchStops(matching query: String) async -> [Stop] {
@@ -120,13 +187,26 @@ public final class PingStore {
 
     public func setHomeStation(_ stopID: StopID?) async {
         await calendarService.setUserHomeStation(stopID)
+        homeStationID = stopID
         await autoDetectLine()
         await refresh()
     }
 
     public func setDestinationStation(_ stopID: StopID?) async {
         await calendarService.setUserDestinationStation(stopID)
+        destinationStationID = stopID
         await autoDetectLine()
+        await refresh()
+    }
+
+    public func clearDefaultRoute() async {
+        await calendarService.setUserHomeStation(nil)
+        await calendarService.setUserDestinationStation(nil)
+        homeStationID = nil
+        destinationStationID = nil
+        didAutoSelectClosestOriginThisSession = false
+        dynamicWalkingMinutes = nil
+        nextDeparture = nil
         await refresh()
     }
 
@@ -140,22 +220,131 @@ public final class PingStore {
     }
 
     public func selectedHomeStationID() async -> StopID? {
-        await calendarService.userHomeStation()
+        if let homeStationID {
+            return homeStationID
+        }
+        let fetchedHome = await calendarService.userHomeStation()
+        homeStationID = fetchedHome
+        return fetchedHome
     }
 
     public func selectedDestinationStationID() async -> StopID? {
-        await calendarService.userDestinationStation()
+        if let destinationStationID {
+            return destinationStationID
+        }
+        let fetchedDestination = await calendarService.userDestinationStation()
+        destinationStationID = fetchedDestination
+        return fetchedDestination
     }
 
     private func defaultBestDeparture() async throws -> LiveDeparture? {
-        guard
-            let homeStopID = await calendarService.userHomeStation(),
-            let destination = await calendarService.userDestinationStation()
-        else {
+        let resolvedHomeStationID: StopID?
+        if let homeStationID {
+            resolvedHomeStationID = homeStationID
+        } else {
+            resolvedHomeStationID = await calendarService.userHomeStation()
+        }
+
+        let resolvedDestinationStationID: StopID?
+        if let destinationStationID {
+            resolvedDestinationStationID = destinationStationID
+        } else {
+            resolvedDestinationStationID = await calendarService.userDestinationStation()
+        }
+
+        homeStationID = resolvedHomeStationID
+        destinationStationID = resolvedDestinationStationID
+
+        guard let homeStopID = resolvedHomeStationID, let destination = resolvedDestinationStationID else {
             return nil
         }
 
         return try await engine.bestCatchableDeparture(from: homeStopID, to: destination)
+    }
+
+    private func updateWalkingETA() async {
+        guard let locationService, let walkingETAService else {
+            dynamicWalkingMinutes = nil
+            return
+        }
+
+        guard let coordinate = await locationService.currentLocation() else {
+            userLocation = nil
+            dynamicWalkingMinutes = nil
+            return
+        }
+        userLocation = TransitCoordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        await autoSelectClosestOriginIfNeeded()
+
+        let resolvedHomeStationID: StopID?
+        if let homeStationID {
+            resolvedHomeStationID = homeStationID
+        } else {
+            resolvedHomeStationID = await calendarService.userHomeStation()
+            homeStationID = resolvedHomeStationID
+        }
+
+        guard let homeStopID = resolvedHomeStationID,
+              let homeStop = availableStops.first(where: { $0.id == homeStopID }) else {
+            dynamicWalkingMinutes = nil
+            return
+        }
+
+        dynamicWalkingMinutes = await walkingETAService.walkingMinutes(from: coordinate, to: homeStop)
+    }
+
+    private func autoSelectClosestOriginIfNeeded() async {
+        guard
+            UserSettings.autoSelectClosestOrigin(),
+            !didAutoSelectClosestOriginThisSession,
+            let userLocation,
+            let closestStop = availableStops.closest(to: userLocation)
+        else {
+            return
+        }
+
+        await calendarService.setUserHomeStation(closestStop.id)
+        homeStationID = closestStop.id
+        didAutoSelectClosestOriginThisSession = true
+        await autoDetectLine()
+    }
+
+    private func filterCommutesNearCurrentLocation(_ plans: [CommutePlan]) -> [CommutePlan] {
+        guard let userLocation else {
+            return plans
+        }
+
+        return plans.filter { plan in
+            guard
+                let destinationID = plan.calendarEvent.resolvedStation,
+                let destination = availableStops.first(where: { $0.id == destinationID }),
+                let destinationCoordinate = destination.coordinate
+            else {
+                return true
+            }
+
+            return userLocation.distance(to: destinationCoordinate) > 800
+        }
+    }
+
+    public func configuredRouteStops() async -> [Stop] {
+        guard
+            let origin = await calendarService.userHomeStation(),
+            let destination = await calendarService.userDestinationStation()
+        else {
+            return []
+        }
+
+        return (try? await staticService.routeStops(origin: origin, destination: destination)) ?? []
+    }
+
+    private func checkForGTFSUpdate() async {
+        guard let gtfsUpdateService, let bundledGTFSURL else { return }
+        let didUpdate = await gtfsUpdateService.updateIfNeeded()
+        if didUpdate, let staticService = staticService as? FGCStaticService {
+            let newURL = gtfsUpdateService.bestAvailableZipURL(bundledURL: bundledGTFSURL)
+            await staticService.updateZipURL(newURL)
+        }
     }
 
     private func reloadLineStops() async {
@@ -164,5 +353,34 @@ public final class PingStore {
         } catch {
             lineStops = []
         }
+    }
+
+}
+
+private extension [Stop] {
+    func closest(to coordinate: TransitCoordinate) -> Stop? {
+        filter { $0.coordinate != nil }
+            .min { first, second in
+                first.distanceSquared(to: coordinate) < second.distanceSquared(to: coordinate)
+            }
+    }
+}
+
+private extension Stop {
+    func distanceSquared(to other: TransitCoordinate) -> Double {
+        guard let coordinate else {
+            return .greatestFiniteMagnitude
+        }
+
+        let latitudeDelta = coordinate.latitude - other.latitude
+        let longitudeDelta = coordinate.longitude - other.longitude
+        return latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta
+    }
+}
+
+private extension TransitCoordinate {
+    func distance(to other: TransitCoordinate) -> CLLocationDistance {
+        CLLocation(latitude: latitude, longitude: longitude)
+            .distance(from: CLLocation(latitude: other.latitude, longitude: other.longitude))
     }
 }

@@ -5,20 +5,27 @@ import UserNotifications
 
 @MainActor
 final class NotificationScheduler {
+    private enum BackgroundTaskID {
+        static let refresh = "app.ping.ios.refresh"
+    }
+
     private let engine: CommuteEngine
     private let center: UNUserNotificationCenter
+    private let walkingMinutesProvider: () -> Int
     private var currentActivity: Activity<PingActivityAttributes>?
 
     init(
         engine: CommuteEngine,
-        center: UNUserNotificationCenter = .current()
+        center: UNUserNotificationCenter = .current(),
+        walkingMinutesProvider: @escaping () -> Int = { UserSettings.walkingMinutes() }
     ) {
         self.engine = engine
         self.center = center
+        self.walkingMinutesProvider = walkingMinutesProvider
     }
 
     func registerBackgroundTasks() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "app.ping.refresh", using: nil) { [weak self] task in
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: BackgroundTaskID.refresh, using: nil) { [weak self] task in
             guard let task = task as? BGAppRefreshTask else {
                 task.setTaskCompleted(success: false)
                 return
@@ -103,7 +110,7 @@ final class NotificationScheduler {
             return
         }
 
-        let walkMin = UserSettings.walkingMinutes()
+        let walkMin = walkingMinutesProvider()
         let rideMin = max(1, Int((train.arrivalTime.timeIntervalSince(train.scheduledTime) / 60).rounded()))
         let attributes = PingActivityAttributes(
             destinationName: train.destinationStopID,
@@ -141,7 +148,7 @@ final class NotificationScheduler {
     }
 
     private func submitBackgroundRefresh() {
-        let request = BGAppRefreshTaskRequest(identifier: "app.ping.refresh")
+        let request = BGAppRefreshTaskRequest(identifier: BackgroundTaskID.refresh)
         request.earliestBeginDate = Date().addingTimeInterval(15 * 60)
         try? BGTaskScheduler.shared.submit(request)
     }

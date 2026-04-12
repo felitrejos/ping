@@ -47,6 +47,17 @@ struct StaticServiceTests {
 
         #expect(matches.contains(where: { $0.id == "ST_CITY" }))
     }
+
+    @Test
+    func routeStopsReturnsGtfsStationOrder() async throws {
+        let zipURL = try makeFixtureZip()
+        let service = FGCStaticService(zipURL: zipURL)
+
+        let stops = try await service.routeStops(origin: "ST_HOME", destination: "ST_CITY")
+
+        #expect(stops.map(\.id) == ["ST_HOME", "ST_MID", "ST_CITY"])
+        #expect(stops.compactMap(\.coordinate).count == 3)
+    }
 }
 
 private func makeFixtureZip() throws -> URL {
@@ -58,9 +69,10 @@ private func makeFixtureZip() throws -> URL {
 
     let files = [
         "stops.txt": """
-        stop_id,stop_name
-        ST_HOME,Sant Cugat Centre
-        ST_CITY,Placa Catalunya
+        stop_id,stop_name,stop_lat,stop_lon
+        ST_HOME,Sant Cugat Centre,41.4700,2.0800
+        ST_MID,Gracia,41.4000,2.1500
+        ST_CITY,Placa Catalunya,41.3860,2.1700
         """,
         "routes.txt": """
         route_id,route_short_name
@@ -74,9 +86,11 @@ private func makeFixtureZip() throws -> URL {
         "stop_times.txt": """
         trip_id,arrival_time,departure_time,stop_id,stop_sequence
         TRIP_1,07:10:00,07:10:00,ST_HOME,1
-        TRIP_1,07:35:00,07:35:00,ST_CITY,2
+        TRIP_1,07:25:00,07:25:00,ST_MID,2
+        TRIP_1,07:35:00,07:35:00,ST_CITY,3
         TRIP_2,25:15:00,25:15:00,ST_HOME,1
-        TRIP_2,25:40:00,25:40:00,ST_CITY,2
+        TRIP_2,25:30:00,25:30:00,ST_MID,2
+        TRIP_2,25:40:00,25:40:00,ST_CITY,3
         """,
     ]
 

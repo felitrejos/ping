@@ -33,7 +33,7 @@ let package = Package(
                 "PingShared",
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
             ],
-            path: "Tests/MakoSharedTests"
+            path: "Tests/PingSharedTests"
         ),
     ]
 )

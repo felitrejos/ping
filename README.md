@@ -25,6 +25,8 @@
 - Fetch FGC GTFS Realtime Trip Updates and keep the last known snapshot
 - Match calendar event locations against known FGC station names
 - Compute leave-by times from walking minutes, buffer minutes, and realtime delays
+- Estimate walking time from your live location to the origin station with MapKit
+- Show nearby FGC stations, selected station routes, and walking guidance on the iOS map
 - Show upcoming departures in a macOS menu bar app
 - Show commute plans and next trains in an iOS app
 - Schedule leave-now notifications for upcoming calendar commutes
@@ -68,7 +70,7 @@ open Ping.xcodeproj
 2. Select the macOS target to test the menu bar app.
 3. Select the iOS target to test the main commute view.
 4. Grant calendar access when prompted.
-5. Configure your home station and walking time in Settings.
+5. Configure your origin and destination in the iOS app or macOS Settings.
 
 ---
 
@@ -80,17 +82,15 @@ Project defaults live in:
 Shared/Models/Constants.swift
 ```
 
-Default route:
-
-- origin: Volpelleres (`VO`)
-- destination: Sarria (`SR`)
-
 User settings are stored with `UserDefaults`:
 
 - origin station
 - destination station
 - walking minutes to station
 - buffer minutes before departure
+- whether to pick the closest FGC station as the origin on app start
+
+Ping starts without a default route. The next-train card appears after both an origin and destination are configured.
 
 ---
 

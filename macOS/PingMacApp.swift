@@ -25,12 +25,12 @@ struct PingMacApp: App {
     }
 
     private var menuBarTitle: String {
-        guard store.hasConfiguredRoute else {
+        guard store.hasConfiguredDefaultRoute else {
             return "🚆 Setup"
         }
 
         if let dep = store.nextDeparture {
-            let leaveIn = max(0, dep.minutesUntilDeparture - UserSettings.walkingMinutes())
+            let leaveIn = max(0, dep.minutesUntilDeparture - store.walkingMinutes)
             return "🚆 \(leaveIn) min"
         }
         return "🚆"

@@ -5,16 +5,18 @@ public actor CommuteEngine {
     private let realtimeService: RealtimeServiceProviding
     private let calendarService: CalendarServiceProviding
     private let clock: Clock
-    private let walkingMinutesProvider: @Sendable () -> Int
+    private let walkingMinutesProvider: @Sendable () async -> Int
     private let bufferMinutesProvider: @Sendable () -> Int
+    private let originCandidatesProvider: (@Sendable () async -> [StopID])?
 
     public init(
         staticService: StaticServiceProviding,
         realtimeService: RealtimeServiceProviding,
         calendarService: CalendarServiceProviding,
         clock: Clock = SystemClock(),
-        walkingMinutesProvider: @escaping @Sendable () -> Int = { UserSettings.walkingMinutes() },
-        bufferMinutesProvider: @escaping @Sendable () -> Int = { UserSettings.bufferMinutes() }
+        walkingMinutesProvider: @escaping @Sendable () async -> Int = { UserSettings.walkingMinutes() },
+        bufferMinutesProvider: @escaping @Sendable () -> Int = { UserSettings.bufferMinutes() },
+        originCandidatesProvider: (@Sendable () async -> [StopID])? = nil
     ) {
         self.staticService = staticService
         self.realtimeService = realtimeService
@@ -22,6 +24,7 @@ public actor CommuteEngine {
         self.clock = clock
         self.walkingMinutesProvider = walkingMinutesProvider
         self.bufferMinutesProvider = bufferMinutesProvider
+        self.originCandidatesProvider = originCandidatesProvider
     }
 
     public func refresh() async {
@@ -55,7 +58,7 @@ public actor CommuteEngine {
     /// Returns the next train you can actually catch given walking + buffer time.
     public func bestCatchableDeparture(from origin: StopID, to destination: StopID) async throws -> LiveDeparture? {
         let now = clock.now
-        let walkingSeconds = TimeInterval(walkingMinutesProvider() * 60)
+        let walkingSeconds = TimeInterval(await walkingMinutesProvider() * 60)
         let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
         let leaveNowCutoff = walkingSeconds + bufferSeconds
 
@@ -70,20 +73,47 @@ public actor CommuteEngine {
     }
 
     public func commutePlans(within hours: Int) async throws -> [CommutePlan] {
-        guard let homeStopID = await calendarService.userHomeStation() else {
+        let preferredHomeStopID = await calendarService.userHomeStation()
+        let extraOriginCandidates = await originCandidatesProvider?() ?? []
+        let originCandidates = uniqueOrigins(home: preferredHomeStopID, additional: extraOriginCandidates)
+        guard !originCandidates.isEmpty else {
             return []
         }
+        let allStops = try await staticService.allStops()
 
         let commuteEvents = try await calendarService.upcomingCommutes(within: hours)
         var plans: [CommutePlan] = []
         for event in commuteEvents {
-            guard let destination = event.resolvedStation else {
+            guard let resolvedDestination = event.resolvedStation else {
                 continue
             }
-            guard let plan = try await plan(for: event, origin: homeStopID, destination: destination) else {
-                continue
+            let nearbyDestinations = destinationCandidates(
+                around: resolvedDestination,
+                from: allStops
+            )
+            let orderedDestinations = orderedDestinations(
+                eventCandidates: event.stationCandidateIDs,
+                nearbyDestinations: nearbyDestinations,
+                fallback: resolvedDestination
+            )
+            guard !orderedDestinations.isEmpty else { continue }
+
+            var selectedPlan: CommutePlan?
+            for origin in originCandidates {
+                for destination in orderedDestinations {
+                    if let plan = try await plan(for: event, origin: origin, destination: destination) {
+                        selectedPlan = plan
+                        break
+                    }
+                }
+                if selectedPlan != nil {
+                    break
+                }
             }
-            plans.append(plan)
+
+            if let selectedPlan {
+                plans.append(selectedPlan)
+            }
         }
         return plans.sorted { $0.recommendedDeparture < $1.recommendedDeparture }
     }
@@ -113,7 +143,7 @@ public actor CommuteEngine {
         }
 
         let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
-        let walkingSeconds = TimeInterval(walkingMinutesProvider() * 60)
+        let walkingSeconds = TimeInterval(await walkingMinutesProvider() * 60)
         let viableOption = liveOptions.first(where: { liveDeparture in
             let leaveBy = liveDeparture.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds))
             return leaveBy > clock.now
@@ -126,9 +156,83 @@ public actor CommuteEngine {
         let recommendedDeparture = viableOption.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds))
         return CommutePlan(
             calendarEvent: event,
+            originStationID: origin,
+            destinationStationID: destination,
             recommendedDeparture: recommendedDeparture,
             trainOptions: liveOptions
         )
+    }
+
+    private func uniqueOrigins(home: StopID?, additional: [StopID]) -> [StopID] {
+        var ordered: [StopID] = []
+        var seen = Set<StopID>()
+
+        if let home, !home.isEmpty {
+            if !seen.contains(home) {
+                ordered.append(home)
+                seen.insert(home)
+            }
+        }
+
+        for origin in additional where !origin.isEmpty && !seen.contains(origin) {
+            ordered.append(origin)
+            seen.insert(origin)
+        }
+
+        return ordered
+    }
+
+    private func destinationCandidates(around resolvedDestination: StopID, from allStops: [Stop]) -> [StopID] {
+        guard
+            let resolvedStop = allStops.first(where: { $0.id == resolvedDestination }),
+            let resolvedCoordinate = resolvedStop.coordinate
+        else {
+            return [resolvedDestination]
+        }
+
+        var ordered = allStops
+            .compactMap { stop -> (id: StopID, distanceSquared: Double)? in
+                guard let coordinate = stop.coordinate else {
+                    return nil
+                }
+                let latitudeDelta = coordinate.latitude - resolvedCoordinate.latitude
+                let longitudeDelta = coordinate.longitude - resolvedCoordinate.longitude
+                let distanceSquared = latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta
+                return (id: stop.id, distanceSquared: distanceSquared)
+            }
+            .sorted { $0.distanceSquared < $1.distanceSquared }
+            .prefix(40)
+            .map(\.id)
+
+        if !ordered.contains(resolvedDestination) {
+            ordered.insert(resolvedDestination, at: 0)
+        }
+        return ordered
+    }
+
+    private func orderedDestinations(
+        eventCandidates: [StopID],
+        nearbyDestinations: [StopID],
+        fallback: StopID
+    ) -> [StopID] {
+        var ordered: [StopID] = []
+        var seen = Set<StopID>()
+
+        for destination in eventCandidates where !destination.isEmpty && !seen.contains(destination) {
+            ordered.append(destination)
+            seen.insert(destination)
+        }
+
+        for destination in nearbyDestinations where !destination.isEmpty && !seen.contains(destination) {
+            ordered.append(destination)
+            seen.insert(destination)
+        }
+
+        if !fallback.isEmpty && !seen.contains(fallback) {
+            ordered.append(fallback)
+        }
+
+        return ordered
     }
 }
 
