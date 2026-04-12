@@ -10,6 +10,7 @@
 		01743C27B00F7D9D46FC522D /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		08B813432A1CE2F8EA021B5E /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		0974690191FE6BA0E491752A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
+		104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C9F3AD2BEE5C5DE7E3367E /* PingLiveActivity.swift */; };
 		1A2DEDBDEDF7C64547B74F5E /* PingWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1AB8E31041A73E53E7F10460 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
@@ -26,6 +27,7 @@
 		3FBC4856F15E27FDD3CCAC45 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */; };
 		43A1013CA02B274A22649FDE /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */; };
 		4D2252E6F3967AECBCA1AEE7 /* TransitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */; };
+		4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		5064C6430D05B37DF97E8027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3416EE5192208E30B00DC270 /* Assets.xcassets */; };
 		5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */; };
 		5BDD31290D712E0B058FC570 /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
@@ -43,6 +45,7 @@
 		8582B6EBD0FC12A522D15129 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28051C0A3FAE0625158FBF62 /* MenuBarView.swift */; };
 		8BB4ADD3B4174225A3005E31 /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		8F38E3A3850FBC1E9F0B178F /* SharedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09116DEBE6559278706A92A0 /* SharedSettingsView.swift */; };
+		924F4B37052816475EC14F9B /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		929A9F3E79937E91910628FC /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 0C956243B7E2E4347C7324A8 /* google_transit.zip */; };
 		932EC972ED8C347EFC8E8A61 /* PingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D1B6EF5FF939EBFCA0274A /* PingStore.swift */; };
 		95AEC08B4D11031D852A5A31 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF726A0720C8355B05F9E59 /* NotificationScheduler.swift */; };
@@ -107,26 +110,27 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		079962CAD515A7859A25A9F5 /* Ping macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "Ping macOS.app"; path = Ping.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		079962CAD515A7859A25A9F5 /* Ping macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ping macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0848B20C357FCC356EF7F3B6 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		086EA666598EBF38A0F20AC4 /* GTFSUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSUpdateService.swift; sourceTree = "<group>"; };
 		09116DEBE6559278706A92A0 /* SharedSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedSettingsView.swift; sourceTree = "<group>"; };
 		0C956243B7E2E4347C7324A8 /* google_transit.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = google_transit.zip; sourceTree = "<group>"; };
 		0CB73B6EBF36B1A740E0212D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PingWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PingWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E7EA5611A04A96CB6C50395 /* PingMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingMacApp.swift; sourceTree = "<group>"; };
 		1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
 		1EFBBA38E50BC24A005019E4 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		28051C0A3FAE0625158FBF62 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		3416EE5192208E30B00DC270 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		35D1B6EF5FF939EBFCA0274A /* PingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingStore.swift; sourceTree = "<group>"; };
+		5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommutePresentation.swift; sourceTree = "<group>"; };
 		55937ED73F88BD9D5C9B43CC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingETAService.swift; sourceTree = "<group>"; };
 		6103487323ABD9F8E2F4958D /* GeoTrainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoTrainService.swift; sourceTree = "<group>"; };
 		6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCStaticService.swift; sourceTree = "<group>"; };
 		71068AB1DAF04AD2B1273F1B /* PingWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingWidgetsBundle.swift; sourceTree = "<group>"; };
 		785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCRealtimeService.swift; sourceTree = "<group>"; };
-		7E7C8DDDED26E37FAA6DC31C /* Ping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ping.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E7C8DDDED26E37FAA6DC31C /* Ping iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Ping iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
 		8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCServiceAlertsService.swift; sourceTree = "<group>"; };
 		936C59BAA7286F130195CDB1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -228,6 +232,7 @@
 		832FDC533DA917C61BE59899 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */,
 				09116DEBE6559278706A92A0 /* SharedSettingsView.swift */,
 			);
 			path = Views;
@@ -258,7 +263,7 @@
 		A9B87E8D0F6F0C9AE7E7E82C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7E7C8DDDED26E37FAA6DC31C /* Ping.app */,
+				7E7C8DDDED26E37FAA6DC31C /* Ping iOS.app */,
 				079962CAD515A7859A25A9F5 /* Ping macOS.app */,
 				0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */,
 			);
@@ -374,7 +379,7 @@
 				81D935DD02BA4651DE209140 /* ZIPFoundation */,
 			);
 			productName = "Ping iOS";
-			productReference = 7E7C8DDDED26E37FAA6DC31C /* Ping.app */;
+			productReference = 7E7C8DDDED26E37FAA6DC31C /* Ping iOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -385,6 +390,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = 73BBE7CE9FAEB2C283B1AAA1 /* Build configuration list for PBXProject "Ping" */;
 			developmentRegion = en;
@@ -439,6 +446,7 @@
 			files = (
 				852B191579D98F352FC69946 /* CalendarService.swift in Sources */,
 				A19389CEAAF931F5AFC229C0 /* CommuteEngine.swift in Sources */,
+				104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */,
 				702F8F1DFD9972AED6A0A01F /* Constants.swift in Sources */,
 				76AC8ACEFF042639315506B9 /* FGCRealtimeService.swift in Sources */,
 				01743C27B00F7D9D46FC522D /* FGCServiceAlertsService.swift in Sources */,
@@ -466,6 +474,7 @@
 			files = (
 				E635A68794CD5AA26EA2F05A /* CalendarService.swift in Sources */,
 				B8F8609DC50FB7853FA024BE /* CommuteEngine.swift in Sources */,
+				4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */,
 				1AB8E31041A73E53E7F10460 /* Constants.swift in Sources */,
 				3C2A81BEAB593F72099C43E7 /* ContentView.swift in Sources */,
 				A1EAFBCBAE9B54813B007D85 /* FGCMapView.swift in Sources */,
@@ -495,6 +504,7 @@
 			files = (
 				6B903A7090BF99F60373BE2B /* CalendarService.swift in Sources */,
 				E309FDA8BA288ED387C1E7B7 /* CommuteEngine.swift in Sources */,
+				924F4B37052816475EC14F9B /* CommutePresentation.swift in Sources */,
 				0974690191FE6BA0E491752A /* Constants.swift in Sources */,
 				20D8F966A0C611A0FE03DD1F /* FGCRealtimeService.swift in Sources */,
 				08B813432A1CE2F8EA021B5E /* FGCServiceAlertsService.swift in Sources */,
@@ -549,7 +559,6 @@
 		3180933E9DA0FFBD379F4C4B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEVELOPMENT_TEAM = WXKM9YZDXT;
 				INFOPLIST_FILE = Widgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -570,7 +579,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = WXKM9YZDXT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -589,7 +597,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = WXKM9YZDXT;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -729,7 +736,6 @@
 		E599B65C7F82F9D581981B0A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DEVELOPMENT_TEAM = WXKM9YZDXT;
 				INFOPLIST_FILE = Widgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -28,6 +28,7 @@ public actor FGCStaticService: StaticServiceProviding {
         let routes: [String: GTFSRoute]
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
+        let tripIDsByStopID: [StopID: [String]]
         let stationStopsByID: [StopID: Stop]
         let stopsByLine: [String: [Stop]]
     }
@@ -54,9 +55,20 @@ public actor FGCStaticService: StaticServiceProviding {
         let destIDs = cache.childStopIDs[destination] ?? [destination]
         let serviceDays = candidateServiceDays(for: after)
         var departures: [TrainDeparture] = []
+        var candidateTripIDs = Set<String>()
 
-        for trip in cache.trips.values {
-            guard let stopTimes = cache.stopTimesByTripID[trip.id] else {
+        for originID in originIDs {
+            guard let tripIDs = cache.tripIDsByStopID[originID] else {
+                continue
+            }
+            candidateTripIDs.formUnion(tripIDs)
+        }
+
+        for tripID in candidateTripIDs {
+            guard
+                let trip = cache.trips[tripID],
+                let stopTimes = cache.stopTimesByTripID[tripID]
+            else {
                 continue
             }
 
@@ -259,6 +271,12 @@ extension FGCStaticService {
         }
         let stopTimes = Dictionary(grouping: stopTimePairs, by: { $0.0 })
             .mapValues { $0.map(\.1).sorted { $0.stopSequence < $1.stopSequence } }
+        var tripIDsByStopID: [StopID: Set<String>] = [:]
+        for (tripID, tripStopTimes) in stopTimes {
+            for stopTime in tripStopTimes {
+                tripIDsByStopID[stopTime.stopID, default: []].insert(tripID)
+            }
+        }
 
         // Build parent lookup (child → parent)
         var parentStopID: [StopID: StopID] = [:]
@@ -293,6 +311,7 @@ extension FGCStaticService {
             routes: routes,
             trips: trips,
             stopTimesByTripID: stopTimes,
+            tripIDsByStopID: tripIDsByStopID.mapValues(Array.init),
             stationStopsByID: stationStopsByID,
             stopsByLine: stopsByLine
         )

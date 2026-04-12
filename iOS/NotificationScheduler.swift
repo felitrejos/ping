@@ -78,6 +78,10 @@ final class NotificationScheduler {
         content.sound = .default
 
         let triggerDate = plan.recommendedDeparture.addingTimeInterval(-300)
+        guard triggerDate > Date().addingTimeInterval(5) else {
+            return
+        }
+
         let trigger = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
         let request = UNNotificationRequest(
             identifier: identifier,

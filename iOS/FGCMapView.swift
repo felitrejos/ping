@@ -16,6 +16,7 @@ struct FGCMapView: View {
     @State private var previousGeoTrainCoordinates: [String: TransitCoordinate] = [:]
     @State private var targetGeoTrainCoordinates: [String: TransitCoordinate] = [:]
     @State private var geoTrainInterpolationStart = Date()
+    @State private var lastWalkingRouteRequestKey: WalkingRouteRequestKey?
 
     private let geoTrainPollInterval: TimeInterval = 10
     private let geoTrainInterpolationDuration: TimeInterval = 10
@@ -107,6 +108,10 @@ struct FGCMapView: View {
         }
 
         return destinationIndex > originIndex ? "D" : "A"
+    }
+
+    private var hasActiveCommuteContext: Bool {
+        store.nextDeparture != nil || store.nextCommute != nil
     }
 
     private var closestStations: [Stop] {
@@ -240,8 +245,14 @@ struct FGCMapView: View {
         .onChange(of: store.userLocation) { _, _ in
             Task { await updateWalkingRoute() }
         }
-        .onChange(of: store.nextDeparture) { _, _ in
+        .onChange(of: hasActiveCommuteContext) { _, _ in
             Task { await updateWalkingRoute() }
+        }
+        .onChange(of: store.homeStationID) { _, _ in
+            Task { await reloadMapData() }
+        }
+        .onChange(of: store.destinationStationID) { _, _ in
+            Task { await reloadMapData() }
         }
         .onChange(of: store.geoTrainUnits) { _, units in
             updateGeoTrainInterpolationTargets(with: units)
@@ -360,7 +371,8 @@ struct FGCMapView: View {
     }
 
     private func updateWalkingRoute() async {
-        guard store.nextDeparture != nil || store.nextCommute != nil else {
+        guard hasActiveCommuteContext else {
+            lastWalkingRouteRequestKey = nil
             walkingRoute = nil
             return
         }
@@ -369,11 +381,23 @@ struct FGCMapView: View {
             let userCoordinate,
             let originCoordinate = originStop?.coordinate?.mapCoordinate
         else {
+            lastWalkingRouteRequestKey = nil
             walkingRoute = nil
             return
         }
 
-        walkingRoute = await Self.walkingRoute(from: userCoordinate, to: originCoordinate)
+        let requestKey = WalkingRouteRequestKey(source: userCoordinate, destination: originCoordinate)
+        guard requestKey != lastWalkingRouteRequestKey else {
+            return
+        }
+
+        lastWalkingRouteRequestKey = requestKey
+        let route = await Self.walkingRoute(from: userCoordinate, to: originCoordinate)
+        guard requestKey == lastWalkingRouteRequestKey else {
+            return
+        }
+
+        walkingRoute = route
     }
 
     private func updateCamera() {
@@ -410,6 +434,24 @@ struct FGCMapView: View {
     private static func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return MKMapItem(location: location, address: nil)
+    }
+}
+
+private struct WalkingRouteRequestKey: Equatable {
+    let sourceLatitudeBucket: Int
+    let sourceLongitudeBucket: Int
+    let destinationLatitudeBucket: Int
+    let destinationLongitudeBucket: Int
+
+    init(source: CLLocationCoordinate2D, destination: CLLocationCoordinate2D) {
+        sourceLatitudeBucket = Self.bucket(source.latitude)
+        sourceLongitudeBucket = Self.bucket(source.longitude)
+        destinationLatitudeBucket = Self.bucket(destination.latitude)
+        destinationLongitudeBucket = Self.bucket(destination.longitude)
+    }
+
+    private static func bucket(_ value: CLLocationDegrees) -> Int {
+        Int((value * 10_000).rounded())
     }
 }
 
