@@ -28,3 +28,17 @@ FGC publishes a GTFS Realtime Service Alerts feed (`alerts-gtfs_realtime`) with 
 
 #### Map polish
 - Show service alerts directly on affected route segments once alerts are supported
+
+### Release readiness
+
+#### macOS parity (without Live Activity)
+- Keep macOS without Live Activity (intentional scope decision)
+- Make macOS calendar commute card actionable (same "use this route" behavior as iOS)
+- Add quick route actions in macOS menu view (set/swap/clear) without opening Settings
+- Align macOS empty/error states and helper copy with iOS wording and behavior
+
+#### Notifications + permissions audit
+- Confirm current notifications scope: iOS leave reminders only (no macOS notification feature for now)
+- Ensure notification copy/permission prompts clearly describe current behavior
+- Remove remaining runtime warnings around background refresh registration and verify BG task setup on device
+- Validate App Store privacy and permission strings against implemented features only
