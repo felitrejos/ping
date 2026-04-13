@@ -116,6 +116,12 @@ Regenerate the project after target/dependency changes:
 xcodegen generate
 ```
 
+Release and notarization guide:
+
+```text
+RELEASE.md
+```
+
 ---
 
 ## License
