@@ -269,6 +269,7 @@ public enum UserSettings {
         public static let bufferMinutes = "ping.bufferMinutes"
         public static let selectedLine = "ping.selectedLine"
         public static let autoSelectClosestOrigin = "ping.autoSelectClosestOrigin"
+        public static let menuBarSleepMode = "ping.menuBarSleepMode"
         public static let favoriteStationIDs = "ping.favoriteStationIDs"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
     }

@@ -941,25 +941,18 @@ private struct CountdownText: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
-            Text(formattedCountdown(from: timeline.date))
+            let remainingSeconds = CountdownFormatting.remainingSeconds(until: targetDate, now: timeline.date)
+            Text(formattedCountdown(remainingSeconds: remainingSeconds))
         }
     }
 
-    private func formattedCountdown(from now: Date) -> String {
-        let remainingSeconds = max(0, Int(targetDate.timeIntervalSince(now)))
-        let hours = remainingSeconds / 3600
-        let minutes = (remainingSeconds % 3600) / 60
-        let seconds = remainingSeconds % 60
-
-        if remainingSeconds >= 3600 {
-            return "\(hours)h \(minutes)min"
-        }
-
+    private func formattedCountdown(remainingSeconds: Int) -> String {
         switch mode {
         case .hero:
-            return "\(minutes)min"
+            let parts = CountdownFormatting.heroParts(remainingSeconds: remainingSeconds)
+            return parts.plainText
         case .board:
-            return "\(minutes)m \(seconds)s"
+            return CountdownFormatting.boardText(remainingSeconds: remainingSeconds)
         }
     }
 }
@@ -969,20 +962,30 @@ private struct HeroCountdownValue: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
-            let remainingSeconds = max(0, Int(targetDate.timeIntervalSince(timeline.date)))
-            let hours = remainingSeconds / 3600
-            let minutes = (remainingSeconds % 3600) / 60
+            let remainingSeconds = CountdownFormatting.remainingSeconds(until: targetDate, now: timeline.date)
+            let parts = CountdownFormatting.heroParts(remainingSeconds: remainingSeconds)
 
-            if remainingSeconds >= 3600 {
-                Text("\(hours)h \(minutes)min")
-                    .font(.system(size: 50, weight: .heavy, design: .rounded))
-                    .contentTransition(.numericText())
+            if parts.isLongForm {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(parts.leadingValue)
+                        .font(.system(size: 50, weight: .heavy, design: .rounded))
+                        .contentTransition(.numericText())
+                    Text(parts.leadingUnit)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Text(parts.trailingValue ?? "")
+                        .font(.system(size: 50, weight: .heavy, design: .rounded))
+                        .contentTransition(.numericText())
+                    Text(parts.trailingUnit ?? "")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(minutes)")
+                    Text(parts.leadingValue)
                         .font(.system(size: 56, weight: .heavy, design: .rounded))
                         .contentTransition(.numericText())
-                    Text("min")
+                    Text(parts.leadingUnit)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }

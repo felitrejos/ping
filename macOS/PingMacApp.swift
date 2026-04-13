@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct PingMacApp: App {
     @State private var store = MacContainer.shared.store
+    @AppStorage(UserSettings.Keys.menuBarSleepMode) private var isMenuBarSleeping = false
 
     init() {
         MacContainer.shared.store.start()
@@ -27,6 +28,10 @@ struct PingMacApp: App {
     private var menuBarTitle: String {
         guard store.hasConfiguredDefaultRoute else {
             return "🚆 Setup"
+        }
+
+        if isMenuBarSleeping {
+            return "🚆💤"
         }
 
         if let dep = store.nextDeparture {

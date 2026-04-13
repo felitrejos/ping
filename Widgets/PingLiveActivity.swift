@@ -39,11 +39,27 @@ struct PingLiveActivityWidget: Widget {
                             Text("Leave in")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text("\(context.state.leaveInMinutes)")
-                                .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            Text("min")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            let parts = leaveInParts(for: context.state)
+                            if parts.isLongForm {
+                                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                    Text(parts.leadingValue)
+                                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                    Text(parts.leadingUnit)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(parts.trailingValue ?? "")
+                                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                    Text(parts.trailingUnit ?? "")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            } else {
+                                Text(parts.leadingValue)
+                                    .font(.system(size: 26, weight: .heavy, design: .rounded))
+                                Text(parts.leadingUnit)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                             Spacer()
                         }
                         HStack(spacing: 2) {
@@ -113,11 +129,27 @@ struct PingLiveActivityWidget: Widget {
                 Text("Leave in")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("\(context.state.leaveInMinutes)")
-                    .font(.system(size: 36, weight: .heavy, design: .rounded))
-                Text("min")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                let parts = leaveInParts(for: context.state)
+                if parts.isLongForm {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(parts.leadingValue)
+                            .font(.system(size: 32, weight: .heavy, design: .rounded))
+                        Text(parts.leadingUnit)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        Text(parts.trailingValue ?? "")
+                            .font(.system(size: 32, weight: .heavy, design: .rounded))
+                        Text(parts.trailingUnit ?? "")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text(parts.leadingValue)
+                        .font(.system(size: 36, weight: .heavy, design: .rounded))
+                    Text(parts.leadingUnit)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
             }
 
@@ -157,6 +189,10 @@ struct PingLiveActivityWidget: Widget {
             .foregroundStyle(.white)
             .frame(width: 28, height: 18)
             .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+
+    private func leaveInParts(for state: PingActivityAttributes.ContentState) -> HeroCountdownParts {
+        CountdownFormatting.heroParts(remainingSeconds: state.leaveInMinutes * 60)
     }
 
 }

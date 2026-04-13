@@ -10,6 +10,7 @@ public struct SharedSettingsView: View {
     @State private var selectedOriginName: String?
     @State private var selectedDestinationName: String?
     @State private var selectedFavoriteID: StopID?
+    @AppStorage(UserSettings.Keys.menuBarSleepMode) private var isMenuBarSleeping = false
     #endif
 
     public init() {}
@@ -92,15 +93,15 @@ public struct SharedSettingsView: View {
                 .buttonStyle(.bordered)
                 .disabled(!store.hasConfiguredDefaultRoute)
 
-                if store.hasConfiguredDefaultRoute {
-                    Button(role: .destructive) {
-                        clearRouteSelection()
-                        Task { await store.clearDefaultRoute() }
-                    } label: {
-                        Label("Clear route", systemImage: "xmark.circle")
-                    }
-                    .buttonStyle(.bordered)
+                Button {
+                    isMenuBarSleeping.toggle()
+                } label: {
+                    Label(
+                        isMenuBarSleeping ? "Wake menu bar" : "Sleep menu bar",
+                        systemImage: isMenuBarSleeping ? "sun.max" : "moon.zzz"
+                    )
                 }
+                .buttonStyle(.bordered)
             }
         } header: {
             Text("Route")
@@ -136,11 +137,6 @@ public struct SharedSettingsView: View {
             }
             .buttonStyle(.plain)
         }
-    }
-
-    private func clearRouteSelection() {
-        selectedOriginName = nil
-        selectedDestinationName = nil
     }
 
     private func swapConfiguredRoute() {
@@ -282,7 +278,7 @@ public struct SharedSettingsView: View {
         } header: {
             Text("Favorite stations")
         } footer: {
-            Text("Tip: Favorites show up in the menu bar for quick switching.")
+            Text("Favorites show up in the menu bar for quick switching.")
         }
     }
 

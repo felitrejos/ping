@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarView: View {
     @Environment(PingStore.self) private var store
     @Environment(\.openSettings) private var openSettings
+    @AppStorage(UserSettings.Keys.menuBarSleepMode) private var isMenuBarSleeping = false
     @State private var activeFavoritePopoverStopID: StopID?
     @State private var showsUpcomingDepartures = false
 
@@ -34,6 +35,12 @@ struct MenuBarView: View {
     private var primarySection: some View {
         if !store.hasConfiguredDefaultRoute {
             setupCard
+        } else if isMenuBarSleeping {
+            if let dep = store.nextDeparture {
+                sleepCard(dep)
+            } else {
+                sleepingFallbackCard
+            }
         } else if let dep = store.nextDeparture {
             trainCard(dep)
         } else if store.lastErrorMessage != nil {
@@ -47,7 +54,7 @@ struct MenuBarView: View {
 
     private func trainCard(_ dep: LiveDeparture) -> some View {
         let walkMin = store.walkingMinutes
-        let leaveIn = max(0, dep.minutesUntilDeparture - walkMin)
+        let leaveByDate = dep.effectiveDepartureTime.addingTimeInterval(TimeInterval(-walkMin * 60))
         let rideMin = max(1, Int((dep.arrivalTime.timeIntervalSince(dep.scheduledTime) / 60).rounded()))
         let routeCode = dep.trainLabel.split(separator: " ").first.map(String.init) ?? store.selectedLine
 
@@ -82,11 +89,7 @@ struct MenuBarView: View {
                 Text("Leave in")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Text("\(leaveIn)")
-                    .font(.system(size: 54, weight: .heavy, design: .rounded))
-                Text("min")
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(.secondary)
+                MenuBarHeroCountdownValue(targetDate: leaveByDate)
             }
 
             timeline(walkMin: walkMin, rideMin: rideMin)
@@ -104,6 +107,50 @@ struct MenuBarView: View {
                 .padding(.vertical, 6)
                 .background(.fill.quaternary, in: Capsule())
             }
+        }
+        .padding(16)
+    }
+
+    private func sleepCard(_ dep: LiveDeparture) -> some View {
+        let routeCode = dep.trainLabel.split(separator: " ").first.map(String.init) ?? store.selectedLine
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(routeTitle)
+                    .font(.caption.weight(.semibold))
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                    .lineLimit(1)
+                Spacer()
+                Label("Sleeping", systemImage: "moon.zzz")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(spacing: 8) {
+                Text(routeCode)
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 18)
+                    .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                Text(dep.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))
+                    .font(.title3.weight(.semibold))
+                    .monospacedDigit()
+
+                Text("→")
+                    .foregroundStyle(.secondary)
+
+                Text(dep.effectiveArrivalTime.formatted(date: .omitted, time: .shortened))
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+            }
+
+            Text("Live countdown is paused while Sleep mode is on.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(16)
     }
@@ -431,7 +478,7 @@ struct MenuBarView: View {
 
     private func upcomingDepartureRow(_ departure: LiveDeparture) -> some View {
         let routeCode = departure.trainLabel.split(separator: " ").first.map(String.init) ?? store.selectedLine
-        let leaveIn = max(0, departure.minutesUntilDeparture - store.walkingMinutes)
+        let leaveByDate = departure.effectiveDepartureTime.addingTimeInterval(TimeInterval(-store.walkingMinutes * 60))
 
         return HStack(spacing: 10) {
             Text(routeCode)
@@ -450,7 +497,7 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Text("\(leaveIn)m")
+            MenuBarCountdownText(targetDate: leaveByDate)
                 .font(.caption.monospacedDigit().weight(.semibold))
                 .foregroundStyle(.secondary)
         }
@@ -563,6 +610,10 @@ struct MenuBarView: View {
         fallbackCard("Set route", "Choose origin and destination in Settings.", "location.fill")
     }
 
+    private var sleepingFallbackCard: some View {
+        fallbackCard("Sleep mode on", "Live countdown is paused. Wake from Settings anytime.", "moon.zzz.fill")
+    }
+
     private var errorCard: some View {
         fallbackCard("Could not refresh", store.lastErrorMessage ?? "", "exclamationmark.triangle.fill")
     }
@@ -590,8 +641,13 @@ struct MenuBarView: View {
     // MARK: - Helpers
 
     private var destinationName: String {
-        guard let dep = store.nextDeparture else { return "" }
-        return store.availableStops.first(where: { $0.id == dep.destinationStopID })?.name ?? dep.destinationStopID
+        if let dep = store.nextDeparture {
+            return store.availableStops.first(where: { $0.id == dep.destinationStopID })?.name ?? dep.destinationStopID
+        }
+        guard let destinationID = store.destinationStationID else {
+            return "Destination"
+        }
+        return store.availableStops.first(where: { $0.id == destinationID })?.name ?? destinationID
     }
 
     private var originName: String {
@@ -634,5 +690,59 @@ private struct LineStatusRow: Identifiable {
 
     var id: String {
         line
+    }
+}
+
+private struct MenuBarCountdownText: View {
+    let targetDate: Date
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            let remainingSeconds = CountdownFormatting.remainingSeconds(until: targetDate, now: timeline.date)
+            Text(CountdownFormatting.boardText(remainingSeconds: remainingSeconds))
+        }
+    }
+}
+
+private struct MenuBarHeroCountdownValue: View {
+    let targetDate: Date
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            let remainingSeconds = CountdownFormatting.remainingSeconds(until: targetDate, now: timeline.date)
+            let parts = CountdownFormatting.heroParts(remainingSeconds: remainingSeconds)
+            countdownBody(parts: parts)
+        }
+    }
+
+    @ViewBuilder
+    private func countdownBody(parts: HeroCountdownParts) -> some View {
+        if parts.isLongForm {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(parts.leadingValue)
+                    .font(.system(size: 40, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text(parts.leadingUnit)
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.secondary)
+                Text(parts.trailingValue ?? "")
+                    .font(.system(size: 40, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text(parts.trailingUnit ?? "")
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        } else {
+            Text(parts.leadingValue)
+                .font(.system(size: 54, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .contentTransition(.numericText())
+
+            Text(parts.leadingUnit)
+                .font(.title3.weight(.medium))
+                .foregroundStyle(.secondary)
+        }
     }
 }

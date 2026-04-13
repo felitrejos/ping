@@ -27,10 +27,14 @@
 
 - Find the best next train between two FGC stations
 - See upcoming departures (next 12h) and real-time delay-aware leave times
-- Save favorite stations for quick route switching
+- Use adaptive countdown formatting across app surfaces (`Xm`, `Xh Ymin`, and board-style `Xm Ys`)
+- Save favorite stations for quick route switching (chips on iOS and macOS)
 - Use calendar-aware commute suggestions in one tap
 - Follow live train positions on the map for your active line
 - Receive iPhone leave reminders and Live Activity trip tracking
+- Use macOS menu bar Sleep mode when you want to pause the live countdown without clearing your route
+- Expand/collapse upcoming departures directly in the macOS menu bar
+- View GTFS-Realtime service alerts in both iOS and macOS
 
 ---
 
