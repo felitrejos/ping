@@ -69,8 +69,8 @@ public final class PingStore {
     }
 
     public var favoriteStations: [Stop] {
-        favoriteStationIDs.compactMap { stopID in
-            availableStops.first(where: { $0.id == stopID })
+        favoriteStationIDs.map { stopID in
+            availableStops.first(where: { $0.id == stopID }) ?? Stop(id: stopID, name: stopID)
         }
     }
 

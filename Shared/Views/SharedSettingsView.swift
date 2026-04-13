@@ -2,23 +2,14 @@ import SwiftUI
 
 public struct SharedSettingsView: View {
     @Environment(PingStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
     @AppStorage(UserSettings.Keys.autoSelectClosestOrigin) private var autoSelectClosestOrigin = false
     @State private var isFavoritePickerPresented = false
 
     #if os(macOS)
-    @State private var originQuery = ""
-    @State private var destinationQuery = ""
-    @State private var originResults: [Stop] = []
-    @State private var destinationResults: [Stop] = []
-    @State private var isEditingOrigin = false
-    @State private var isEditingDestination = false
+    @State private var activeRoutePicker: RoutePickerTarget?
     @State private var selectedOriginName: String?
     @State private var selectedDestinationName: String?
-    @State private var originSearchTask: Task<Void, Never>?
-    @State private var destinationSearchTask: Task<Void, Never>?
-    @FocusState private var originFocused: Bool
-    @FocusState private var destinationFocused: Bool
+    @State private var selectedFavoriteID: StopID?
     #endif
 
     public init() {}
@@ -36,16 +27,28 @@ public struct SharedSettingsView: View {
         .formStyle(.grouped)
         .navigationTitle("Settings")
         .sheet(isPresented: $isFavoritePickerPresented) {
-            FavoriteStationPickerView(
+            StationSearchPickerView(
+                title: "Add Favorite",
                 availableStops: store.availableStops,
-                favoriteStationIDs: Set(store.favoriteStationIDs),
-                onSelect: { stop in
-                    store.addFavoriteStation(stop.id)
-                    isFavoritePickerPresented = false
-                }
-            )
+                excludedStopIDs: Set(store.favoriteStationIDs),
+                selectedStopID: nil
+            ) { stop in
+                store.addFavoriteStation(stop.id)
+                isFavoritePickerPresented = false
+            }
         }
         #if os(macOS)
+        .sheet(item: $activeRoutePicker) { target in
+            StationSearchPickerView(
+                title: target.title,
+                availableStops: store.availableStops,
+                excludedStopIDs: [],
+                selectedStopID: target == .origin ? store.homeStationID : store.destinationStationID
+            ) { stop in
+                applyRoutePickerSelection(stop: stop, target: target)
+                activeRoutePicker = nil
+            }
+        }
         .toolbar(.hidden, for: .automatic)
         .onChange(of: store.availableStops) { _, stops in
             guard !stops.isEmpty else { return }
@@ -66,189 +69,99 @@ public struct SharedSettingsView: View {
     #if os(macOS)
     private var routeSection: some View {
         Section {
-            stationInput(
+            routeSelectionButton(
                 title: "Origin",
-                placeholder: "Search station",
-                query: $originQuery,
-                results: $originResults,
-                isEditing: $isEditingOrigin,
-                focused: $originFocused,
-                selectedName: $selectedOriginName,
-                onQueryChanged: scheduleOriginSearch,
-                onClear: {
-                    Task { await store.setHomeStation(nil) }
-                }
-            ) { stop in
-                isEditingOrigin = false
-                originFocused = false
-                selectedOriginName = stop.name
-                originQuery = stop.name
-                originResults = []
-                Task { await store.setHomeStation(stop.id) }
+                value: selectedOriginName ?? "Choose station"
+            ) {
+                activeRoutePicker = .origin
             }
 
-            stationInput(
+            routeSelectionButton(
                 title: "Destination",
-                placeholder: "Search station",
-                query: $destinationQuery,
-                results: $destinationResults,
-                isEditing: $isEditingDestination,
-                focused: $destinationFocused,
-                selectedName: $selectedDestinationName,
-                onQueryChanged: scheduleDestinationSearch,
-                onClear: {
-                    Task { await store.setDestinationStation(nil) }
-                }
-            ) { stop in
-                isEditingDestination = false
-                destinationFocused = false
-                selectedDestinationName = stop.name
-                destinationQuery = stop.name
-                destinationResults = []
-                Task { await store.setDestinationStation(stop.id) }
+                value: selectedDestinationName ?? "Choose station"
+            ) {
+                activeRoutePicker = .destination
             }
 
-            if store.hasConfiguredDefaultRoute {
-                Button(role: .destructive) {
-                    clearRouteFields()
-                    Task { await store.clearDefaultRoute() }
+            HStack(spacing: 8) {
+                Button {
+                    swapConfiguredRoute()
                 } label: {
-                    Label("Clear route", systemImage: "xmark.circle")
+                    Label("Swap route", systemImage: "arrow.up.arrow.down")
+                }
+                .buttonStyle(.bordered)
+                .disabled(!store.hasConfiguredDefaultRoute)
+
+                if store.hasConfiguredDefaultRoute {
+                    Button(role: .destructive) {
+                        clearRouteSelection()
+                        Task { await store.clearDefaultRoute() }
+                    } label: {
+                        Label("Clear route", systemImage: "xmark.circle")
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
         } header: {
             Text("Route")
+        } footer: {
+            Text("Search and select stations using the pickers above.")
         }
     }
 
-    private func clearRouteFields() {
-        originQuery = ""
-        destinationQuery = ""
+    private func routeSelectionButton(
+        title: String,
+        value: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.3)
+
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    Text(value)
+                        .lineLimit(1)
+                        .foregroundStyle(value == "Choose station" ? .secondary : .primary)
+                    Spacer()
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func clearRouteSelection() {
         selectedOriginName = nil
         selectedDestinationName = nil
-        originResults = []
-        destinationResults = []
-        originSearchTask?.cancel()
-        destinationSearchTask?.cancel()
-        originFocused = false
-        destinationFocused = false
-        isEditingOrigin = false
-        isEditingDestination = false
     }
 
-    private func stationInput(
-        title: String,
-        placeholder: String,
-        query: Binding<String>,
-        results: Binding<[Stop]>,
-        isEditing: Binding<Bool>,
-        focused: FocusState<Bool>.Binding,
-        selectedName: Binding<String?>,
-        onQueryChanged: @escaping (String) -> Void,
-        onClear: @escaping () -> Void,
-        onSelect: @escaping (Stop) -> Void
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-            ZStack(alignment: .trailing) {
-                TextField(placeholder, text: query)
-                    .textFieldStyle(.plain)
-                    .multilineTextAlignment(.leading)
-                    .focused(focused)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .padding(.trailing, 28)
-                    .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 10))
-                    .onChange(of: query.wrappedValue) { _, newValue in
-                        guard isEditing.wrappedValue else { return }
-                        onQueryChanged(newValue)
-                    }
-                    .onChange(of: focused.wrappedValue) { _, isFocused in
-                        if isFocused {
-                            isEditing.wrappedValue = true
-                            if query.wrappedValue.isEmpty, let selectedName = selectedName.wrappedValue {
-                                query.wrappedValue = selectedName
-                            }
-                        } else {
-                            isEditing.wrappedValue = false
-                            if let selectedName = selectedName.wrappedValue, query.wrappedValue != selectedName {
-                                query.wrappedValue = selectedName
-                            }
-                        }
-                    }
+    private func swapConfiguredRoute() {
+        guard let originID = store.homeStationID, let destinationID = store.destinationStationID else {
+            return
+        }
 
-                if focused.wrappedValue && !query.wrappedValue.isEmpty {
-                    Button {
-                        query.wrappedValue = ""
-                        selectedName.wrappedValue = nil
-                        results.wrappedValue = []
-                        onClear()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                            .contentShape(Rectangle())
-                            .padding(.trailing, 8)
-                            .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Clear \(title)")
-                }
-            }
-
-            if isEditing.wrappedValue && !results.wrappedValue.isEmpty {
-                VStack(spacing: 0) {
-                    ForEach(results.wrappedValue.prefix(5)) { stop in
-                        Button {
-                            onSelect(stop)
-                        } label: {
-                            HStack {
-                                Text(stop.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 6)
-                        }
-                        .buttonStyle(.plain)
-
-                        if stop.id != results.wrappedValue.prefix(5).last?.id {
-                            Divider()
-                        }
-                    }
-                }
-                .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 8))
-            }
+        Task {
+            await store.setRoute(origin: destinationID, destination: originID)
+            await prefillStationNames(from: store.availableStops)
         }
     }
 
-    private func scheduleOriginSearch(_ query: String) {
-        originSearchTask?.cancel()
-        originSearchTask = Task {
-            try? await Task.sleep(for: .milliseconds(220))
-            guard !Task.isCancelled else { return }
-
-            if query.isEmpty {
-                originResults = []
-                return
-            }
-
-            originResults = await store.searchStops(matching: query)
-        }
-    }
-
-    private func scheduleDestinationSearch(_ query: String) {
-        destinationSearchTask?.cancel()
-        destinationSearchTask = Task {
-            try? await Task.sleep(for: .milliseconds(220))
-            guard !Task.isCancelled else { return }
-
-            if query.isEmpty {
-                destinationResults = []
-                return
-            }
-
-            destinationResults = await store.searchStops(matching: query)
+    private func applyRoutePickerSelection(stop: Stop, target: RoutePickerTarget) {
+        switch target {
+        case .origin:
+            selectedOriginName = stop.name
+            Task { await store.setHomeStation(stop.id) }
+        case .destination:
+            selectedDestinationName = stop.name
+            Task { await store.setDestinationStation(stop.id) }
         }
     }
 
@@ -256,24 +169,16 @@ public struct SharedSettingsView: View {
         let originID = await store.selectedHomeStationID()
         let destinationID = await store.selectedDestinationStationID()
 
-        if let originID, let name = stops.first(where: { $0.id == originID })?.name {
-            selectedOriginName = name
-            if !originFocused {
-                originQuery = name
-            }
-        } else if !originFocused {
+        if let originID {
+            selectedOriginName = stops.first(where: { $0.id == originID })?.name ?? originID
+        } else {
             selectedOriginName = nil
-            originQuery = ""
         }
 
-        if let destinationID, let name = stops.first(where: { $0.id == destinationID })?.name {
-            selectedDestinationName = name
-            if !destinationFocused {
-                destinationQuery = name
-            }
-        } else if !destinationFocused {
+        if let destinationID {
+            selectedDestinationName = stops.first(where: { $0.id == destinationID })?.name ?? destinationID
+        } else {
             selectedDestinationName = nil
-            destinationQuery = ""
         }
     }
     #endif
@@ -286,37 +191,109 @@ public struct SharedSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
+                #if os(macOS)
+                List(selection: $selectedFavoriteID) {
+                    ForEach(Array(store.favoriteStations.enumerated()), id: \.element.id) { index, stop in
+                        HStack(spacing: 10) {
+                            Text(stop.name)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(favoriteDetailText(stop: stop, index: index))
+                                .font(.body.weight(index == 0 ? .semibold : .regular))
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "line.3.horizontal")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .tag(stop.id)
+                    }
+                    .onMove(perform: store.moveFavoriteStations(fromOffsets:toOffset:))
+                }
+                .frame(height: 190)
+                .listStyle(.inset(alternatesRowBackgrounds: true))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(.quaternary)
+                )
+
+                HStack(spacing: 0) {
+                    Button {
+                        isFavoritePickerPresented = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 28, height: 24)
+
+                    Divider()
+                        .frame(height: 14)
+                        .padding(.horizontal, 2)
+
+                    Button {
+                        guard let selectedFavoriteID else { return }
+                        store.removeFavoriteStation(selectedFavoriteID)
+                        self.selectedFavoriteID = nil
+                    } label: {
+                        Image(systemName: "minus")
+                    }
+                    .buttonStyle(.plain)
+                    .frame(width: 28, height: 24)
+                    .disabled(selectedFavoriteID == nil)
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                #else
                 ForEach(store.favoriteStations) { stop in
                     HStack(spacing: 10) {
-                        Text(stop.name)
-                            .foregroundStyle(.primary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(stop.name)
+                                .foregroundStyle(.primary)
+                            if stop.name == stop.id {
+                                Text("Station metadata still loading")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
                         Spacer()
+
                         Image(systemName: "line.3.horizontal")
                             .font(.body.weight(.semibold))
                             .foregroundStyle(.tertiary)
                     }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button("Remove", role: .destructive) {
-                                store.removeFavoriteStation(stop.id)
-                            }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button("Remove", role: .destructive) {
+                            store.removeFavoriteStation(stop.id)
                         }
-                }
+                    }
+                }   
                 .onMove(perform: store.moveFavoriteStations(fromOffsets:toOffset:))
-                #if !os(macOS)
                 .environment(\.editMode, .constant(.active))
                 #endif
             }
 
+            #if !os(macOS)
             Button("Add new favorite") {
                 isFavoritePickerPresented = true
             }
             .foregroundStyle(.blue)
+            #endif
         } header: {
             Text("Favorite stations")
         } footer: {
-            Text("Tap favorite chips on Home to choose origin or destination.")
+            Text("Tip: Favorites show up in the menu bar for quick switching.")
         }
     }
+
+    #if os(macOS)
+    private func favoriteDetailText(stop: Stop, index: Int) -> String {
+        if index == 0 {
+            return "Primary"
+        }
+        return stop.id
+    }
+    #endif
 
     private var originAutomationSection: some View {
         Section {
@@ -437,49 +414,257 @@ public struct SharedSettingsView: View {
     }
 }
 
-private struct FavoriteStationPickerView: View {
+#if os(macOS)
+private enum RoutePickerTarget: String, Identifiable {
+    case origin
+    case destination
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .origin:
+            "Choose Origin"
+        case .destination:
+            "Choose Destination"
+        }
+    }
+}
+#endif
+
+private struct StationSearchPickerView: View {
+    @Environment(PingStore.self) private var store
+    let title: String
     let availableStops: [Stop]
-    let favoriteStationIDs: Set<StopID>
+    let excludedStopIDs: Set<StopID>
+    let selectedStopID: StopID?
     let onSelect: (Stop) -> Void
+
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    @State private var searchResults: [Stop] = []
+    @State private var isLoading = false
+    @State private var searchTask: Task<Void, Never>?
 
-    private var filteredStops: [Stop] {
-        availableStops
-            .filter { !favoriteStationIDs.contains($0.id) }
-            .filter { stop in
-                query.isEmpty || stop.name.localizedStandardContains(query)
+    private var uniqueAvailableStops: [Stop] {
+        var seen = Set<StopID>()
+        var result: [Stop] = []
+
+        for stop in availableStops {
+            if seen.contains(stop.id) {
+                continue
             }
+            seen.insert(stop.id)
+            result.append(stop)
+        }
+
+        return result
+    }
+
+    private var displayedStops: [Stop] {
+        let sourceStops: [Stop]
+        if !searchResults.isEmpty || !query.isEmpty {
+            sourceStops = searchResults
+        } else {
+            sourceStops = uniqueAvailableStops
+        }
+
+        return deduplicate(stops: sourceStops)
+            .filter { !excludedStopIDs.contains($0.id) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
+    private var subtitleText: String {
+        if isLoading {
+            return "Searching stations..."
+        }
+
+        if displayedStops.isEmpty {
+            return "No stations found"
+        }
+
+        return "\(displayedStops.count) stations"
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                Section("Stations") {
-                    ForEach(filteredStops) { stop in
-                        Button {
-                            onSelect(stop)
-                            dismiss()
-                        } label: {
-                            HStack {
-                                Text(stop.name)
-                                    .foregroundStyle(.primary)
-                                Spacer()
+        #if os(macOS)
+        macOSBody
+        #else
+        iOSBody
+        #endif
+    }
+
+    #if os(macOS)
+    private var macOSBody: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                    Text("Search and select a station")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                macSearchField
+                    .frame(width: 230)
+            }
+
+            Group {
+                if displayedStops.isEmpty && !isLoading {
+                    ContentUnavailableView(
+                        query.isEmpty ? "Stations unavailable" : "No matches",
+                        systemImage: "magnifyingglass",
+                        description: Text(query.isEmpty ? "Try again in a moment." : "Try another station name.")
+                    )
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(displayedStops) { stop in
+                                Button {
+                                    selectedStopIDForMac = stop.id
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        Text(stop.name)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        Text(stop.id)
+                                            .foregroundStyle(.secondary)
+                                        if stop.id == selectedStopIDForMac {
+                                            Image(systemName: "checkmark")
+                                                .foregroundStyle(.blue)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(
+                                        stop.id == selectedStopIDForMac
+                                            ? Color.accentColor.opacity(0.15)
+                                            : Color.clear
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                if stop.id != displayedStops.last?.id {
+                                    Divider()
+                                }
                             }
-                            .padding(.vertical, 2)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
-            .navigationTitle("Add Favorite")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(.quaternary)
+            )
+
+            HStack(spacing: 8) {
+                Text(subtitleText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                Button("Add") {
+                    applySelectedStop()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(selectedStopIDForMac == nil)
+            }
+        }
+        .padding(16)
+        .frame(width: 560, height: 520)
+        .task {
+            await performSearch(for: query)
+            selectedStopIDForMac = selectedStopID
+        }
+        .onChange(of: query) { _, newValue in
+            scheduleSearch(for: newValue)
+        }
+        .onDisappear {
+            searchTask?.cancel()
+        }
+    }
+
+    private var macSearchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("Search", text: $query)
+                .textFieldStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.fill.quaternary, in: Capsule())
+    }
+
+    @State private var selectedStopIDForMac: StopID?
+
+    private func applySelectedStop() {
+        guard let selectedStopIDForMac,
+              let selectedStop = displayedStops.first(where: { $0.id == selectedStopIDForMac }) else {
+            return
+        }
+
+        onSelect(selectedStop)
+        dismiss()
+    }
+    #else
+    private var iOSBody: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                if displayedStops.isEmpty && !isLoading {
+                    ContentUnavailableView(
+                        query.isEmpty ? "Stations unavailable" : "No matches",
+                        systemImage: "magnifyingglass",
+                        description: Text(query.isEmpty ? "Pull to retry or try again in a moment." : "Try a different station name.")
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    List {
+                        Section("Stations") {
+                            ForEach(displayedStops) { stop in
+                                Button {
+                                    onSelect(stop)
+                                    dismiss()
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        Text(stop.name)
+                                            .foregroundStyle(.primary)
+                                        Spacer()
+                                        if stop.id == selectedStopID {
+                                            Image(systemName: "checkmark")
+                                                .foregroundStyle(.blue)
+                                        }
+                                    }
+                                    .padding(.vertical, 2)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle(title)
+            .navigationSubtitle(subtitleText)
 #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
 #endif
-            .searchable(text: $query, prompt: Text("Search").bold())
+            .searchable(text: $query, prompt: Text("Search stations"))
+            .task {
+                await performSearch(for: query)
+            }
+            .onChange(of: query) { _, newValue in
+                scheduleSearch(for: newValue)
+            }
+            .onDisappear {
+                searchTask?.cancel()
+            }
             .toolbar {
-#if os(iOS)
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         dismiss()
@@ -487,17 +672,48 @@ private struct FavoriteStationPickerView: View {
                         Image(systemName: "xmark")
                     }
                 }
-#else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Retry") {
+                        Task { await performSearch(for: query) }
                     }
                 }
-#endif
             }
         }
+    }
+    #endif
+
+    private func deduplicate(stops: [Stop]) -> [Stop] {
+        var seen = Set<StopID>()
+        var deduped: [Stop] = []
+
+        for stop in stops {
+            if seen.insert(stop.id).inserted {
+                deduped.append(stop)
+            }
+        }
+
+        return deduped
+    }
+
+    private func scheduleSearch(for newValue: String) {
+        searchTask?.cancel()
+        searchTask = Task {
+            try? await Task.sleep(for: .milliseconds(180))
+            guard !Task.isCancelled else { return }
+            await performSearch(for: newValue)
+        }
+    }
+
+    private func performSearch(for term: String) async {
+        isLoading = true
+        let fetched = await store.searchStops(matching: term)
+        searchResults = fetched
+        #if os(macOS)
+        if let selectedStopIDForMac, !searchResults.contains(where: { $0.id == selectedStopIDForMac }) {
+            self.selectedStopIDForMac = nil
+        }
+        #endif
+        isLoading = false
     }
 }
 
