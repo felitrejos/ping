@@ -1,7 +1,7 @@
 # Ping TODO
 
-## Status
+## To Do
 
-All previously tracked items are complete.
+### Commute accuracy
 
-This file is intentionally kept clean until new work is scoped.
+- Fix commute fetching/departure filtering: for the same route, Ping is showing more departures than the official FGC app.

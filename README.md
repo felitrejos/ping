@@ -16,35 +16,42 @@
 </p>
 
 <p align="center">
-  Local-first commute planning using FGC schedule data, realtime trip updates, and calendar context
+  Local-first commute planning powered by FGC schedule and realtime data
 </p>
 
 ---
 
-## What It Does
+## Product Overview
 
-`Ping` helps you quickly pick an FGC route and decide when to leave.
+`Ping` helps you choose a route fast and know exactly when to leave.
 
 - Find the best next train between two FGC stations
-- See upcoming departures (next 12h) and real-time delay-aware leave times
-- Use adaptive countdown formatting across app surfaces (`Xm`, `Xh Ymin`, and board-style `Xm Ys`)
-- Save favorite stations for quick route switching (chips on iOS and macOS)
-- Use calendar-aware commute suggestions in one tap
-- Follow live train positions on the map for your active line
+- Track upcoming departures and delay-aware leave times
+- Save favorite stations for quick route switching
+- Get calendar-aware commute suggestions in one tap
+- Follow live train positions on your active line
 - Receive iPhone leave reminders and Live Activity trip tracking
-- Use macOS menu bar Sleep mode when you want to pause the live countdown without clearing your route
-- Expand/collapse upcoming departures directly in the macOS menu bar
-- View GTFS-Realtime service alerts in both iOS and macOS
+- See GTFS-Realtime service alerts in iOS and macOS
 
 ---
 
-## Installation
+## Quick Start
+
+1. Launch iOS or macOS target from Xcode.
+2. Pick origin and destination stations.
+3. Tap `Search routes`.
+4. Optionally add favorite stations in Settings.
+5. Optionally enable location/calendar access for walking ETA and commute suggestions.
+
+---
+
+## Build From Source
 
 Requirements:
 
 - Xcode with iOS 26+ and macOS 26+ SDKs
 - `xcodegen`
-- `protoc`
+- `protoc` (only needed when regenerating GTFS Realtime generated code)
 
 ```bash
 git clone https://github.com/felitrejos/ping.git
@@ -53,57 +60,20 @@ xcodegen generate
 open Ping.xcodeproj
 ```
 
-Before running:
-
-1. Let Xcode finish resolving package dependencies.
-2. Confirm `google_transit.zip` is included in app resources.
-3. Pick an iOS or macOS target and run.
-
-Dependencies:
-
-- `SwiftProtobuf`
-- `ZIPFoundation`
+Then select `Ping iOS` or `Ping macOS` and run.
 
 ---
 
-## Quickstart
+## Architecture
 
-1. Launch the app target you want to test (iOS or macOS).
-2. Grant calendar/location permissions (or use the in-app enable buttons).
-3. Pick origin and destination stations from the station picker.
-4. Tap `Search routes` to load trains.
-5. (Optional) Add favorites in Settings for faster switching.
+- Swift + SwiftUI multi-target app (`iOS/`, `macOS/`, `Widgets/`)
+- Shared domain and services in `Shared/`
+- GTFS static and GTFS-Realtime ingestion
+- Dependencies:
+  - `SwiftProtobuf`
+  - `ZIPFoundation`
 
----
-
-## Configuration
-
-Project defaults live in:
-
-```text
-Shared/Models/Constants.swift
-```
-
-User settings are stored with `UserDefaults`:
-
-- origin station
-- destination station
-- favorite stations
-- buffer minutes before departure
-- whether to pick the closest FGC station as the origin on app start
-
-Ping starts without a default route. The next-train card appears after both an origin and destination are configured.
-You can change stations freely, then tap `Search routes` to refresh results when ready.
-
----
-
-## GTFS Realtime
-
-The realtime service resolves the FGC OpenDataSoft record endpoint, downloads the protobuf file exposed by that endpoint, and decodes it with SwiftProtobuf.
-
-Generated GTFS Realtime Swift types are committed to the repository so Xcode can build without requiring `protoc` on every machine.
-
-Regenerate them with:
+If you need to regenerate protobuf models:
 
 ```bash
 protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
@@ -115,47 +85,35 @@ protoc --swift_out=Shared/Generated Proto/gtfs-realtime.proto
 
 ```text
 ping/
-├── Shared/
-│   ├── Models/       # shared models, constants, ActivityKit attributes
-│   ├── Services/     # GTFS static, GTFS-RT, calendar services
-│   ├── Engine/       # commute planning and shared observable app state
-│   └── Views/        # shared SwiftUI settings UI
-├── iOS/              # iPhone app, notifications, background refresh
-├── macOS/            # menu bar app and popover UI
-├── Widgets/          # Live Activity widget
-├── Tests/            # shared service and engine tests
-└── Proto/            # GTFS Realtime proto source
+├── Shared/              # shared models, services, engine, settings views
+├── iOS/                 # iPhone app
+├── macOS/               # menu bar app
+├── Widgets/             # Live Activity widget
+├── Tests/PingSharedTests/
+├── Resources/
+└── Proto/
 ```
 
 ---
 
 ## Testing
 
-Shared tests cover:
+Run shared tests:
 
-- GTFS parsing and post-midnight times
-- GTFS Realtime decoding and snapshot updates
-- calendar event resolution
-- commute recommendation logic
-
-Run from Xcode.
+```bash
+swift test
+```
 
 ---
 
-## Development
+## Development Notes
 
 `project.yml` is the source of truth for the Xcode project.
 
-Regenerate the project after changing target structure:
+Regenerate the project after target/dependency changes:
 
 ```bash
 xcodegen generate
-```
-
-Generated protobuf code lives under:
-
-```text
-Shared/Generated/
 ```
 
 ---
