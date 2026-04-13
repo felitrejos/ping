@@ -44,21 +44,31 @@ struct PingLiveActivityWidget: Widget {
                                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                                     Text(parts.leadingValue)
                                         .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                        .lineLimit(1)
                                     Text(parts.leadingUnit)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
                                     Text(parts.trailingValue ?? "")
                                         .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                        .lineLimit(1)
                                     Text(parts.trailingUnit ?? "")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
+                                        .lineLimit(1)
                                 }
+                                .fixedSize(horizontal: true, vertical: false)
                             } else {
-                                Text(parts.leadingValue)
-                                    .font(.system(size: 26, weight: .heavy, design: .rounded))
-                                Text(parts.leadingUnit)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                    Text(parts.leadingValue)
+                                        .font(.system(size: 26, weight: .heavy, design: .rounded))
+                                        .lineLimit(1)
+                                    Text(parts.leadingUnit)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
+                                .fixedSize(horizontal: true, vertical: false)
                             }
                             Spacer()
                         }
@@ -134,21 +144,31 @@ struct PingLiveActivityWidget: Widget {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(parts.leadingValue)
                             .font(.system(size: 32, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
                         Text(parts.leadingUnit)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                         Text(parts.trailingValue ?? "")
                             .font(.system(size: 32, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
                         Text(parts.trailingUnit ?? "")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
+                    .fixedSize(horizontal: true, vertical: false)
                 } else {
-                    Text(parts.leadingValue)
-                        .font(.system(size: 36, weight: .heavy, design: .rounded))
-                    Text(parts.leadingUnit)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(parts.leadingValue)
+                            .font(.system(size: 36, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                        Text(parts.leadingUnit)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
                 }
                 Spacer()
             }

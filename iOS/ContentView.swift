@@ -10,6 +10,7 @@ import UIKit
 
 struct ContentView: View {
     @Environment(PingStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var tracker = CommuteTracker()
     @State private var selectedOriginID: StopID?
@@ -69,7 +70,12 @@ struct ContentView: View {
             guard !store.availableStops.isEmpty else { return }
             Task { await prefillStationNames(from: store.availableStops) }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            guard newPhase == .active else { return }
+            Task { await tracker.syncWithSystemActivityState() }
+        }
         .task {
+            await tracker.syncWithSystemActivityState()
             if !store.availableStops.isEmpty {
                 await prefillStationNames(from: store.availableStops)
             }
@@ -724,10 +730,35 @@ final class CommuteTracker {
     @ObservationIgnored nonisolated(unsafe) private var activity: Activity<PingActivityAttributes>?
     #endif
 
+    func syncWithSystemActivityState() async {
+        #if canImport(ActivityKit)
+        let activeActivities = Activity<PingActivityAttributes>.activities
+
+        if let activity, activeActivities.contains(where: { $0.id == activity.id }) {
+            isTracking = true
+            return
+        }
+
+        if let adopted = activeActivities.first {
+            activity = adopted
+            isTracking = true
+            return
+        }
+
+        activity = nil
+        #endif
+        isTracking = false
+    }
+
     func start(departure: LiveDeparture, store: PingStore) async {
-        isTracking = true
         #if canImport(ActivityKit)
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        await syncWithSystemActivityState()
+        if isTracking {
+            await update(departure: departure, store: store)
+            return
+        }
+
         let destName = store.availableStops.first(where: { $0.id == departure.destinationStopID })?.name
             ?? departure.destinationStopID
         let walkMin = store.walkingMinutes
@@ -743,14 +774,19 @@ final class CommuteTracker {
             departureTime: departure.effectiveDepartureTime,
             arrivalTime: departure.effectiveArrivalTime
         )
-        activity = try? Activity.request(
+        let requested = try? Activity.request(
             attributes: attrs,
             content: .init(state: state, staleDate: nil)
         )
+        activity = requested
+        isTracking = requested != nil
+        #else
+        isTracking = false
         #endif
     }
 
     func update(departure: LiveDeparture, store: PingStore) async {
+        await syncWithSystemActivityState()
         guard isTracking else { return }
         #if canImport(ActivityKit)
         let walkMin = store.walkingMinutes
@@ -767,11 +803,12 @@ final class CommuteTracker {
     }
 
     func stop() async {
-        isTracking = false
         #if canImport(ActivityKit)
+        await syncWithSystemActivityState()
         await activity?.end(nil, dismissalPolicy: .immediate)
         activity = nil
         #endif
+        isTracking = false
     }
 }
 
@@ -970,25 +1007,33 @@ private struct HeroCountdownValue: View {
                     Text(parts.leadingValue)
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
                         .contentTransition(.numericText())
+                        .lineLimit(1)
                     Text(parts.leadingUnit)
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                     Text(parts.trailingValue ?? "")
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
                         .contentTransition(.numericText())
+                        .lineLimit(1)
                     Text(parts.trailingUnit ?? "")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
+                .fixedSize(horizontal: true, vertical: false)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(parts.leadingValue)
                         .font(.system(size: 56, weight: .heavy, design: .rounded))
                         .contentTransition(.numericText())
+                        .lineLimit(1)
                     Text(parts.leadingUnit)
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
+                .fixedSize(horizontal: true, vertical: false)
             }
         }
     }

@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct MenuBarView: View {
     @Environment(PingStore.self) private var store
@@ -593,15 +596,39 @@ struct MenuBarView: View {
         VStack(spacing: 0) {
             Divider().padding(.horizontal, 16)
             HStack {
-                Spacer()
-                Button("Settings") { openSettings() }
+                Button("Settings") {
+                    openSettingsWindow()
+                }
                     .font(.callout)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+
                 Spacer()
+
+                Button("Quit") {
+                    terminateApp()
+                }
+                .font(.callout)
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 16)
             .padding(.vertical, 8)
         }
+    }
+
+    private func openSettingsWindow() {
+        #if os(macOS)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        #endif
+        openSettings()
+    }
+
+    private func terminateApp() {
+        #if os(macOS)
+        NSApp.terminate(nil)
+        #endif
     }
 
     // MARK: - Fallback cards
@@ -726,6 +753,7 @@ private struct MenuBarHeroCountdownValue: View {
                 Text(parts.leadingUnit)
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
                 Text(parts.trailingValue ?? "")
                     .font(.system(size: 40, weight: .heavy, design: .rounded))
                     .monospacedDigit()
@@ -733,16 +761,23 @@ private struct MenuBarHeroCountdownValue: View {
                 Text(parts.trailingUnit ?? "")
                     .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
+            .fixedSize(horizontal: true, vertical: false)
         } else {
-            Text(parts.leadingValue)
-                .font(.system(size: 54, weight: .heavy, design: .rounded))
-                .monospacedDigit()
-                .contentTransition(.numericText())
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(parts.leadingValue)
+                    .font(.system(size: 54, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
 
-            Text(parts.leadingUnit)
-                .font(.title3.weight(.medium))
-                .foregroundStyle(.secondary)
+                Text(parts.leadingUnit)
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .fixedSize(horizontal: true, vertical: false)
         }
     }
 }

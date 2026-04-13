@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 @main
 struct PingMacApp: App {
@@ -22,6 +25,27 @@ struct PingMacApp: App {
             SharedSettingsView()
                 .environment(store)
                 .frame(width: 420, height: 440)
+                .onAppear {
+                    #if os(macOS)
+                    NSApp.setActivationPolicy(.regular)
+                    NSApp.activate(ignoringOtherApps: true)
+                    #endif
+                }
+                .onDisappear {
+                    #if os(macOS)
+                    NSApp.setActivationPolicy(.accessory)
+                    #endif
+                }
+        }
+        .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Quit Ping") {
+                    #if os(macOS)
+                    NSApp.terminate(nil)
+                    #endif
+                }
+                .keyboardShortcut("q")
+            }
         }
     }
 
