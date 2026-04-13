@@ -17,7 +17,24 @@ public actor FGCStaticService: StaticServiceProviding {
     private struct GTFSTrip: Sendable {
         let id: String
         let routeID: String
+        let serviceID: String
         let headsign: String
+    }
+
+    private struct GTFSServiceCalendar: Sendable {
+        let serviceID: String
+        let startDayKey: Int
+        let endDayKey: Int
+        let activeWeekdays: Set<Int>
+
+        func isActive(dayKey: Int, weekday: Int) -> Bool {
+            dayKey >= startDayKey && dayKey <= endDayKey && activeWeekdays.contains(weekday)
+        }
+    }
+
+    private enum GTFSServiceExceptionType: Int, Sendable {
+        case added = 1
+        case removed = 2
     }
 
     private struct ParsedCache: Sendable {
@@ -29,6 +46,8 @@ public actor FGCStaticService: StaticServiceProviding {
         let trips: [String: GTFSTrip]
         let stopTimesByTripID: [String: [GTFSStopTime]]
         let tripIDsByStopID: [StopID: [String]]
+        let serviceCalendarsByID: [String: GTFSServiceCalendar]
+        let serviceExceptionsByDayKey: [Int: [String: GTFSServiceExceptionType]]
         let stationStopsByID: [StopID: Stop]
         let stopsByLine: [String: [Stop]]
     }
@@ -81,6 +100,10 @@ public actor FGCStaticService: StaticServiceProviding {
             }
 
             for serviceDay in serviceDays {
+                guard tripRuns(on: serviceDay, serviceID: trip.serviceID, cache: cache) else {
+                    continue
+                }
+
                 let departureDate = serviceDay.addingTimeInterval(TimeInterval(originTime.departureSeconds))
                 guard departureDate >= after else {
                     continue
@@ -184,6 +207,8 @@ extension FGCStaticService {
         let routesRows = try GTFSCSVParser.parse(text: try readEntry(named: "routes.txt", from: archive))
         let tripsRows = try GTFSCSVParser.parse(text: try readEntry(named: "trips.txt", from: archive))
         let stopTimesRows = try GTFSCSVParser.parse(text: try readEntry(named: "stop_times.txt", from: archive))
+        let calendarRows = try parseOptionalRows(named: "calendar.txt", from: archive)
+        let calendarDateRows = try parseOptionalRows(named: "calendar_dates.txt", from: archive)
 
         let stopPairs: [(String, Stop)] = stopsRows.compactMap { row in
             guard let stopID = row["stop_id"], let stopName = row["stop_name"] else {
@@ -233,7 +258,11 @@ extension FGCStaticService {
         let routes = Dictionary(uniqueKeysWithValues: routePairs)
 
         let tripPairs: [(String, GTFSTrip)] = tripsRows.compactMap { row in
-            guard let tripID = row["trip_id"], let routeID = row["route_id"] else {
+            guard
+                let tripID = row["trip_id"],
+                let routeID = row["route_id"],
+                let serviceID = row["service_id"]
+            else {
                 return nil
             }
             return (
@@ -241,11 +270,69 @@ extension FGCStaticService {
                 GTFSTrip(
                     id: tripID,
                     routeID: routeID,
+                    serviceID: serviceID,
                     headsign: row["trip_headsign"] ?? row["trip_short_name"] ?? routeID
                 )
             )
         }
         let trips = Dictionary(uniqueKeysWithValues: tripPairs)
+
+        let serviceCalendarsByID: [String: GTFSServiceCalendar] = Dictionary(
+            uniqueKeysWithValues: calendarRows.compactMap { row in
+                guard
+                    let serviceID = row["service_id"],
+                    let startDateString = row["start_date"],
+                    let endDateString = row["end_date"],
+                    let startDayKey = parseGTFSDateKey(startDateString),
+                    let endDayKey = parseGTFSDateKey(endDateString)
+                else {
+                    return nil
+                }
+
+                var activeWeekdays = Set<Int>()
+                let weekdayColumns: [(column: String, weekday: Int)] = [
+                    ("sunday", 1),
+                    ("monday", 2),
+                    ("tuesday", 3),
+                    ("wednesday", 4),
+                    ("thursday", 5),
+                    ("friday", 6),
+                    ("saturday", 7),
+                ]
+
+                for (column, weekday) in weekdayColumns {
+                    if row[column] == "1" {
+                        activeWeekdays.insert(weekday)
+                    }
+                }
+
+                return (
+                    serviceID,
+                    GTFSServiceCalendar(
+                        serviceID: serviceID,
+                        startDayKey: startDayKey,
+                        endDayKey: endDayKey,
+                        activeWeekdays: activeWeekdays
+                    )
+                )
+            }
+        )
+
+        var serviceExceptionsByDayKey: [Int: [String: GTFSServiceExceptionType]] = [:]
+        for row in calendarDateRows {
+            guard
+                let serviceID = row["service_id"],
+                let dateString = row["date"],
+                let dayKey = parseGTFSDateKey(dateString),
+                let exceptionTypeString = row["exception_type"],
+                let exceptionTypeRawValue = Int(exceptionTypeString),
+                let exceptionType = GTFSServiceExceptionType(rawValue: exceptionTypeRawValue)
+            else {
+                continue
+            }
+
+            serviceExceptionsByDayKey[dayKey, default: [:]][serviceID] = exceptionType
+        }
 
         let stopTimePairs: [(String, GTFSStopTime)] = stopTimesRows.compactMap { row in
             guard
@@ -312,6 +399,8 @@ extension FGCStaticService {
             trips: trips,
             stopTimesByTripID: stopTimes,
             tripIDsByStopID: tripIDsByStopID.mapValues(Array.init),
+            serviceCalendarsByID: serviceCalendarsByID,
+            serviceExceptionsByDayKey: serviceExceptionsByDayKey,
             stationStopsByID: stationStopsByID,
             stopsByLine: stopsByLine
         )
@@ -335,6 +424,14 @@ extension FGCStaticService {
         return text
     }
 
+    private func parseOptionalRows(named name: String, from archive: Archive) throws -> [[String: String]] {
+        guard archive[name] != nil else {
+            return []
+        }
+        let text = try readEntry(named: name, from: archive)
+        return try GTFSCSVParser.parse(text: text)
+    }
+
     private func candidateServiceDays(for date: Date) -> [Date] {
         let startOfToday = calendar.startOfDay(for: date)
         guard
@@ -352,6 +449,51 @@ extension FGCStaticService {
             return 0
         }
         return components[0] * 3_600 + components[1] * 60 + components[2]
+    }
+
+    private func parseGTFSDateKey(_ value: String) -> Int? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count == 8 else {
+            return nil
+        }
+        return Int(trimmed)
+    }
+
+    private func dayKey(for date: Date) -> Int? {
+        let components = calendar.dateComponents([.year, .month, .day], from: date)
+        guard
+            let year = components.year,
+            let month = components.month,
+            let day = components.day
+        else {
+            return nil
+        }
+
+        return year * 10_000 + month * 100 + day
+    }
+
+    private func tripRuns(on serviceDay: Date, serviceID: String, cache: ParsedCache) -> Bool {
+        guard
+            let dayKey = dayKey(for: serviceDay)
+        else {
+            return false
+        }
+
+        if let exception = cache.serviceExceptionsByDayKey[dayKey]?[serviceID] {
+            switch exception {
+            case .added:
+                return true
+            case .removed:
+                return false
+            }
+        }
+
+        guard let serviceCalendar = cache.serviceCalendarsByID[serviceID] else {
+            return false
+        }
+
+        let weekday = calendar.component(.weekday, from: serviceDay)
+        return serviceCalendar.isActive(dayKey: dayKey, weekday: weekday)
     }
 
     private func normalize(_ string: String) -> String {
