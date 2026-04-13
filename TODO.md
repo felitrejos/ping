@@ -1,7 +1,5 @@
 # Ping TODO
 
-## To Do
+## Status
 
-### Commute accuracy
-
-- Fix commute fetching/departure filtering: for the same route, Ping is showing more departures than the official FGC app.
+No open tasks right now.
