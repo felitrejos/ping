@@ -20,13 +20,10 @@ Uses SwiftUI's `.colorEffect()` / `.distortionEffect()` modifiers (iOS 17+, no U
 
 ## Map: TMB bus stops
 
-Add TMB bus stop annotations to the existing `FGCMapView` with a zoom-level gate so performance stays solid (TMB has ~2,900 stops across Barcelona — rendering all at once as SwiftUI annotations would lag badly).
+Completed baseline integration (GTFS static load, zoom-gated rendering, and tap-to-load arrivals). Remaining follow-ups:
 
-- [ ] **GTFS static integration** — add `TMBStaticService` reusing the existing GTFS ZIP parsing logic, pointed at `https://api.tmb.cat/v1/static/datasets/gtfs.zip`. Requires TMB `app_id` + `app_key` stored in settings.
-- [ ] **Zoom-level gate** — only render TMB stop annotations when the map is zoomed past street level (roughly `MKCoordinateSpan` latitude delta < ~0.02). FGC stations always visible. Use `onMapCameraChange` to reactively show/hide the TMB layer.
-- [ ] **Tap to show departures** — tapping a TMB stop calls `GET /v1/ibus/stops/{stop_id}` and shows upcoming buses in the existing `MapStatusPanel` bottom sheet. No live vehicle positions (TMB doesn't expose them).
-- [ ] **Map toggle** — overlay control to switch between FGC only / TMB only / both.
-- [ ] **TMB `RealtimeService`** — implement `RealtimeServiceProviding` using the iBus REST API instead of GTFS-RT protobuf. Delay = iBus arrival timestamp − static scheduled time.
+- [ ] **Map toggle modes** — extend overlay control from current on/off to explicit `FGC only` / `TMB only` / `both`.
+- [ ] **TMB delay model** — enrich realtime layer so delay is computed as `iBus arrival timestamp − static scheduled time`.
 
 ## Haptic Feedback
 
