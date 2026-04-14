@@ -18,8 +18,9 @@ struct FGCMapView: View {
     @State private var selectedTMBStop: TMBStop?
     @State private var tmbArrivals: [TMBArrival] = []
     @State private var tmbLoadState: TMBLoadState = .idle
+    @State private var nearbyTMBStops: [TMBStop] = []
 
-    private let tmbZoomLatitudeDeltaThreshold: CLLocationDegrees = 0.02
+    private let tmbZoomLatitudeDeltaThreshold: CLLocationDegrees = 0.06
     private let maxVisibleTMBStops = 300
 
     private var stationsWithCoordinates: [Stop] {
@@ -154,6 +155,7 @@ struct FGCMapView: View {
                 isUsingLiveLocation: store.isUsingLiveLocation,
                 routeStops: routeStops,
                 closestStations: closestStations,
+                closestBusStops: nearbyTMBStops,
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
                 selectedBusStop: selectedTMBStop,
@@ -193,6 +195,7 @@ struct FGCMapView: View {
             if let lastCameraRegion {
                 await refreshVisibleTMBStops(for: lastCameraRegion)
             }
+            await refreshNearbyTMBStops()
         }
         .refreshable {
             await store.refresh()
@@ -210,10 +213,14 @@ struct FGCMapView: View {
                 if let lastCameraRegion {
                     await refreshVisibleTMBStops(for: lastCameraRegion)
                 }
+                await refreshNearbyTMBStops()
             }
         }
         .onChange(of: store.userLocation) { _, _ in
-            Task { await updateWalkingRoute() }
+            Task {
+                await updateWalkingRoute()
+                await refreshNearbyTMBStops()
+            }
         }
         .onChange(of: hasActiveCommuteContext) { _, _ in
             Task { await updateWalkingRoute() }
@@ -282,7 +289,7 @@ struct FGCMapView: View {
         }
         .accessibilityLabel(isTMBOverlayEnabled ? "Disable TMB bus overlay" : "Enable TMB bus overlay")
         .accessibilityHint("Shows nearby TMB bus stops on the map when zoomed in")
-        .ifAvailableGlassMapButton()
+        .buttonStyle(.glass)
     }
 
     private func clearSelectedStation() {
@@ -352,6 +359,38 @@ struct FGCMapView: View {
 
         await MainActor.run {
             visibleTMBStops = Array(sortedStops.prefix(maxVisibleTMBStops))
+        }
+    }
+
+    private func refreshNearbyTMBStops() async {
+        guard let userCoordinate else {
+            await MainActor.run {
+                nearbyTMBStops = []
+            }
+            return
+        }
+
+        guard store.hasTMBCredentials else {
+            await MainActor.run {
+                nearbyTMBStops = []
+            }
+            return
+        }
+
+        let nearbyBox = TMBBoundingBox(
+            minLatitude: userCoordinate.latitude - 0.015,
+            maxLatitude: userCoordinate.latitude + 0.015,
+            minLongitude: userCoordinate.longitude - 0.02,
+            maxLongitude: userCoordinate.longitude + 0.02
+        )
+        let center = TransitCoordinate(latitude: userCoordinate.latitude, longitude: userCoordinate.longitude)
+        let stops = await store.tmbStops(in: nearbyBox)
+        let sortedStops = stops.sorted { first, second in
+            first.coordinate.distanceSquared(to: center) < second.coordinate.distanceSquared(to: center)
+        }
+
+        await MainActor.run {
+            nearbyTMBStops = Array(sortedStops.prefix(5))
         }
     }
 
@@ -435,6 +474,7 @@ struct FGCMapView: View {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         return MKMapItem(location: location, address: nil)
     }
+
 }
 
 private struct WalkingRouteRequestKey: Equatable {
@@ -470,7 +510,7 @@ private enum StationRole {
     }
 
     var symbol: String {
-        self == .nearby ? "mappin.circle" : "mappin.circle.fill"
+        "tram.fill"
     }
 }
 
@@ -502,6 +542,7 @@ private struct MapStatusPanel: View {
     let isUsingLiveLocation: Bool
     let routeStops: [Stop]
     let closestStations: [Stop]
+    let closestBusStops: [TMBStop]
     let hasUserLocation: Bool
     let selectedStation: Stop?
     let selectedBusStop: TMBStop?
@@ -573,7 +614,7 @@ private struct MapStatusPanel: View {
     private var nearbySummary: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Nearby FGC stations", systemImage: "mappin.and.ellipse")
+                Label("Nearby stations", systemImage: "mappin.and.ellipse")
                     .font(.headline)
                 Spacer()
                 if hasUserLocation {
@@ -584,10 +625,17 @@ private struct MapStatusPanel: View {
                 }
             }
             if hasUserLocation {
-                Text(closestStations.map(\.name).prefix(3).joined(separator: ", "))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("FGC: \(joinedStationNames(from: closestStations.map(\.name), fallback: "No nearby stations"))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+
+                    Text("TMB: \(joinedStationNames(from: closestBusStops.map(\.name), fallback: "No nearby stops"))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
             } else {
                 Text("Location is off, so nearby stations are unavailable.")
                     .font(.subheadline)
@@ -595,6 +643,15 @@ private struct MapStatusPanel: View {
                     .lineLimit(2)
             }
         }
+    }
+
+    private func joinedStationNames(from names: [String], fallback: String) -> String {
+        var seen = Set<String>()
+        let uniqueNames = names.filter { seen.insert($0).inserted }
+        if uniqueNames.isEmpty {
+            return fallback
+        }
+        return uniqueNames.prefix(3).joined(separator: ", ")
     }
 
     private func stationActions(for station: Stop) -> some View {
@@ -632,18 +689,13 @@ private struct MapStatusPanel: View {
 
     private func busStopSummary(for stop: TMBStop) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            HStack(spacing: 10) {
                 Label(stop.name, systemImage: "bus.fill")
                     .font(.headline)
                     .lineLimit(2)
+                    .padding(.trailing, 48)
 
                 Spacer()
-
-                if let code = stop.code, !code.isEmpty {
-                    Text("#\(code)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
             }
 
             switch busLoadState {
@@ -718,11 +770,7 @@ private struct MapStatusPanel: View {
             Label(title, systemImage: systemImage)
                 .frame(maxWidth: .infinity)
         }
-        if #available(iOS 26.0, *) {
-            if isPrimary { button.buttonStyle(.glassProminent) } else { button.buttonStyle(.glass) }
-        } else {
-            if isPrimary { button.buttonStyle(.borderedProminent) } else { button.buttonStyle(.bordered) }
-        }
+        if isPrimary { button.buttonStyle(.glassProminent) } else { button.buttonStyle(.glass) }
     }
 }
 
@@ -803,19 +851,5 @@ private extension MKCoordinateRegion {
         )
 
         self.init(center: center, span: span)
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func ifAvailableGlassMapButton() -> some View {
-        if #available(iOS 26.0, *) {
-            self
-                .buttonStyle(.glass)
-        } else {
-            self
-                .buttonStyle(.bordered)
-                .background(.regularMaterial, in: Circle())
-        }
     }
 }

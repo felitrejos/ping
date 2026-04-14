@@ -240,7 +240,6 @@ public enum UserSettings {
         public static let walkingMinutes = "ping.walkingMinutes"
         public static let bufferMinutes = "ping.bufferMinutes"
         public static let selectedLine = "ping.selectedLine"
-        public static let autoSelectClosestOrigin = "ping.autoSelectClosestOrigin"
         public static let menuBarSleepMode = "ping.menuBarSleepMode"
         public static let favoriteStationIDs = "ping.favoriteStationIDs"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
@@ -327,14 +326,6 @@ public enum UserSettings {
 
     public static func setSelectedLine(_ line: String, defaults: UserDefaults = .standard) {
         defaults.set(line, forKey: Keys.selectedLine)
-    }
-
-    public static func autoSelectClosestOrigin(defaults: UserDefaults = .standard) -> Bool {
-        defaults.bool(forKey: Keys.autoSelectClosestOrigin)
-    }
-
-    public static func setAutoSelectClosestOrigin(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
-        defaults.set(isEnabled, forKey: Keys.autoSelectClosestOrigin)
     }
 
     public static func tmbEnabled(defaults: UserDefaults = .standard) -> Bool {

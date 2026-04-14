@@ -63,4 +63,5 @@ struct UserSettingsTests {
         UserSettings.setTMBEnabled(false, defaults: defaults)
         #expect(!UserSettings.tmbEnabled(defaults: defaults))
     }
+
 }

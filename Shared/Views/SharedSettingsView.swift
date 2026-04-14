@@ -1,8 +1,8 @@
+import CoreLocation
 import SwiftUI
 
 public struct SharedSettingsView: View {
     @Environment(PingStore.self) private var store
-    @AppStorage(UserSettings.Keys.autoSelectClosestOrigin) private var autoSelectClosestOrigin = false
     @State private var isFavoritePickerPresented = false
 
     #if os(macOS)
@@ -21,7 +21,6 @@ public struct SharedSettingsView: View {
             routeSection
             #endif
             favoritesSection
-            originAutomationSection
             walkingSection
             calendarSection
         }
@@ -291,29 +290,6 @@ public struct SharedSettingsView: View {
     }
     #endif
 
-    private var originAutomationSection: some View {
-        Section {
-            Toggle(isOn: $autoSelectClosestOrigin) {
-                Label("Use closest station as origin", systemImage: "location.magnifyingglass")
-            }
-            .onChange(of: autoSelectClosestOrigin) { _, newValue in
-                UserSettings.setAutoSelectClosestOrigin(newValue)
-                store.resetClosestOriginSelectionForCurrentSession()
-                if newValue {
-                    store.requestLocationAccess()
-                } else {
-                    Task { await store.refresh() }
-                }
-            }
-
-            Text("When enabled, Ping picks the nearest FGC station as your origin when the app starts.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        } header: {
-            Text("Origin")
-        }
-    }
-
     private var walkingSection: some View {
         Section {
             if store.isUsingLiveLocation {
@@ -429,6 +405,12 @@ private enum RoutePickerTarget: String, Identifiable {
 #endif
 
 private struct StationSearchPickerView: View {
+    private struct StationPickerSection: Identifiable {
+        let id: String
+        let title: String
+        let stops: [Stop]
+    }
+
     @Environment(PingStore.self) private var store
     let title: String
     let availableStops: [Stop]
@@ -457,17 +439,78 @@ private struct StationSearchPickerView: View {
         return result
     }
 
-    private var displayedStops: [Stop] {
-        let sourceStops: [Stop]
-        if !searchResults.isEmpty || !query.isEmpty {
-            sourceStops = searchResults
-        } else {
-            sourceStops = uniqueAvailableStops
-        }
+    private var normalizedQuery: String {
+        query.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
-        return deduplicate(stops: sourceStops)
+    private var isSearching: Bool {
+        !normalizedQuery.isEmpty
+    }
+
+    private var sortedAvailableStops: [Stop] {
+        deduplicate(stops: uniqueAvailableStops)
             .filter { !excludedStopIDs.contains($0.id) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    private var matchedStops: [Stop] {
+        deduplicate(stops: searchResults)
+            .filter { !excludedStopIDs.contains($0.id) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    private var nearestStops: [Stop] {
+        guard !isSearching, let userLocation = store.userLocation else {
+            return []
+        }
+
+        return sortedAvailableStops
+            .compactMap { stop -> (stop: Stop, distance: CLLocationDistance)? in
+                guard let coordinate = stop.coordinate else {
+                    return nil
+                }
+
+                let distance = CLLocation(
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude
+                )
+                .distance(from: CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude))
+                return (stop, distance)
+            }
+            .sorted { $0.distance < $1.distance }
+            .prefix(5)
+            .map(\.stop)
+    }
+
+    private var regularStops: [Stop] {
+        let nearestIDs = Set(nearestStops.map(\.id))
+        return sortedAvailableStops.filter { !nearestIDs.contains($0.id) }
+    }
+
+    private var displayedStops: [Stop] {
+        if isSearching {
+            return matchedStops
+        }
+
+        return deduplicate(stops: nearestStops + regularStops)
+    }
+
+    private var sectionedStops: [StationPickerSection] {
+        if isSearching {
+            guard !matchedStops.isEmpty else {
+                return []
+            }
+            return [StationPickerSection(id: "search-results", title: "Search results", stops: matchedStops)]
+        }
+
+        var sections: [StationPickerSection] = []
+        if !nearestStops.isEmpty {
+            sections.append(StationPickerSection(id: "nearest-stations", title: "Nearest stations", stops: nearestStops))
+        }
+        if !regularStops.isEmpty {
+            sections.append(StationPickerSection(id: "all-stations", title: "All stations", stops: regularStops))
+        }
+        return sections
     }
 
     private var subtitleText: String {
@@ -507,7 +550,7 @@ private struct StationSearchPickerView: View {
             }
 
             Group {
-                if displayedStops.isEmpty && !isLoading {
+                if sectionedStops.isEmpty && !isLoading {
                     ContentUnavailableView(
                         query.isEmpty ? "Stations unavailable" : "No matches",
                         systemImage: "magnifyingglass",
@@ -515,35 +558,52 @@ private struct StationSearchPickerView: View {
                     )
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(displayedStops) { stop in
-                                Button {
-                                    selectedStopIDForMac = stop.id
-                                } label: {
-                                    HStack(spacing: 10) {
-                                        Text(stop.name)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        Text(stop.id)
-                                            .foregroundStyle(.secondary)
-                                        if stop.id == selectedStopIDForMac {
-                                            Image(systemName: "checkmark")
-                                                .foregroundStyle(.blue)
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(sectionedStops.enumerated()), id: \.element.id) { sectionIndex, section in
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(section.title)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                        .textCase(.uppercase)
+                                        .padding(.horizontal, 12)
+                                        .padding(.top, sectionIndex == 0 ? 8 : 12)
+                                        .padding(.bottom, 6)
+
+                                    ForEach(section.stops) { stop in
+                                        Button {
+                                            selectedStopIDForMac = stop.id
+                                        } label: {
+                                            HStack(spacing: 10) {
+                                                Text(stop.name)
+                                                    .foregroundStyle(.primary)
+                                                Spacer()
+                                                Text(stop.id)
+                                                    .foregroundStyle(.secondary)
+                                                if stop.id == selectedStopIDForMac {
+                                                    Image(systemName: "checkmark")
+                                                        .foregroundStyle(.blue)
+                                                }
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 7)
+                                            .background(
+                                                stop.id == selectedStopIDForMac
+                                                    ? Color.accentColor.opacity(0.15)
+                                                    : Color.clear
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        if stop.id != section.stops.last?.id {
+                                            Divider()
                                         }
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 7)
-                                    .background(
-                                        stop.id == selectedStopIDForMac
-                                            ? Color.accentColor.opacity(0.15)
-                                            : Color.clear
-                                    )
                                 }
-                                .buttonStyle(.plain)
 
-                                if stop.id != displayedStops.last?.id {
+                                if sectionIndex != sectionedStops.count - 1 {
                                     Divider()
+                                        .padding(.top, 8)
                                 }
                             }
                         }
@@ -613,7 +673,7 @@ private struct StationSearchPickerView: View {
     private var iOSBody: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if displayedStops.isEmpty && !isLoading {
+                if sectionedStops.isEmpty && !isLoading {
                     ContentUnavailableView(
                         query.isEmpty ? "Stations unavailable" : "No matches",
                         systemImage: "magnifyingglass",
@@ -622,24 +682,26 @@ private struct StationSearchPickerView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        Section("Stations") {
-                            ForEach(displayedStops) { stop in
-                                Button {
-                                    onSelect(stop)
-                                    dismiss()
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Text(stop.name)
-                                            .foregroundStyle(.primary)
-                                        Spacer()
-                                        if stop.id == selectedStopID {
-                                            Image(systemName: "checkmark")
-                                                .foregroundStyle(.blue)
+                        ForEach(sectionedStops) { section in
+                            Section(section.title) {
+                                ForEach(section.stops) { stop in
+                                    Button {
+                                        onSelect(stop)
+                                        dismiss()
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Text(stop.name)
+                                                .foregroundStyle(.primary)
+                                            Spacer()
+                                            if stop.id == selectedStopID {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundStyle(.blue)
+                                            }
                                         }
+                                        .padding(.vertical, 2)
                                     }
-                                    .padding(.vertical, 2)
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -705,7 +767,7 @@ private struct StationSearchPickerView: View {
         let fetched = await store.searchStops(matching: term)
         searchResults = fetched
         #if os(macOS)
-        if let selectedStopIDForMac, !searchResults.contains(where: { $0.id == selectedStopIDForMac }) {
+        if let selectedStopIDForMac, !displayedStops.contains(where: { $0.id == selectedStopIDForMac }) {
             self.selectedStopIDForMac = nil
         }
         #endif

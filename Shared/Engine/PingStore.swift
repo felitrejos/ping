@@ -95,7 +95,6 @@ public final class PingStore {
     private let gtfsUpdateService: GTFSUpdateService?
     private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
-    private var didAutoSelectClosestOriginThisSession = false
 
     public init(
         engine: CommuteEngine,
@@ -137,6 +136,7 @@ public final class PingStore {
             if await calendarService.authorizationStatus() == .notDetermined {
                 calendarAuthorization = await calendarService.requestAccess()
             }
+            await resetRouteForNewSession()
             requestLocationAccess(shouldRefreshAfterAuthorization: false)
             await checkForGTFSUpdate()
             await realtimeService.startPolling()
@@ -190,10 +190,6 @@ public final class PingStore {
         }
     }
 
-    public func resetClosestOriginSelectionForCurrentSession() {
-        didAutoSelectClosestOriginThisSession = false
-    }
-
     public func requestCalendarAccess() async {
         calendarAuthorization = await calendarService.requestAccess()
         await refresh()
@@ -209,7 +205,7 @@ public final class PingStore {
             }
 
             // Refresh when authorization changed, or when already authorized so location-dependent
-            // features (e.g. closest-origin automation) can update immediately.
+            // features can update immediately.
             if locationAuthorizationStatus != previousStatus || isLocationAccessGranted {
                 await refresh()
             }
@@ -264,7 +260,7 @@ public final class PingStore {
     }
 
     public func tmbStops(in box: TMBBoundingBox) async -> [TMBStop] {
-        guard isTMBEnabled, let tmbStaticService else {
+        guard hasTMBCredentials, let tmbStaticService else {
             return []
         }
 
@@ -278,7 +274,8 @@ public final class PingStore {
 
         do {
             let identifier = stop.code ?? stop.id
-            return .success(try await tmbRealtimeService.arrivals(stopID: identifier))
+            let arrivals = try await tmbRealtimeService.arrivals(stopID: identifier)
+            return .success(arrivals)
         } catch let error as TMBArrivalsError {
             return .failure(error)
         } catch {
@@ -291,8 +288,6 @@ public final class PingStore {
         await calendarService.setUserDestinationStation(nil)
         homeStationID = nil
         destinationStationID = nil
-        // Avoid immediately re-selecting nearest origin right after manual clear.
-        didAutoSelectClosestOriginThisSession = true
         dynamicWalkingMinutes = nil
         nextDeparture = nil
         upcomingDepartures = []
@@ -386,7 +381,6 @@ public final class PingStore {
             return
         }
         userLocation = TransitCoordinate(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        await autoSelectClosestOriginIfNeeded()
 
         let resolvedHomeStationID: StopID?
         if let homeStationID {
@@ -403,22 +397,6 @@ public final class PingStore {
         }
 
         dynamicWalkingMinutes = await walkingETAService.walkingMinutes(from: coordinate, to: homeStop)
-    }
-
-    private func autoSelectClosestOriginIfNeeded() async {
-        guard
-            UserSettings.autoSelectClosestOrigin(),
-            !didAutoSelectClosestOriginThisSession,
-            let userLocation,
-            let closestStop = availableStops.closest(to: userLocation)
-        else {
-            return
-        }
-
-        await calendarService.setUserHomeStation(closestStop.id)
-        homeStationID = closestStop.id
-        didAutoSelectClosestOriginThisSession = true
-        await autoDetectLine()
     }
 
     private func filterCommutesNearCurrentLocation(_ plans: [CommutePlan]) -> [CommutePlan] {
@@ -471,11 +449,24 @@ public final class PingStore {
             return
         }
 
+        // Always sync the static service with any previously downloaded ZIP,
+        // even when we do not fetch a new file this run.
+        let existingURL = gtfsUpdateService.bestAvailableTMBZipURL()
+        await tmbStaticService.updateZipURL(existingURL)
+
         let didUpdateTMB = await gtfsUpdateService.refreshTMBIfStale(credentials: tmbCredentials.ordered)
+        let bestURL = gtfsUpdateService.bestAvailableTMBZipURL()
+        await tmbStaticService.updateZipURL(bestURL)
         if didUpdateTMB {
-            let newURL = gtfsUpdateService.bestAvailableTMBZipURL()
-            await tmbStaticService.updateZipURL(newURL)
+            await tmbStaticService.invalidateCache()
         }
+    }
+
+    private func resetRouteForNewSession() async {
+        await calendarService.setUserHomeStation(nil)
+        await calendarService.setUserDestinationStation(nil)
+        homeStationID = nil
+        destinationStationID = nil
     }
 
     private func reloadLineStops() async {
@@ -486,27 +477,6 @@ public final class PingStore {
         }
     }
 
-}
-
-private extension [Stop] {
-    func closest(to coordinate: TransitCoordinate) -> Stop? {
-        filter { $0.coordinate != nil }
-            .min { first, second in
-                first.distanceSquared(to: coordinate) < second.distanceSquared(to: coordinate)
-            }
-    }
-}
-
-private extension Stop {
-    func distanceSquared(to other: TransitCoordinate) -> Double {
-        guard let coordinate else {
-            return .greatestFiniteMagnitude
-        }
-
-        let latitudeDelta = coordinate.latitude - other.latitude
-        let longitudeDelta = coordinate.longitude - other.longitude
-        return latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta
-    }
 }
 
 private extension TransitCoordinate {

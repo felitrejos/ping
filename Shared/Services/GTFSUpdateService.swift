@@ -40,7 +40,11 @@ public actor GTFSUpdateService {
     @discardableResult
     public func updateIfNeeded() async -> Bool {
         let lastFetch = UserSettings.gtfsLastFetched()
-        if let lastFetch, Date().timeIntervalSince(lastFetch) < updateInterval {
+        if
+            let lastFetch,
+            Date().timeIntervalSince(lastFetch) < updateInterval,
+            FileManager.default.fileExists(atPath: fgcLocalZipURL.path)
+        {
             return false
         }
 
@@ -56,9 +60,14 @@ public actor GTFSUpdateService {
     /// Downloads a fresh TMB GTFS ZIP if stale, trying credentials in order.
     /// Returns `true` if new data was downloaded.
     @discardableResult
-    public func refreshTMBIfStale(credentials: [TMBCredentials]) async -> Bool {
+    public func refreshTMBIfStale(credentials: [TMBCredentials], force: Bool = false) async -> Bool {
         let lastFetch = UserSettings.tmbGTFSLastFetched()
-        if let lastFetch, Date().timeIntervalSince(lastFetch) < updateInterval {
+        if
+            !force,
+            let lastFetch,
+            Date().timeIntervalSince(lastFetch) < updateInterval,
+            FileManager.default.fileExists(atPath: tmbLocalZipURL.path)
+        {
             return false
         }
 

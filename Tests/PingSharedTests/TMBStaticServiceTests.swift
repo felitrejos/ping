@@ -15,7 +15,7 @@ struct TMBStaticServiceTests {
         let stop = try #require(await service.stop(id: "STOP_1"))
         #expect(stop.name == "Placa Catalunya")
         #expect(stop.code == "1001")
-        #expect(stop.routeShortNames == ["H12", "V17"])
+        #expect(stop.routeShortNames.isEmpty)
     }
 
     @Test

@@ -2,12 +2,12 @@ import Foundation
 
 enum GTFSCSVParser {
     static func parse(text: String) throws -> [[String: String]] {
-        let rows = tokenize(text: text)
+        let rows = tokenize(text: normalizeLineEndings(in: text))
         guard let headerRow = rows.first else {
             return []
         }
 
-        let headers = headerRow.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let headers = headerRow.map(normalizeHeader)
         return rows.dropFirst().compactMap { row in
             guard row.contains(where: { !$0.isEmpty }) else {
                 return nil
@@ -56,7 +56,16 @@ enum GTFSCSVParser {
                     row = []
                     field = ""
                 case "\r":
-                    break
+                    row.append(field)
+                    rows.append(row)
+                    row = []
+                    field = ""
+
+                    let nextIndex = index + 1
+                    if nextIndex < characters.count, characters[nextIndex] == "\n" {
+                        // Consume LF in CRLF.
+                        index += 1
+                    }
                 default:
                     field.append(character)
                 }
@@ -70,5 +79,19 @@ enum GTFSCSVParser {
         }
 
         return rows
+    }
+
+    private static func normalizeHeader(_ value: String) -> String {
+        var header = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if header.unicodeScalars.first == "\u{FEFF}" {
+            header = String(header.dropFirst())
+        }
+        return header
+    }
+
+    private static func normalizeLineEndings(in text: String) -> String {
+        text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
     }
 }
