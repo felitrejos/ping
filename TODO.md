@@ -18,13 +18,6 @@ Uses SwiftUI's `.colorEffect()` / `.distortionEffect()` modifiers (iOS 17+, no U
 - [ ] **Noise texture on card backgrounds** — near-invisible grain (±3% luminance) over `TrainHeroCard` and `NoticeCard` backgrounds for tactile depth on OLED. One shader, many callsites. `iOS/ContentView.swift` → `ShaderLibrary.noiseOverlay(.float(0.03))`.
 - [ ] **Radial pulse on origin station marker** — expanding ring fades out from origin `StationMarker` on the map (~2s repeat, SwiftUI scale+opacity animation, no shader strictly required but can be done with a `.colorEffect` falloff shader). `iOS/FGCMapView.swift` → `StationMarker`.
 
-## Map: GeoTrain removal (main) / preservation (branch)
-
-The GeoTrain feature polls `fgc.opendatasoft.com` every 10s but the underlying data updates every ~30–60s (OpenDataSoft catalog, not a real-time stream). The cubic interpolation makes movement look smooth but positions are stale. Not worth the polling overhead or the misleading UX.
-
-- [ ] **Branch off current `main` into `feature/geotrain`** before removing, so the implementation is preserved if the data source ever improves.
-- [ ] **Remove from `main`**: delete `GeoTrainService.swift`, `GeoTrainServiceProviding` protocol, `GeoTrainUnit` model, `GeoTrainMarker` view, overlay toggle button, and all interpolation state from `iOS/FGCMapView.swift`. Update `PingStore`, `SharedContainer`, and `ServiceProtocols` to drop the geo train wiring.
-
 ## Map: TMB bus stops
 
 Add TMB bus stop annotations to the existing `FGCMapView` with a zoom-level gate so performance stays solid (TMB has ~2,900 stops across Barcelona — rendering all at once as SwiftUI annotations would lag badly).
