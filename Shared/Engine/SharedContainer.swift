@@ -4,11 +4,13 @@ import Foundation
 public final class SharedContainer {
     public let staticService: FGCStaticService
     public let realtimeService: FGCRealtimeService
+    public let tmbCredentials: TMBCredentialProvider
+    public let tmbStaticService: TMBStaticService
+    public let tmbRealtimeService: TMBiBusService
     public let calendarService: CalendarService
     public let engine: CommuteEngine
     public let store: PingStore
     public let gtfsUpdateService: GTFSUpdateService
-    public let geoTrainService: GeoTrainService
     public let serviceAlertsService: FGCServiceAlertsService
     public let locationService: LocationService
     public let walkingETAService: WalkingETAService
@@ -23,8 +25,10 @@ public final class SharedContainer {
 
         let updateService = GTFSUpdateService()
         gtfsUpdateService = updateService
-        geoTrainService = GeoTrainService()
         serviceAlertsService = FGCServiceAlertsService()
+        tmbCredentials = TMBCredentialProvider(bundle: bundle)
+        tmbStaticService = TMBStaticService(zipURL: updateService.bestAvailableTMBZipURL())
+        tmbRealtimeService = TMBiBusService(credentials: tmbCredentials)
 
         // Use downloaded ZIP if available, otherwise fall back to bundled
         let zipURL = updateService.bestAvailableZipURL(bundledURL: bundledZipURL)
@@ -76,8 +80,10 @@ public final class SharedContainer {
             realtimeService: realtimeService,
             locationService: locationService,
             walkingETAService: walkingETAService,
-            geoTrainService: geoTrainService,
             serviceAlertsService: serviceAlertsService,
+            tmbStaticService: tmbStaticService,
+            tmbRealtimeService: tmbRealtimeService,
+            tmbCredentials: tmbCredentials,
             gtfsUpdateService: updateService,
             bundledGTFSURL: bundledZipURL
         )

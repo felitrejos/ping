@@ -30,6 +30,14 @@
 	<string>Ping uses your location to estimate how long it takes to walk to your origin station.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>TMB_APP_ID_BACKUP</key>
+	<string>$(TMB_APP_ID_BACKUP)</string>
+	<key>TMB_APP_ID_PRIMARY</key>
+	<string>$(TMB_APP_ID_PRIMARY)</string>
+	<key>TMB_APP_KEY_BACKUP</key>
+	<string>$(TMB_APP_KEY_BACKUP)</string>
+	<key>TMB_APP_KEY_PRIMARY</key>
+	<string>$(TMB_APP_KEY_PRIMARY)</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Ping sends leave-now reminders for upcoming trips.</string>
 	<key>UIApplicationSceneManifest</key>

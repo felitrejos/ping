@@ -1,0 +1,5 @@
+// Copy this file to `TMBKeys.xcconfig` and replace placeholder values.
+TMB_APP_ID_PRIMARY = <PRIMARY_APP_ID>
+TMB_APP_KEY_PRIMARY = <PRIMARY_APP_KEY>
+TMB_APP_ID_BACKUP = <BACKUP_APP_ID>
+TMB_APP_KEY_BACKUP = <BACKUP_APP_KEY>

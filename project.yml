@@ -21,6 +21,9 @@ targets:
     type: application
     platform: iOS
     deploymentTarget: "26.0"
+    configFiles:
+      Debug: iOS/Config/TMBKeys.xcconfig
+      Release: iOS/Config/TMBKeys.xcconfig
     sources:
       - path: Shared
       - path: iOS
@@ -35,6 +38,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.ping.ios
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        DEVELOPMENT_TEAM: WXKM9YZDXT
         GENERATE_INFOPLIST_FILE: false
         INFOPLIST_FILE: iOS/Info.plist
   Ping macOS:
@@ -72,6 +76,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.ping.ios.widgets
         PRODUCT_NAME: PingWidgets
         PRODUCT_MODULE_NAME: PingWidgets
+        DEVELOPMENT_TEAM: WXKM9YZDXT
         INFOPLIST_FILE: Widgets/Info.plist
 schemes:
   Ping iOS:

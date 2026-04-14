@@ -27,12 +27,18 @@ public protocol CalendarServiceProviding: Sendable {
     func setUserDestinationStation(_ stopID: StopID?) async
 }
 
-public protocol GeoTrainServiceProviding: Sendable {
-    func fetchUnits(limit: Int) async throws -> [GeoTrainUnit]
-}
-
 public protocol ServiceAlertsProviding: Sendable {
     func fetchAlerts() async throws -> [ServiceAlert]
+}
+
+public protocol TMBStaticServiceProviding: Sendable {
+    func allStops() async throws -> [TMBStop]
+    func stops(in region: TMBBoundingBox) async throws -> [TMBStop]
+    func stop(id: String) async throws -> TMBStop?
+}
+
+public protocol TMBRealtimeServiceProviding: Sendable {
+    func arrivals(stopID: String) async throws -> [TMBArrival]
 }
 
 public protocol Clock: Sendable {

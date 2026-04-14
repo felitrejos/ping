@@ -12,7 +12,6 @@ public final class PingStore {
     public var availableStops: [Stop] = []
     public var lineStops: [Stop] = []
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
-    public var geoTrainUnits: [GeoTrainUnit] = []
     public var activeServiceAlerts: [ServiceAlert] = []
     public var serviceAlertsLastUpdated: Date?
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
@@ -23,6 +22,7 @@ public final class PingStore {
     public private(set) var homeStationID: StopID?
     public private(set) var destinationStationID: StopID?
     public private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
+    public private(set) var isTMBLayerPreferred = UserSettings.tmbEnabled()
 
     /// Dynamic walking ETA in minutes from current location to origin station.
     /// Returns 0 when location-based ETA is unavailable.
@@ -68,6 +68,14 @@ public final class PingStore {
         hasConfiguredRoute && hasConfiguredDestination
     }
 
+    public var hasTMBCredentials: Bool {
+        tmbCredentials?.hasAny ?? false
+    }
+
+    public var isTMBEnabled: Bool {
+        hasTMBCredentials && isTMBLayerPreferred
+    }
+
     public var favoriteStations: [Stop] {
         favoriteStationIDs.map { stopID in
             availableStops.first(where: { $0.id == stopID }) ?? Stop(id: stopID, name: stopID)
@@ -80,8 +88,10 @@ public final class PingStore {
     private let realtimeService: RealtimeServiceProviding
     private let locationService: LocationProviding?
     private let walkingETAService: WalkingETAProviding?
-    private let geoTrainService: GeoTrainServiceProviding?
     private let serviceAlertsService: ServiceAlertsProviding?
+    private let tmbStaticService: TMBStaticServiceProviding?
+    private let tmbRealtimeService: TMBRealtimeServiceProviding?
+    private let tmbCredentials: TMBCredentialProvider?
     private let gtfsUpdateService: GTFSUpdateService?
     private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
@@ -94,8 +104,10 @@ public final class PingStore {
         realtimeService: RealtimeServiceProviding,
         locationService: LocationProviding? = nil,
         walkingETAService: WalkingETAProviding? = nil,
-        geoTrainService: GeoTrainServiceProviding? = nil,
         serviceAlertsService: ServiceAlertsProviding? = nil,
+        tmbStaticService: TMBStaticServiceProviding? = nil,
+        tmbRealtimeService: TMBRealtimeServiceProviding? = nil,
+        tmbCredentials: TMBCredentialProvider? = nil,
         gtfsUpdateService: GTFSUpdateService? = nil,
         bundledGTFSURL: URL? = nil
     ) {
@@ -105,8 +117,10 @@ public final class PingStore {
         self.realtimeService = realtimeService
         self.locationService = locationService
         self.walkingETAService = walkingETAService
-        self.geoTrainService = geoTrainService
         self.serviceAlertsService = serviceAlertsService
+        self.tmbStaticService = tmbStaticService
+        self.tmbRealtimeService = tmbRealtimeService
+        self.tmbCredentials = tmbCredentials
         self.gtfsUpdateService = gtfsUpdateService
         self.bundledGTFSURL = bundledGTFSURL
         Task {
@@ -166,14 +180,12 @@ public final class PingStore {
             commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
             nextCommute = commutePlans.first
             (nextDeparture, upcomingDepartures) = try await defaultDepartures()
-            await refreshGeoTrainUnits()
             await refreshServiceAlerts()
             lastErrorMessage = nil
             lastUpdated = Date()
         } catch {
             lastErrorMessage = error.localizedDescription
             upcomingDepartures = []
-            geoTrainUnits = []
             lastUpdated = Date()
         }
     }
@@ -231,19 +243,6 @@ public final class PingStore {
         await refresh()
     }
 
-    public func refreshGeoTrainUnits() async {
-        guard let geoTrainService else {
-            geoTrainUnits = []
-            return
-        }
-
-        do {
-            geoTrainUnits = try await geoTrainService.fetchUnits(limit: 100)
-        } catch {
-            geoTrainUnits = []
-        }
-    }
-
     public func refreshServiceAlerts() async {
         guard let serviceAlertsService else {
             activeServiceAlerts = []
@@ -259,6 +258,34 @@ public final class PingStore {
         }
     }
 
+    public func setTMBEnabled(_ isEnabled: Bool) {
+        isTMBLayerPreferred = isEnabled
+        UserSettings.setTMBEnabled(isEnabled)
+    }
+
+    public func tmbStops(in box: TMBBoundingBox) async -> [TMBStop] {
+        guard isTMBEnabled, let tmbStaticService else {
+            return []
+        }
+
+        return (try? await tmbStaticService.stops(in: box)) ?? []
+    }
+
+    public func tmbArrivals(for stop: TMBStop) async -> Result<[TMBArrival], TMBArrivalsError> {
+        guard isTMBEnabled, let tmbRealtimeService else {
+            return .failure(.noCredentials)
+        }
+
+        do {
+            let identifier = stop.code ?? stop.id
+            return .success(try await tmbRealtimeService.arrivals(stopID: identifier))
+        } catch let error as TMBArrivalsError {
+            return .failure(error)
+        } catch {
+            return .failure(.network(error))
+        }
+    }
+
     public func clearDefaultRoute() async {
         await calendarService.setUserHomeStation(nil)
         await calendarService.setUserDestinationStation(nil)
@@ -269,7 +296,6 @@ public final class PingStore {
         dynamicWalkingMinutes = nil
         nextDeparture = nil
         upcomingDepartures = []
-        geoTrainUnits = []
         activeServiceAlerts = []
         await refresh()
     }
@@ -425,11 +451,30 @@ public final class PingStore {
     }
 
     private func checkForGTFSUpdate() async {
-        guard let gtfsUpdateService, let bundledGTFSURL else { return }
-        let didUpdate = await gtfsUpdateService.updateIfNeeded()
-        if didUpdate, let staticService = staticService as? FGCStaticService {
-            let newURL = gtfsUpdateService.bestAvailableZipURL(bundledURL: bundledGTFSURL)
-            await staticService.updateZipURL(newURL)
+        guard let gtfsUpdateService else {
+            return
+        }
+
+        if let bundledGTFSURL {
+            let didUpdate = await gtfsUpdateService.updateIfNeeded()
+            if didUpdate, let staticService = staticService as? FGCStaticService {
+                let newURL = gtfsUpdateService.bestAvailableZipURL(bundledURL: bundledGTFSURL)
+                await staticService.updateZipURL(newURL)
+            }
+        }
+
+        guard
+            let tmbCredentials,
+            tmbCredentials.hasAny,
+            let tmbStaticService = tmbStaticService as? TMBStaticService
+        else {
+            return
+        }
+
+        let didUpdateTMB = await gtfsUpdateService.refreshTMBIfStale(credentials: tmbCredentials.ordered)
+        if didUpdateTMB {
+            let newURL = gtfsUpdateService.bestAvailableTMBZipURL()
+            await tmbStaticService.updateZipURL(newURL)
         }
     }
 

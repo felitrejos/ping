@@ -10,16 +10,17 @@ struct FGCMapView: View {
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
     @State private var destinationID: StopID?
-    @State private var isGeoTrainOverlayEnabled = false
+    @State private var isTMBOverlayEnabled = UserSettings.tmbEnabled()
     @State private var shouldShowAllStations = false
-    @State private var displayedGeoTrainCoordinates: [String: TransitCoordinate] = [:]
-    @State private var previousGeoTrainCoordinates: [String: TransitCoordinate] = [:]
-    @State private var targetGeoTrainCoordinates: [String: TransitCoordinate] = [:]
-    @State private var geoTrainInterpolationStart = Date()
     @State private var lastWalkingRouteRequestKey: WalkingRouteRequestKey?
+    @State private var lastCameraRegion: MKCoordinateRegion?
+    @State private var visibleTMBStops: [TMBStop] = []
+    @State private var selectedTMBStop: TMBStop?
+    @State private var tmbArrivals: [TMBArrival] = []
+    @State private var tmbLoadState: TMBLoadState = .idle
 
-    private let geoTrainPollInterval: TimeInterval = 10
-    private let geoTrainInterpolationDuration: TimeInterval = 10
+    private let tmbZoomLatitudeDeltaThreshold: CLLocationDegrees = 0.02
+    private let maxVisibleTMBStops = 300
 
     private var stationsWithCoordinates: [Stop] {
         store.availableStops.filter { $0.coordinate != nil }
@@ -65,51 +66,6 @@ struct FGCMapView: View {
         return stationsWithCoordinates.first { $0.id == destinationID }
     }
 
-    private var visibleGeoTrainUnits: [GeoTrainUnit] {
-        guard store.hasConfiguredDefaultRoute else {
-            return store.geoTrainUnits
-        }
-
-        let selectedLine = store.selectedLine.uppercased()
-        let lineUnits = store.geoTrainUnits.filter { $0.line.uppercased() == selectedLine }
-        guard let expectedDirection = expectedRouteDirection, !lineUnits.isEmpty else {
-            return lineUnits
-        }
-
-        let directionUnits = lineUnits.filter { $0.direction.uppercased() == expectedDirection }
-        return directionUnits.isEmpty ? lineUnits : directionUnits
-    }
-
-    private var renderedGeoTrainUnits: [GeoTrainUnit] {
-        visibleGeoTrainUnits.map { unit in
-            let coordinate = displayedGeoTrainCoordinates[unit.id] ?? unit.coordinate
-            return GeoTrainUnit(
-                id: unit.id,
-                line: unit.line,
-                direction: unit.direction,
-                originStopID: unit.originStopID,
-                destinationStopID: unit.destinationStopID,
-                coordinate: coordinate,
-                isOnTime: unit.isOnTime
-            )
-        }
-    }
-
-    private var expectedRouteDirection: String? {
-        guard
-            let originID,
-            let destinationID,
-            !store.lineStops.isEmpty,
-            let originIndex = store.lineStops.firstIndex(where: { $0.id == originID }),
-            let destinationIndex = store.lineStops.firstIndex(where: { $0.id == destinationID }),
-            originIndex != destinationIndex
-        else {
-            return nil
-        }
-
-        return destinationIndex > originIndex ? "D" : "A"
-    }
-
     private var hasActiveCommuteContext: Bool {
         store.nextDeparture != nil || store.nextCommute != nil
     }
@@ -139,6 +95,7 @@ struct FGCMapView: View {
                 if let coordinate = station.coordinate?.mapCoordinate {
                     Annotation(station.name, coordinate: coordinate) {
                         Button {
+                            clearSelectedTMBStop()
                             selectedStation = station
                         } label: {
                             StationMarker(
@@ -152,10 +109,19 @@ struct FGCMapView: View {
                 }
             }
 
-            if isGeoTrainOverlayEnabled {
-                ForEach(renderedGeoTrainUnits) { unit in
-                    Annotation("", coordinate: unit.coordinate.mapCoordinate) {
-                        GeoTrainMarker(unit: unit)
+            if isTMBOverlayEnabled {
+                ForEach(visibleTMBStops) { stop in
+                    Annotation(stop.name, coordinate: stop.coordinate.mapCoordinate) {
+                        Button {
+                            clearSelectedStation()
+                            selectedTMBStop = stop
+                            Task {
+                                await loadTMBArrivals(for: stop)
+                            }
+                        } label: {
+                            TMBBusStopMarker(stop: stop)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -168,12 +134,17 @@ struct FGCMapView: View {
             MapUserLocationButton()
             MapScaleView()
         }
+        .onMapCameraChange(frequency: .onEnd) { context in
+            lastCameraRegion = context.region
+            Task {
+                await refreshVisibleTMBStops(for: context.region)
+            }
+        }
         .overlay(alignment: .topLeading) {
-            geoTrainOverlayButton
+            mapOverlayControls
                 .padding(.top, 12)
                 .padding(.leading, 14)
         }
-        .animation(.linear(duration: 1.0), value: renderedGeoTrainUnits)
         .safeAreaInset(edge: .bottom) {
             MapStatusPanel(
                 origin: originStop,
@@ -185,7 +156,11 @@ struct FGCMapView: View {
                 closestStations: closestStations,
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
+                selectedBusStop: selectedTMBStop,
+                busArrivals: tmbArrivals,
+                busLoadState: tmbLoadState,
                 onDismissStation: clearSelectedStation,
+                onDismissBusStop: clearSelectedTMBStop,
                 onSetOrigin: { station in
                     clearSelectedStation()
                     Task {
@@ -199,40 +174,32 @@ struct FGCMapView: View {
                         await store.setDestinationStation(station.id)
                         await reloadMapData()
                     }
+                },
+                onRetryBusArrivals: {
+                    guard let selectedTMBStop else {
+                        return
+                    }
+
+                    Task {
+                        await loadTMBArrivals(for: selectedTMBStop)
+                    }
                 }
             )
         }
         .task {
             await reloadMapData()
             scheduleFullStationLoad()
-            if isGeoTrainOverlayEnabled {
-                await store.refreshGeoTrainUnits()
-                resetGeoTrainInterpolation(with: store.geoTrainUnits)
-            }
-        }
-        .task(id: isGeoTrainOverlayEnabled) {
-            guard isGeoTrainOverlayEnabled else {
-                return
-            }
-
-            var lastRefresh = Date.distantPast
-            while !Task.isCancelled, isGeoTrainOverlayEnabled {
-                let now = Date()
-                if now.timeIntervalSince(lastRefresh) >= geoTrainPollInterval {
-                    await store.refreshGeoTrainUnits()
-                    lastRefresh = Date()
-                }
-
-                advanceGeoTrainInterpolation(at: now)
-                try? await Task.sleep(for: .seconds(1))
+            isTMBOverlayEnabled = store.isTMBLayerPreferred
+            if let lastCameraRegion {
+                await refreshVisibleTMBStops(for: lastCameraRegion)
             }
         }
         .refreshable {
             await store.refresh()
             await reloadMapData()
             scheduleFullStationLoad()
-            if isGeoTrainOverlayEnabled {
-                await store.refreshGeoTrainUnits()
+            if let lastCameraRegion {
+                await refreshVisibleTMBStops(for: lastCameraRegion)
             }
         }
         .onChange(of: store.availableStops) { _, _ in
@@ -240,6 +207,9 @@ struct FGCMapView: View {
             Task {
                 await reloadMapData()
                 scheduleFullStationLoad()
+                if let lastCameraRegion {
+                    await refreshVisibleTMBStops(for: lastCameraRegion)
+                }
             }
         }
         .onChange(of: store.userLocation) { _, _ in
@@ -254,8 +224,21 @@ struct FGCMapView: View {
         .onChange(of: store.destinationStationID) { _, _ in
             Task { await reloadMapData() }
         }
-        .onChange(of: store.geoTrainUnits) { _, units in
-            updateGeoTrainInterpolationTargets(with: units)
+        .onChange(of: isTMBOverlayEnabled) { _, isEnabled in
+            store.setTMBEnabled(isEnabled)
+            if !isEnabled {
+                clearSelectedTMBStop()
+                visibleTMBStops = []
+                return
+            }
+
+            guard let lastCameraRegion else {
+                return
+            }
+
+            Task {
+                await refreshVisibleTMBStops(for: lastCameraRegion)
+            }
         }
     }
 
@@ -271,72 +254,34 @@ struct FGCMapView: View {
         }
     }
 
-    private func resetGeoTrainInterpolation(with units: [GeoTrainUnit]) {
-        let coordinates = Dictionary(uniqueKeysWithValues: units.map { ($0.id, $0.coordinate) })
-        displayedGeoTrainCoordinates = coordinates
-        previousGeoTrainCoordinates = coordinates
-        targetGeoTrainCoordinates = coordinates
-        geoTrainInterpolationStart = Date()
-    }
-
-    private func updateGeoTrainInterpolationTargets(with units: [GeoTrainUnit]) {
-        let nextTargets = Dictionary(uniqueKeysWithValues: units.map { ($0.id, $0.coordinate) })
-        if targetGeoTrainCoordinates.isEmpty {
-            resetGeoTrainInterpolation(with: units)
-            return
+    @ViewBuilder
+    private var mapOverlayControls: some View {
+        if store.hasTMBCredentials {
+            tmbOverlayButton
         }
-
-        previousGeoTrainCoordinates = displayedGeoTrainCoordinates
-        targetGeoTrainCoordinates = nextTargets
-        geoTrainInterpolationStart = Date()
-
-        for id in displayedGeoTrainCoordinates.keys where nextTargets[id] == nil {
-            displayedGeoTrainCoordinates.removeValue(forKey: id)
-            previousGeoTrainCoordinates.removeValue(forKey: id)
-        }
-    }
-
-    private func advanceGeoTrainInterpolation(at now: Date) {
-        guard !targetGeoTrainCoordinates.isEmpty else {
-            return
-        }
-
-        let progress = min(1, now.timeIntervalSince(geoTrainInterpolationStart) / geoTrainInterpolationDuration)
-        let easedProgress = progress * progress * (3 - 2 * progress)
-        var nextDisplayed: [String: TransitCoordinate] = [:]
-
-        for (id, target) in targetGeoTrainCoordinates {
-            let start = previousGeoTrainCoordinates[id] ?? target
-            nextDisplayed[id] = TransitCoordinate(
-                latitude: start.latitude + (target.latitude - start.latitude) * easedProgress,
-                longitude: start.longitude + (target.longitude - start.longitude) * easedProgress
-            )
-        }
-
-        displayedGeoTrainCoordinates = nextDisplayed
     }
 
     @ViewBuilder
-    private var geoTrainOverlayButton: some View {
+    private var tmbOverlayButton: some View {
         Button {
-            isGeoTrainOverlayEnabled.toggle()
+            isTMBOverlayEnabled.toggle()
         } label: {
             ZStack {
-                Image(systemName: "tram.fill")
+                Image(systemName: "bus.fill")
                     .font(.headline.weight(.semibold))
                     .frame(width: 40, height: 40)
 
-                if !isGeoTrainOverlayEnabled {
+                if !isTMBOverlayEnabled {
                     Rectangle()
                         .fill(.red)
                         .frame(width: 28, height: 2.5)
                         .rotationEffect(.degrees(-38))
                 }
             }
-            .foregroundStyle(isGeoTrainOverlayEnabled ? .primary : .secondary)
+            .foregroundStyle(isTMBOverlayEnabled ? .primary : .secondary)
         }
-        .accessibilityLabel(isGeoTrainOverlayEnabled ? "Disable GeoTrain overlay" : "Enable GeoTrain overlay")
-        .accessibilityHint("Shows live train positions on the map")
+        .accessibilityLabel(isTMBOverlayEnabled ? "Disable TMB bus overlay" : "Enable TMB bus overlay")
+        .accessibilityHint("Shows nearby TMB bus stops on the map when zoomed in")
         .ifAvailableGlassMapButton()
     }
 
@@ -345,6 +290,16 @@ struct FGCMapView: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) {
             selectedStation = nil
+        }
+    }
+
+    private func clearSelectedTMBStop() {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            selectedTMBStop = nil
+            tmbArrivals = []
+            tmbLoadState = .idle
         }
     }
 
@@ -368,6 +323,49 @@ struct FGCMapView: View {
         routeStops = await store.configuredRouteStops()
         await updateWalkingRoute()
         updateCamera()
+    }
+
+    private func refreshVisibleTMBStops(for region: MKCoordinateRegion) async {
+        guard isTMBOverlayEnabled, store.isTMBEnabled else {
+            await MainActor.run {
+                visibleTMBStops = []
+            }
+            return
+        }
+
+        guard region.span.latitudeDelta <= tmbZoomLatitudeDeltaThreshold else {
+            await MainActor.run {
+                visibleTMBStops = []
+            }
+            return
+        }
+
+        let box = TMBBoundingBox(region: region)
+        let center = TransitCoordinate(
+            latitude: region.center.latitude,
+            longitude: region.center.longitude
+        )
+        let stops = await store.tmbStops(in: box)
+        let sortedStops = stops.sorted { first, second in
+            first.coordinate.distanceSquared(to: center) < second.coordinate.distanceSquared(to: center)
+        }
+
+        await MainActor.run {
+            visibleTMBStops = Array(sortedStops.prefix(maxVisibleTMBStops))
+        }
+    }
+
+    private func loadTMBArrivals(for stop: TMBStop) async {
+        tmbLoadState = .loading
+        let result = await store.tmbArrivals(for: stop)
+        switch result {
+        case let .success(arrivals):
+            tmbArrivals = arrivals
+            tmbLoadState = .idle
+        case let .failure(error):
+            tmbArrivals = []
+            tmbLoadState = .error(error.displayMessage)
+        }
     }
 
     private func updateWalkingRoute() async {
@@ -412,7 +410,9 @@ struct FGCMapView: View {
             return
         }
 
-        position = .region(MKCoordinateRegion(coordinates: coordinates, padding: 0.012))
+        let region = MKCoordinateRegion(coordinates: coordinates, padding: 0.012)
+        lastCameraRegion = region
+        position = .region(region)
     }
 
     private static func walkingRoute(
@@ -504,13 +504,20 @@ private struct MapStatusPanel: View {
     let closestStations: [Stop]
     let hasUserLocation: Bool
     let selectedStation: Stop?
+    let selectedBusStop: TMBStop?
+    let busArrivals: [TMBArrival]
+    let busLoadState: TMBLoadState
     let onDismissStation: () -> Void
+    let onDismissBusStop: () -> Void
     let onSetOrigin: (Stop) -> Void
     let onSetDestination: (Stop) -> Void
+    let onRetryBusArrivals: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let selectedStation {
+            if let selectedBusStop {
+                busStopSummary(for: selectedBusStop)
+            } else if let selectedStation {
                 stationActions(for: selectedStation)
             } else if let nextDeparture {
                 activeRouteSummary(nextDeparture)
@@ -623,6 +630,83 @@ private struct MapStatusPanel: View {
         }
     }
 
+    private func busStopSummary(for stop: TMBStop) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Label(stop.name, systemImage: "bus.fill")
+                    .font(.headline)
+                    .lineLimit(2)
+
+                Spacer()
+
+                if let code = stop.code, !code.isEmpty {
+                    Text("#\(code)")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            switch busLoadState {
+            case .idle:
+                if busArrivals.isEmpty {
+                    Text("No upcoming buses at this stop.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(busArrivals.prefix(5).enumerated()), id: \.offset) { _, arrival in
+                            HStack(spacing: 8) {
+                                Text(arrival.routeShortName)
+                                    .font(.caption.weight(.bold))
+                                    .monospacedDigit()
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(.orange.opacity(0.16), in: Capsule())
+
+                                Text(arrival.destination)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                Text("\(arrival.minutesAway) min")
+                                    .font(.subheadline.weight(.semibold))
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                }
+            case .loading:
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading arrivals…")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            case let .error(message):
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button("Retry", action: onRetryBusArrivals)
+                        .buttonStyle(.bordered)
+                }
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            Button(action: onDismissBusStop) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 30, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel("Close bus stop details")
+            .offset(x: 4, y: -8)
+        }
+    }
+
     @ViewBuilder
     private func stationActionButton(
         _ title: String,
@@ -642,42 +726,28 @@ private struct MapStatusPanel: View {
     }
 }
 
-private struct GeoTrainMarker: View {
-    let unit: GeoTrainUnit
+private struct TMBBusStopMarker: View {
+    let stop: TMBStop
 
     var body: some View {
-        VStack(spacing: 2) {
-            Image(systemName: "tram.fill")
-                .font(.caption.weight(.bold))
-                .frame(width: 22, height: 22)
-                .background(unitTint, in: Circle())
-                .overlay {
-                    Circle()
-                        .stroke(.white.opacity(0.9), lineWidth: 1.2)
-                }
-
-            Text(unit.line)
-                .font(.caption2.weight(.bold))
-                .monospacedDigit()
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(unitTint, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .stroke(.white.opacity(0.9), lineWidth: 1.1)
-                }
-        }
-        .foregroundStyle(.white)
-        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-        .accessibilityLabel("GeoTrain \(unit.line)")
+        Image(systemName: "bus.fill")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 22, height: 22)
+            .background(.orange, in: Circle())
+            .overlay {
+                Circle()
+                    .stroke(.white.opacity(0.95), lineWidth: 1.1)
+            }
+            .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
+            .accessibilityLabel(stop.name)
     }
+}
 
-    private var unitTint: Color {
-        if let isOnTime = unit.isOnTime {
-            return isOnTime ? .teal : .orange
-        }
-        return .indigo
-    }
+private enum TMBLoadState: Equatable {
+    case idle
+    case loading
+    case error(String)
 }
 
 private extension Stop {
@@ -693,6 +763,25 @@ private extension Stop {
 private extension TransitCoordinate {
     var mapCoordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    func distanceSquared(to other: TransitCoordinate) -> Double {
+        let latitudeDelta = latitude - other.latitude
+        let longitudeDelta = longitude - other.longitude
+        return latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta
+    }
+}
+
+private extension TMBBoundingBox {
+    init(region: MKCoordinateRegion) {
+        let latitudeDelta = region.span.latitudeDelta / 2
+        let longitudeDelta = region.span.longitudeDelta / 2
+        self.init(
+            minLatitude: region.center.latitude - latitudeDelta,
+            maxLatitude: region.center.latitude + latitudeDelta,
+            minLongitude: region.center.longitude - longitudeDelta,
+            maxLongitude: region.center.longitude + longitudeDelta
+        )
     }
 }
 

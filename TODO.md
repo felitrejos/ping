@@ -25,7 +25,7 @@ Add TMB bus stop annotations to the existing `FGCMapView` with a zoom-level gate
 - [ ] **GTFS static integration** — add `TMBStaticService` reusing the existing GTFS ZIP parsing logic, pointed at `https://api.tmb.cat/v1/static/datasets/gtfs.zip`. Requires TMB `app_id` + `app_key` stored in settings.
 - [ ] **Zoom-level gate** — only render TMB stop annotations when the map is zoomed past street level (roughly `MKCoordinateSpan` latitude delta < ~0.02). FGC stations always visible. Use `onMapCameraChange` to reactively show/hide the TMB layer.
 - [ ] **Tap to show departures** — tapping a TMB stop calls `GET /v1/ibus/stops/{stop_id}` and shows upcoming buses in the existing `MapStatusPanel` bottom sheet. No live vehicle positions (TMB doesn't expose them).
-- [ ] **Map toggle** — overlay control (alongside the existing GeoTrain button, or replacing it) to switch between FGC only / TMB only / both.
+- [ ] **Map toggle** — overlay control to switch between FGC only / TMB only / both.
 - [ ] **TMB `RealtimeService`** — implement `RealtimeServiceProviding` using the iBus REST API instead of GTFS-RT protobuf. Delay = iBus arrival timestamp − static scheduled time.
 
 ## Haptic Feedback

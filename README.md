@@ -11,7 +11,7 @@
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/swift-6.0-F05138?style=flat&logo=swift&logoColor=white" /></a>
   <a href="#"><img src="https://img.shields.io/badge/swiftui-iOS%2026%2B%20%7C%20macOS%2026%2B-0A84FF?style=flat" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/data-GTFS%20%2B%20GTFS--RT-1f6feb?style=flat" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/data-GTFS%20%2B%20GTFS--RT%20%2B%20iBus-1f6feb?style=flat" /></a>
   <a href="#"><img src="https://img.shields.io/badge/license-MIT-24292e?style=flat" /></a>
 </p>
 
@@ -29,7 +29,8 @@
 - Track upcoming departures and delay-aware leave times
 - Save favorite stations for quick route switching
 - Get calendar-aware commute suggestions in one tap
-- Follow live train positions on your active line
+- Browse TMB bus stops on the map (zoom-gated for performance)
+- Tap a TMB stop to load upcoming iBus arrivals
 - Receive iPhone leave reminders and Live Activity trip tracking
 - See GTFS-Realtime service alerts in iOS and macOS
 
@@ -62,13 +63,27 @@ open Ping.xcodeproj
 
 Then select `Ping iOS` or `Ping macOS` and run.
 
+### TMB API Keys (iOS)
+
+To enable TMB map stops + iBus arrivals:
+
+1. Copy `iOS/Config/TMBKeys.example.xcconfig` to `iOS/Config/TMBKeys.xcconfig`
+2. Fill:
+   - `TMB_APP_ID_PRIMARY`
+   - `TMB_APP_KEY_PRIMARY`
+   - `TMB_APP_ID_BACKUP`
+   - `TMB_APP_KEY_BACKUP`
+
+`TMBKeys.xcconfig` is gitignored and used by the iOS target config.
+
 ---
 
 ## Architecture
 
 - Swift + SwiftUI multi-target app (`iOS/`, `macOS/`, `Widgets/`)
 - Shared domain and services in `Shared/`
-- GTFS static and GTFS-Realtime ingestion
+- FGC GTFS static + GTFS-Realtime ingestion
+- TMB GTFS static + iBus arrivals ingestion (iOS map)
 - Dependencies:
   - `SwiftProtobuf`
   - `ZIPFoundation`

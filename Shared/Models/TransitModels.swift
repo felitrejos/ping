@@ -163,34 +163,6 @@ public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct GeoTrainUnit: Codable, Equatable, Identifiable, Sendable {
-    public let id: String
-    public let line: String
-    public let direction: String
-    public let originStopID: StopID?
-    public let destinationStopID: StopID?
-    public let coordinate: TransitCoordinate
-    public let isOnTime: Bool?
-
-    public init(
-        id: String,
-        line: String,
-        direction: String,
-        originStopID: StopID?,
-        destinationStopID: StopID?,
-        coordinate: TransitCoordinate,
-        isOnTime: Bool?
-    ) {
-        self.id = id
-        self.line = line
-        self.direction = direction
-        self.originStopID = originStopID
-        self.destinationStopID = destinationStopID
-        self.coordinate = coordinate
-        self.isOnTime = isOnTime
-    }
-}
-
 public enum ServiceAlertSeverity: String, Codable, Equatable, Sendable {
     case info
     case minor
@@ -272,6 +244,7 @@ public enum UserSettings {
         public static let menuBarSleepMode = "ping.menuBarSleepMode"
         public static let favoriteStationIDs = "ping.favoriteStationIDs"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
+        public static let tmbEnabled = "ping.tmbEnabled"
     }
 
     public static let defaultWalkingMinutes = 8
@@ -346,6 +319,7 @@ public enum UserSettings {
     }
 
     public static let defaultSelectedLine = "S2"
+    public static let defaultTMBEnabled = true
 
     public static func selectedLine(defaults: UserDefaults = .standard) -> String {
         defaults.string(forKey: Keys.selectedLine) ?? defaultSelectedLine
@@ -361,6 +335,17 @@ public enum UserSettings {
 
     public static func setAutoSelectClosestOrigin(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(isEnabled, forKey: Keys.autoSelectClosestOrigin)
+    }
+
+    public static func tmbEnabled(defaults: UserDefaults = .standard) -> Bool {
+        if defaults.object(forKey: Keys.tmbEnabled) == nil {
+            return defaultTMBEnabled
+        }
+        return defaults.bool(forKey: Keys.tmbEnabled)
+    }
+
+    public static func setTMBEnabled(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(isEnabled, forKey: Keys.tmbEnabled)
     }
 
     public static func favoriteStationIDs(defaults: UserDefaults = .standard) -> [StopID] {
@@ -409,6 +394,14 @@ public enum UserSettings {
 
     public static func setGTFSLastFetched(_ date: Date, defaults: UserDefaults = .standard) {
         defaults.set(date, forKey: "ping.gtfsLastFetched")
+    }
+
+    public static func tmbGTFSLastFetched(defaults: UserDefaults = .standard) -> Date? {
+        defaults.object(forKey: "ping.tmbGTFSLastFetched") as? Date
+    }
+
+    public static func setTMBGTFSLastFetched(_ date: Date, defaults: UserDefaults = .standard) {
+        defaults.set(date, forKey: "ping.tmbGTFSLastFetched")
     }
 
     public static func isConfiguredStopID(_ stopID: StopID?) -> Bool {

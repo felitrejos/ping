@@ -49,4 +49,18 @@ struct UserSettingsTests {
 
         #expect(UserSettings.favoriteStationIDs(defaults: defaults) == ["VO", "SR"])
     }
+
+    @Test
+    func tmbToggleDefaultsToEnabledAndPersists() {
+        let suiteName = "UserSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        #expect(UserSettings.tmbEnabled(defaults: defaults))
+
+        UserSettings.setTMBEnabled(false, defaults: defaults)
+        #expect(!UserSettings.tmbEnabled(defaults: defaults))
+    }
 }

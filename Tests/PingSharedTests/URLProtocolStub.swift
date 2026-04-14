@@ -3,6 +3,7 @@ import Foundation
 enum StubbedResponse {
     case protobuf(Data)
     case jsonRecords(fileURL: URL)
+    case http(statusCode: Int, contentType: String, body: Data)
 
     var body: Data {
         switch self {
@@ -12,6 +13,8 @@ enum StubbedResponse {
             """
             {"results":[{"file":{"url":"\(fileURL.absoluteString)"}}]}
             """.data(using: .utf8) ?? Data()
+        case let .http(_, _, body):
+            body
         }
     }
 
@@ -21,6 +24,26 @@ enum StubbedResponse {
             "application/octet-stream"
         case .jsonRecords:
             "application/json"
+        case let .http(_, contentType, _):
+            contentType
+        }
+    }
+
+    var statusCode: Int {
+        switch self {
+        case .protobuf, .jsonRecords:
+            200
+        case let .http(statusCode, _, _):
+            statusCode
+        }
+    }
+
+    var responseBody: Data {
+        switch self {
+        case .protobuf, .jsonRecords:
+            body
+        case let .http(_, _, body):
+            body
         }
     }
 }
@@ -50,12 +73,12 @@ final class URLProtocolStub: URLProtocol, @unchecked Sendable {
 
         let httpResponse = HTTPURLResponse(
             url: url,
-            statusCode: 200,
+            statusCode: response.statusCode,
             httpVersion: nil,
             headerFields: ["Content-Type": response.contentType]
         )!
         client?.urlProtocol(self, didReceive: httpResponse, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: response.body)
+        client?.urlProtocol(self, didLoad: response.responseBody)
         client?.urlProtocolDidFinishLoading(self)
     }
 
