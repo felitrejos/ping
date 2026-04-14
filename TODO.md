@@ -22,7 +22,6 @@ Uses SwiftUI's `.colorEffect()` / `.distortionEffect()` modifiers (iOS 17+, no U
 
 Completed baseline integration (GTFS static load, zoom-gated rendering, and tap-to-load arrivals). Remaining follow-ups:
 
-- [ ] **Map toggle modes** — extend overlay control from current on/off to explicit `FGC only` / `TMB only` / `both`.
 - [ ] **TMB delay model** — enrich realtime layer so delay is computed as `iBus arrival timestamp − static scheduled time`.
 
 ## Haptic Feedback

@@ -23,6 +23,7 @@ public final class PingStore {
     public private(set) var destinationStationID: StopID?
     public private(set) var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
     public private(set) var isTMBLayerPreferred = UserSettings.tmbEnabled()
+    public private(set) var isFGCLayerPreferred = UserSettings.fgcEnabled()
 
     /// Dynamic walking ETA in minutes from current location to origin station.
     /// Returns 0 when location-based ETA is unavailable.
@@ -257,6 +258,11 @@ public final class PingStore {
     public func setTMBEnabled(_ isEnabled: Bool) {
         isTMBLayerPreferred = isEnabled
         UserSettings.setTMBEnabled(isEnabled)
+    }
+
+    public func setFGCEnabled(_ isEnabled: Bool) {
+        isFGCLayerPreferred = isEnabled
+        UserSettings.setFGCEnabled(isEnabled)
     }
 
     public func tmbStops(in box: TMBBoundingBox) async -> [TMBStop] {

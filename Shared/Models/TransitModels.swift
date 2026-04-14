@@ -244,6 +244,7 @@ public enum UserSettings {
         public static let favoriteStationIDs = "ping.favoriteStationIDs"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
         public static let tmbEnabled = "ping.tmbEnabled"
+        public static let fgcEnabled = "ping.fgcEnabled"
     }
 
     public static let defaultWalkingMinutes = 8
@@ -319,6 +320,7 @@ public enum UserSettings {
 
     public static let defaultSelectedLine = "S2"
     public static let defaultTMBEnabled = true
+    public static let defaultFGCEnabled = true
 
     public static func selectedLine(defaults: UserDefaults = .standard) -> String {
         defaults.string(forKey: Keys.selectedLine) ?? defaultSelectedLine
@@ -337,6 +339,17 @@ public enum UserSettings {
 
     public static func setTMBEnabled(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
         defaults.set(isEnabled, forKey: Keys.tmbEnabled)
+    }
+
+    public static func fgcEnabled(defaults: UserDefaults = .standard) -> Bool {
+        if defaults.object(forKey: Keys.fgcEnabled) == nil {
+            return defaultFGCEnabled
+        }
+        return defaults.bool(forKey: Keys.fgcEnabled)
+    }
+
+    public static func setFGCEnabled(_ isEnabled: Bool, defaults: UserDefaults = .standard) {
+        defaults.set(isEnabled, forKey: Keys.fgcEnabled)
     }
 
     public static func favoriteStationIDs(defaults: UserDefaults = .standard) -> [StopID] {

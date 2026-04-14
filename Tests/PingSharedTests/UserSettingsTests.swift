@@ -64,4 +64,18 @@ struct UserSettingsTests {
         #expect(!UserSettings.tmbEnabled(defaults: defaults))
     }
 
+    @Test
+    func fgcToggleDefaultsToEnabledAndPersists() {
+        let suiteName = "UserSettingsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+        }
+
+        #expect(UserSettings.fgcEnabled(defaults: defaults))
+
+        UserSettings.setFGCEnabled(false, defaults: defaults)
+        #expect(!UserSettings.fgcEnabled(defaults: defaults))
+    }
+
 }

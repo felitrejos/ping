@@ -11,6 +11,7 @@ struct FGCMapView: View {
     @State private var originID: StopID?
     @State private var destinationID: StopID?
     @State private var isTMBOverlayEnabled = UserSettings.tmbEnabled()
+    @State private var isFGCOverlayEnabled = UserSettings.fgcEnabled()
     @State private var shouldShowAllStations = false
     @State private var lastWalkingRouteRequestKey: WalkingRouteRequestKey?
     @State private var lastCameraRegion: MKCoordinateRegion?
@@ -92,20 +93,22 @@ struct FGCMapView: View {
                     .stroke(.blue, lineWidth: 5)
             }
 
-            ForEach(visibleStations) { station in
-                if let coordinate = station.coordinate?.mapCoordinate {
-                    Annotation(station.name, coordinate: coordinate) {
-                        Button {
-                            clearSelectedTMBStop()
-                            selectedStation = station
-                        } label: {
-                            StationMarker(
-                                station: station,
-                                role: role(for: station),
-                                isNearby: userCoordinate != nil && closestStations.contains(where: { $0.id == station.id })
-                            )
+            if isFGCOverlayEnabled {
+                ForEach(visibleStations) { station in
+                    if let coordinate = station.coordinate?.mapCoordinate {
+                        Annotation(station.name, coordinate: coordinate) {
+                            Button {
+                                clearSelectedTMBStop()
+                                selectedStation = station
+                            } label: {
+                                StationMarker(
+                                    station: station,
+                                    role: role(for: station),
+                                    isNearby: userCoordinate != nil && closestStations.contains(where: { $0.id == station.id })
+                                )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -192,6 +195,7 @@ struct FGCMapView: View {
             await reloadMapData()
             scheduleFullStationLoad()
             isTMBOverlayEnabled = store.isTMBLayerPreferred
+            isFGCOverlayEnabled = store.isFGCLayerPreferred
             if let lastCameraRegion {
                 await refreshVisibleTMBStops(for: lastCameraRegion)
             }
@@ -247,6 +251,12 @@ struct FGCMapView: View {
                 await refreshVisibleTMBStops(for: lastCameraRegion)
             }
         }
+        .onChange(of: isFGCOverlayEnabled) { _, isEnabled in
+            store.setFGCEnabled(isEnabled)
+            if !isEnabled {
+                clearSelectedStation()
+            }
+        }
     }
 
     private func scheduleFullStationLoad() {
@@ -263,32 +273,66 @@ struct FGCMapView: View {
 
     @ViewBuilder
     private var mapOverlayControls: some View {
-        if store.hasTMBCredentials {
-            tmbOverlayButton
+        VStack(spacing: 8) {
+            fgcOverlayButton
+            if store.hasTMBCredentials {
+                tmbOverlayButton
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var fgcOverlayButton: some View {
+        layerToggleButton(
+            isOn: isFGCOverlayEnabled,
+            systemImage: "tram.fill",
+            onLabel: "Disable FGC station overlay",
+            offLabel: "Enable FGC station overlay",
+            hint: "Shows FGC train stations on the map"
+        ) {
+            isFGCOverlayEnabled.toggle()
         }
     }
 
     @ViewBuilder
     private var tmbOverlayButton: some View {
-        Button {
+        layerToggleButton(
+            isOn: isTMBOverlayEnabled,
+            systemImage: "bus.fill",
+            onLabel: "Disable TMB bus overlay",
+            offLabel: "Enable TMB bus overlay",
+            hint: "Shows nearby TMB bus stops on the map when zoomed in"
+        ) {
             isTMBOverlayEnabled.toggle()
-        } label: {
+        }
+    }
+
+    @ViewBuilder
+    private func layerToggleButton(
+        isOn: Bool,
+        systemImage: String,
+        onLabel: String,
+        offLabel: String,
+        hint: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
             ZStack {
-                Image(systemName: "bus.fill")
+                Image(systemName: systemImage)
                     .font(.headline.weight(.semibold))
                     .frame(width: 40, height: 40)
 
-                if !isTMBOverlayEnabled {
+                if !isOn {
                     Rectangle()
                         .fill(.red)
                         .frame(width: 28, height: 2.5)
                         .rotationEffect(.degrees(-38))
                 }
             }
-            .foregroundStyle(isTMBOverlayEnabled ? .primary : .secondary)
+            .foregroundStyle(isOn ? .primary : .secondary)
         }
-        .accessibilityLabel(isTMBOverlayEnabled ? "Disable TMB bus overlay" : "Enable TMB bus overlay")
-        .accessibilityHint("Shows nearby TMB bus stops on the map when zoomed in")
+        .accessibilityLabel(isOn ? onLabel : offLabel)
+        .accessibilityHint(hint)
         .buttonStyle(.glass)
     }
 
