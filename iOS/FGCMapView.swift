@@ -23,6 +23,8 @@ struct FGCMapView: View {
     @State private var selectedTMBStop: TMBStop?
     @State private var tmbArrivals: [TMBArrival] = []
     @State private var tmbLoadState: TMBLoadState = .idle
+    @State private var fgcDepartures: [StationDeparture] = []
+    @State private var fgcLoadState: FGCLoadState = .idle
     @State private var nearbyTMBStops: [TMBStop] = []
     @State private var closestFGCStations: [Stop] = []
     @State private var closestFGCStationIDs: Set<StopID> = []
@@ -106,6 +108,9 @@ struct FGCMapView: View {
                             Button {
                                 clearSelectedTMBStop()
                                 selectedStation = station
+                                Task {
+                                    await loadFGCDepartures(for: station)
+                                }
                             } label: {
                                 StationMarker(
                                     station: station,
@@ -179,6 +184,8 @@ struct FGCMapView: View {
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
                 selectedBusStop: selectedTMBStop,
+                stationDepartures: fgcDepartures,
+                stationLoadState: fgcLoadState,
                 busArrivals: tmbArrivals,
                 busLoadState: tmbLoadState,
                 onDismissStation: clearSelectedStation,
@@ -204,6 +211,15 @@ struct FGCMapView: View {
 
                     Task {
                         await loadTMBArrivals(for: selectedTMBStop)
+                    }
+                },
+                onRetryStationDepartures: {
+                    guard let selectedStation else {
+                        return
+                    }
+
+                    Task {
+                        await loadFGCDepartures(for: selectedStation)
                     }
                 }
             )
@@ -376,6 +392,8 @@ struct FGCMapView: View {
         transaction.disablesAnimations = true
         withTransaction(transaction) {
             selectedStation = nil
+            fgcDepartures = []
+            fgcLoadState = .idle
         }
     }
 
@@ -689,6 +707,19 @@ struct FGCMapView: View {
         }
     }
 
+    private func loadFGCDepartures(for station: Stop) async {
+        fgcLoadState = .loading
+        let result = await store.fgcDepartures(from: station.id)
+        switch result {
+        case let .success(departures):
+            fgcDepartures = departures
+            fgcLoadState = .idle
+        case let .failure(error):
+            fgcDepartures = []
+            fgcLoadState = .error(error.displayMessage)
+        }
+    }
+
     private func loadTMBArrivals(for stop: TMBStop) async {
         tmbLoadState = .loading
         let result = await store.tmbArrivals(for: stop)
@@ -864,6 +895,8 @@ private struct MapStatusPanel: View {
     let hasUserLocation: Bool
     let selectedStation: Stop?
     let selectedBusStop: TMBStop?
+    let stationDepartures: [StationDeparture]
+    let stationLoadState: FGCLoadState
     let busArrivals: [TMBArrival]
     let busLoadState: TMBLoadState
     let onDismissStation: () -> Void
@@ -871,13 +904,14 @@ private struct MapStatusPanel: View {
     let onSetOrigin: (Stop) -> Void
     let onSetDestination: (Stop) -> Void
     let onRetryBusArrivals: () -> Void
+    let onRetryStationDepartures: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let selectedBusStop {
                 busStopSummary(for: selectedBusStop)
             } else if let selectedStation {
-                stationActions(for: selectedStation)
+                stationSummary(for: selectedStation)
             } else if let nextDeparture {
                 activeRouteSummary(nextDeparture)
             } else if let origin, let destination {
@@ -972,13 +1006,59 @@ private struct MapStatusPanel: View {
         return uniqueNames.prefix(3).joined(separator: ", ")
     }
 
-    private func stationActions(for station: Stop) -> some View {
-        VStack(alignment: .leading, spacing: 20) {
+    private func stationSummary(for station: Stop) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             Label(station.name, systemImage: "tram.fill")
                 .font(.headline)
                 .lineLimit(2)
-                .padding(.trailing, 54)
-                .padding(.bottom, 4)
+                .padding(.trailing, 48)
+
+            switch stationLoadState {
+            case .idle:
+                if stationDepartures.isEmpty {
+                    Text("No upcoming trains at this station.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(stationDepartures.prefix(5).enumerated()), id: \.offset) { _, departure in
+                            HStack(spacing: 8) {
+                                Text(departure.routeShortName)
+                                    .font(.caption.weight(.bold))
+                                    .monospacedDigit()
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(.blue.opacity(0.16), in: Capsule())
+
+                                Text(departure.headsign)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+
+                                Spacer()
+
+                                Text("\(departure.minutesUntilDeparture) min")
+                                    .font(.subheadline.weight(.semibold))
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+                }
+            case .loading:
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Loading departures…")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            case let .error(message):
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Button("Retry", action: onRetryStationDepartures)
+                        .buttonStyle(.bordered)
+                }
+            }
 
             HStack(spacing: 10) {
                 stationActionButton("From here", systemImage: "target", isPrimary: true) {
@@ -989,7 +1069,6 @@ private struct MapStatusPanel: View {
                     onSetDestination(station)
                 }
             }
-            .padding(.top, 10)
         }
         .overlay(alignment: .topTrailing) {
             Button(action: onDismissStation) {
@@ -1123,6 +1202,12 @@ private struct TMBStopDot: View {
 }
 
 private enum TMBLoadState: Equatable {
+    case idle
+    case loading
+    case error(String)
+}
+
+private enum FGCLoadState: Equatable {
     case idle
     case loading
     case error(String)

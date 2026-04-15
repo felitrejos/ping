@@ -42,6 +42,8 @@ public actor FGCStaticService: StaticServiceProviding {
         let stopsSortedByName: [Stop]
         let stationStopsByID: [StopID: Stop]
         let stationSpatialIndex: FGCStopSpatialIndex
+        let stopIDsByLine: [String: Set<StopID>]
+        let linesByStopID: [StopID: Set<String>]
         let childStopIDs: [StopID: Set<StopID>]
         let parentStopID: [StopID: StopID]
         let routes: [String: GTFSRoute]
@@ -189,6 +191,66 @@ public actor FGCStaticService: StaticServiceProviding {
         }
     }
 
+    public func departuresFrom(origin: StopID, after: Date, limit: Int) async throws -> [TrainDeparture] {
+        let cache = try loadCache()
+        let originIDs = cache.childStopIDs[origin] ?? [origin]
+        let serviceDays = candidateServiceDays(for: after)
+        var departures: [TrainDeparture] = []
+        var candidateTripIDs = Set<String>()
+
+        for originID in originIDs {
+            guard let tripIDs = cache.tripIDsByStopID[originID] else {
+                continue
+            }
+            candidateTripIDs.formUnion(tripIDs)
+        }
+
+        for tripID in candidateTripIDs {
+            guard
+                let trip = cache.trips[tripID],
+                let stopTimes = cache.stopTimesByTripID[tripID],
+                let originTime = stopTimes.first(where: { originIDs.contains($0.stopID) }),
+                let terminalTime = stopTimes.last,
+                let route = cache.routes[trip.routeID]
+            else {
+                continue
+            }
+
+            for serviceDay in serviceDays {
+                guard tripRuns(on: serviceDay, serviceID: trip.serviceID, cache: cache) else {
+                    continue
+                }
+
+                let departureDate = serviceDay.addingTimeInterval(TimeInterval(originTime.departureSeconds))
+                guard departureDate >= after else {
+                    continue
+                }
+
+                let arrivalDate = serviceDay.addingTimeInterval(TimeInterval(terminalTime.arrivalSeconds))
+                departures.append(
+                    TrainDeparture(
+                        tripID: trip.id,
+                        departureTime: departureDate,
+                        arrivalTime: arrivalDate,
+                        headsign: trip.headsign,
+                        routeShortName: route.shortName
+                    )
+                )
+            }
+        }
+
+        let sorted = departures.sorted { $0.departureTime < $1.departureTime }
+
+        // Deduplicate by departure minute + route to avoid showing the same train multiple times.
+        var seen = Set<String>()
+        let deduped = sorted.filter { departure in
+            let key = "\(departure.routeShortName)-\(Int(departure.departureTime.timeIntervalSince1970 / 60))"
+            return seen.insert(key).inserted
+        }
+
+        return Array(deduped.prefix(max(0, limit)))
+    }
+
     public func allStops() async throws -> [Stop] {
         try loadCache().stopsSortedByName
     }
@@ -202,6 +264,25 @@ public actor FGCStaticService: StaticServiceProviding {
             }
             return first.id < second.id
         }
+    }
+
+    /// Returns all stations considered compatible with `stopID` using a non-directional line-based match.
+    /// If a station belongs to multiple lines, compatibility is the union of stations for those lines.
+    public func compatibleStopIDs(for stopID: StopID) async throws -> Set<StopID> {
+        let cache = try loadCache()
+        guard !stopID.isEmpty else {
+            return []
+        }
+
+        guard let lineNames = cache.linesByStopID[stopID], !lineNames.isEmpty else {
+            return Set([stopID])
+        }
+
+        var compatible = Set<StopID>([stopID])
+        for line in lineNames {
+            compatible.formUnion(cache.stopIDsByLine[line] ?? [])
+        }
+        return compatible
     }
 
     public func stopsForLine(_ lineName: String) async throws -> [Stop] {
@@ -452,6 +533,13 @@ extension FGCStaticService {
             }
         }
 
+        var linesByStopID: [StopID: Set<String>] = [:]
+        for (line, stopIDs) in stopIDsByLine {
+            for stopID in stopIDs {
+                linesByStopID[stopID, default: []].insert(line)
+            }
+        }
+
         let stationStopsByID = Dictionary(uniqueKeysWithValues: stationStops.map { ($0.id, $0) })
         var stopsByLine: [String: [Stop]] = [:]
         for (line, ids) in stopIDsByLine {
@@ -463,6 +551,8 @@ extension FGCStaticService {
             stopsSortedByName: stationStops,
             stationStopsByID: stationStopsByID,
             stationSpatialIndex: FGCStopSpatialIndex(stops: stationStops),
+            stopIDsByLine: stopIDsByLine,
+            linesByStopID: linesByStopID,
             childStopIDs: childStopIDs,
             parentStopID: parentStopID,
             routes: routes,

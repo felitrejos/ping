@@ -96,6 +96,7 @@ public final class PingStore {
     private let gtfsUpdateService: GTFSUpdateService?
     private let bundledGTFSURL: URL?
     private var refreshTask: Task<Void, Never>?
+    private var compatibleStopIDsCache: [StopID: Set<StopID>] = [:]
 
     public init(
         engine: CommuteEngine,
@@ -176,6 +177,7 @@ public final class PingStore {
             locationAuthorizationStatus = locationService?.authorizationStatus() ?? .notDetermined
             favoriteStationIDs = UserSettings.favoriteStationIDs()
             availableStops = try await staticService.allStops()
+            compatibleStopIDsCache.removeAll()
             await reloadLineStops()
             await updateWalkingETA()
             commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
@@ -286,6 +288,35 @@ public final class PingStore {
         }
     }
 
+    public func compatibleStopIDs(with stopID: StopID?) async -> Set<StopID> {
+        let allStopIDs = Set(availableStops.map(\.id))
+        guard let stopID, !stopID.isEmpty else {
+            return allStopIDs
+        }
+
+        if let cached = compatibleStopIDsCache[stopID] {
+            return cached
+        }
+
+        let compatibleFromStaticService: Set<StopID>
+        if let fgcStaticService = staticService as? FGCStaticService {
+            compatibleFromStaticService = (try? await fgcStaticService.compatibleStopIDs(for: stopID)) ?? []
+        } else {
+            compatibleFromStaticService = []
+        }
+
+        var compatible = compatibleFromStaticService.intersection(allStopIDs)
+        if compatible.isEmpty {
+            compatible = Set([stopID]).intersection(allStopIDs)
+        }
+        if compatible.isEmpty {
+            compatible = allStopIDs
+        }
+
+        compatibleStopIDsCache[stopID] = compatible
+        return compatible
+    }
+
     public func tmbArrivals(for stop: TMBStop) async -> Result<[TMBArrival], TMBArrivalsError> {
         guard isTMBEnabled, let tmbRealtimeService else {
             return .failure(.noCredentials)
@@ -299,6 +330,37 @@ public final class PingStore {
             return .failure(error)
         } catch {
             return .failure(.network(error))
+        }
+    }
+
+    public func fgcDepartures(from stopID: StopID, limit: Int = 6) async -> Result<[StationDeparture], FGCDeparturesError> {
+        guard let fgcStaticService = staticService as? FGCStaticService else {
+            return .failure(.unavailable)
+        }
+
+        do {
+            let now = Date()
+            let fetchLimit = max(limit * 4, limit)
+            let scheduled = try await fgcStaticService.departuresFrom(origin: stopID, after: now, limit: fetchLimit)
+            let departures = await scheduled.asyncMap { departure in
+                let delaySeconds = await realtimeService.delayFor(tripID: departure.tripID, stopID: stopID) ?? 0
+                let effectiveDeparture = departure.departureTime.addingTimeInterval(TimeInterval(delaySeconds))
+                let minutes = max(0, Int((effectiveDeparture.timeIntervalSince(now) / 60.0).rounded(.awayFromZero)))
+                return StationDeparture(
+                    tripID: departure.tripID,
+                    routeShortName: departure.routeShortName,
+                    headsign: departure.headsign,
+                    scheduledDepartureTime: departure.departureTime,
+                    delaySeconds: delaySeconds,
+                    minutesUntilDeparture: minutes
+                )
+            }
+            let upcoming = departures
+                .filter { $0.effectiveDepartureTime >= now }
+                .sorted { $0.effectiveDepartureTime < $1.effectiveDepartureTime }
+            return .success(Array(upcoming.prefix(max(0, limit))))
+        } catch {
+            return .failure(.requestFailed(error.localizedDescription))
         }
     }
 
@@ -502,5 +564,30 @@ private extension TransitCoordinate {
     func distance(to other: TransitCoordinate) -> CLLocationDistance {
         CLLocation(latitude: latitude, longitude: longitude)
             .distance(from: CLLocation(latitude: other.latitude, longitude: other.longitude))
+    }
+}
+
+public enum FGCDeparturesError: Error, Equatable {
+    case unavailable
+    case requestFailed(String)
+
+    public var displayMessage: String {
+        switch self {
+        case .unavailable:
+            "FGC departures are unavailable."
+        case let .requestFailed(message):
+            message
+        }
+    }
+}
+
+private extension Sequence {
+    func asyncMap<T>(_ transform: @Sendable (Element) async -> T) async -> [T] {
+        var result: [T] = []
+        for element in self {
+            let value = await transform(element)
+            result.append(value)
+        }
+        return result
     }
 }

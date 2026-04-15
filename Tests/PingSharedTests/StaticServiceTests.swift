@@ -86,6 +86,35 @@ struct StaticServiceTests {
 
         #expect(departures.contains(where: { $0.tripID == "TRIP_SPECIAL" }))
     }
+
+    @Test
+    func compatibleStopIDsUseNonDirectionalLineMembership() async throws {
+        let zipURL = try makeFixtureZip()
+        let service = FGCStaticService(zipURL: zipURL)
+
+        let compatible = try await service.compatibleStopIDs(for: "ST_HOME")
+
+        #expect(compatible.contains("ST_HOME"))
+        #expect(compatible.contains("ST_CITY"))
+        #expect(!compatible.contains("ST_OTHER_A"))
+    }
+
+    @Test
+    func departuresFromReturnsUpcomingTripsForOrigin() async throws {
+        let zipURL = try makeFixtureZip()
+        let service = FGCStaticService(
+            zipURL: zipURL,
+            calendar: makeCalendar(timeZone: TimeZone(secondsFromGMT: 0)!)
+        )
+
+        let after = ISO8601DateFormatter().date(from: "2026-04-11T06:59:00Z")!
+        let departures = try await service.departuresFrom(origin: "ST_HOME", after: after, limit: 3)
+
+        #expect(!departures.isEmpty)
+        #expect(departures.first?.tripID == "TRIP_1")
+        #expect(departures.first?.routeShortName == "S1")
+        #expect(departures.count <= 3)
+    }
 }
 
 private func makeFixtureZip() throws -> URL {
@@ -101,10 +130,13 @@ private func makeFixtureZip() throws -> URL {
         ST_HOME,Sant Cugat Centre,41.4700,2.0800
         ST_MID,Gracia,41.4000,2.1500
         ST_CITY,Placa Catalunya,41.3860,2.1700
+        ST_OTHER_A,El Putxet,41.4060,2.1450
+        ST_OTHER_B,Avinguda Tibidabo,41.4140,2.1370
         """,
         "routes.txt": """
         route_id,route_short_name
         ROUTE_1,S1
+        ROUTE_2,L7
         """,
         "trips.txt": """
         route_id,service_id,trip_id,trip_headsign
@@ -112,6 +144,7 @@ private func makeFixtureZip() throws -> URL {
         ROUTE_1,DAILY,TRIP_2,Placa Catalunya
         ROUTE_1,WKD,TRIP_WKD,Placa Catalunya
         ROUTE_1,SPECIAL,TRIP_SPECIAL,Placa Catalunya
+        ROUTE_2,DAILY,TRIP_L7,Avinguda Tibidabo
         """,
         "stop_times.txt": """
         trip_id,arrival_time,departure_time,stop_id,stop_sequence
@@ -127,6 +160,8 @@ private func makeFixtureZip() throws -> URL {
         TRIP_SPECIAL,09:00:00,09:00:00,ST_HOME,1
         TRIP_SPECIAL,09:15:00,09:15:00,ST_MID,2
         TRIP_SPECIAL,09:25:00,09:25:00,ST_CITY,3
+        TRIP_L7,10:00:00,10:00:00,ST_OTHER_A,1
+        TRIP_L7,10:10:00,10:10:00,ST_OTHER_B,2
         """,
         "calendar.txt": """
         service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date

@@ -31,7 +31,8 @@ public struct SharedSettingsView: View {
                 title: "Add Favorite",
                 availableStops: store.availableStops,
                 excludedStopIDs: Set(store.favoriteStationIDs),
-                selectedStopID: nil
+                selectedStopID: nil,
+                counterpartStopID: nil
             ) { stop in
                 store.addFavoriteStation(stop.id)
                 isFavoritePickerPresented = false
@@ -43,7 +44,8 @@ public struct SharedSettingsView: View {
                 title: target.title,
                 availableStops: store.availableStops,
                 excludedStopIDs: [],
-                selectedStopID: target == .origin ? store.homeStationID : store.destinationStationID
+                selectedStopID: target == .origin ? store.homeStationID : store.destinationStationID,
+                counterpartStopID: target == .origin ? store.destinationStationID : store.homeStationID
             ) { stop in
                 applyRoutePickerSelection(stop: stop, target: target)
                 activeRoutePicker = nil
@@ -416,6 +418,7 @@ private struct StationSearchPickerView: View {
     let availableStops: [Stop]
     let excludedStopIDs: Set<StopID>
     let selectedStopID: StopID?
+    let counterpartStopID: StopID?
     let onSelect: (Stop) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -423,6 +426,15 @@ private struct StationSearchPickerView: View {
     @State private var searchResults: [Stop] = []
     @State private var isLoading = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var compatibleStopIDs: Set<StopID>?
+    
+    private var effectiveExcludedStopIDs: Set<StopID> {
+        var combined = excludedStopIDs
+        if let counterpartStopID, !counterpartStopID.isEmpty {
+            combined.insert(counterpartStopID)
+        }
+        return combined
+    }
 
     private var uniqueAvailableStops: [Stop] {
         var seen = Set<StopID>()
@@ -449,13 +461,19 @@ private struct StationSearchPickerView: View {
 
     private var sortedAvailableStops: [Stop] {
         deduplicate(stops: uniqueAvailableStops)
-            .filter { !excludedStopIDs.contains($0.id) }
+            .filter { !effectiveExcludedStopIDs.contains($0.id) }
+            .filter { stop in
+                compatibleStopIDs.map { $0.contains(stop.id) } ?? true
+            }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     private var matchedStops: [Stop] {
         deduplicate(stops: searchResults)
-            .filter { !excludedStopIDs.contains($0.id) }
+            .filter { !effectiveExcludedStopIDs.contains($0.id) }
+            .filter { stop in
+                compatibleStopIDs.map { $0.contains(stop.id) } ?? true
+            }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
@@ -635,8 +653,15 @@ private struct StationSearchPickerView: View {
         .padding(16)
         .frame(width: 560, height: 520)
         .task {
+            await refreshCompatibility()
             await performSearch(for: query)
             selectedStopIDForMac = selectedStopID
+        }
+        .onChange(of: counterpartStopID) { _, _ in
+            Task {
+                await refreshCompatibility()
+                await performSearch(for: query)
+            }
         }
         .onChange(of: query) { _, newValue in
             scheduleSearch(for: newValue)
@@ -714,7 +739,14 @@ private struct StationSearchPickerView: View {
 #endif
             .searchable(text: $query, prompt: Text("Search stations"))
             .task {
+                await refreshCompatibility()
                 await performSearch(for: query)
+            }
+            .onChange(of: counterpartStopID) { _, _ in
+                Task {
+                    await refreshCompatibility()
+                    await performSearch(for: query)
+                }
             }
             .onChange(of: query) { _, newValue in
                 scheduleSearch(for: newValue)
@@ -772,6 +804,10 @@ private struct StationSearchPickerView: View {
         }
         #endif
         isLoading = false
+    }
+
+    private func refreshCompatibility() async {
+        compatibleStopIDs = await store.compatibleStopIDs(with: counterpartStopID)
     }
 }
 

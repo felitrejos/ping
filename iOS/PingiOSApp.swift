@@ -1,5 +1,8 @@
 import BackgroundTasks
 import SwiftUI
+#if canImport(AppIntents)
+import AppIntents
+#endif
 
 @main
 struct PingiOSApp: App {
@@ -26,6 +29,9 @@ struct PingiOSApp: App {
                 notificationScheduler.registerBackgroundTasks()
                 await store.refresh()
                 await notificationScheduler.syncCommuteNotifications()
+#if canImport(AppIntents)
+                await PingIntentSupport.donateNextDepartureIntent()
+#endif
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .active || newPhase == .background else { return }

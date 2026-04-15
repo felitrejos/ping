@@ -1,5 +1,8 @@
 import SwiftUI
 import CoreLocation
+#if canImport(AppIntents)
+import AppIntents
+#endif
 #if canImport(ActivityKit)
 import ActivityKit
 #endif
@@ -47,7 +50,9 @@ struct ContentView: View {
             NavigationStack {
                 StationPickerSheet(
                     stops: store.availableStops,
-                    title: target == .origin ? "Choose Origin" : "Choose Destination"
+                    title: target == .origin ? "Choose Origin" : "Choose Destination",
+                    counterpartStopID: target == .origin ? selectedDestinationID : selectedOriginID,
+                    excludedStopIDs: Set([target == .origin ? selectedDestinationID : selectedOriginID].compactMap { $0 })
                 ) { stop in
                     if target == .origin {
                         setPendingOrigin(stop.id)
@@ -337,6 +342,9 @@ struct ContentView: View {
         defer { isSearchingRoute = false }
 
         await store.setRoute(origin: originID, destination: destinationID)
+#if canImport(AppIntents)
+        await PingIntentSupport.donateNextDepartureIntent()
+#endif
         routeSearchCommitted = true
     }
 
@@ -377,12 +385,22 @@ struct ContentView: View {
     }
 
     private func prefillStationNames(from stops: [Stop]) async {
-        let originID = await store.selectedHomeStationID()
-        let destID = await store.selectedDestinationStationID()
-        selectedOriginID = originID
-        selectedDestinationID = destID
-        selectedOriginName = originID.flatMap { id in stops.first(where: { $0.id == id })?.name }
-        selectedDestinationName = destID.flatMap { id in stops.first(where: { $0.id == id })?.name }
+        let persistedOriginID = await store.selectedHomeStationID()
+        let persistedDestinationID = await store.selectedDestinationStationID()
+
+        if let persistedOriginID {
+            selectedOriginID = persistedOriginID
+            selectedOriginName = stops.first(where: { $0.id == persistedOriginID })?.name
+        } else if selectedOriginID == nil {
+            selectedOriginName = nil
+        }
+
+        if let persistedDestinationID {
+            selectedDestinationID = persistedDestinationID
+            selectedDestinationName = stops.first(where: { $0.id == persistedDestinationID })?.name
+        } else if selectedDestinationID == nil {
+            selectedDestinationName = nil
+        }
     }
 
     @ViewBuilder
@@ -1098,9 +1116,13 @@ private struct StationPickerSheet: View {
     @Environment(PingStore.self) private var store
     let stops: [Stop]
     let title: String
+    let counterpartStopID: StopID?
+    let excludedStopIDs: Set<StopID>
     let onSelect: (Stop) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    @State private var compatibleStopIDs: Set<StopID>?
+    @State private var isLoadingCompatibility = false
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1108,7 +1130,12 @@ private struct StationPickerSheet: View {
 
     private var filteredStops: [Stop] {
         stops
-            .filter { trimmedQuery.isEmpty || $0.name.localizedStandardContains(trimmedQuery) }
+            .filter { stop in
+                let matchesQuery = trimmedQuery.isEmpty || stop.name.localizedStandardContains(trimmedQuery)
+                let matchesCompatibility = compatibleStopIDs.map { $0.contains(stop.id) } ?? true
+                let isNotExcluded = !excludedStopIDs.contains(stop.id)
+                return matchesQuery && matchesCompatibility && isNotExcluded
+            }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
@@ -1162,10 +1189,23 @@ private struct StationPickerSheet: View {
                     .buttonStyle(.plain)
                 }
             }
+
+            if filteredStops.isEmpty && !trimmedQuery.isEmpty {
+                Section {
+                    Text("No compatible stations found for this route.")
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "Search station")
+        .task {
+            await refreshCompatibility()
+        }
+        .onChange(of: counterpartStopID) { _, _ in
+            Task { await refreshCompatibility() }
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
@@ -1174,7 +1214,19 @@ private struct StationPickerSheet: View {
                     Image(systemName: "xmark")
                 }
             }
+            if isLoadingCompatibility {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
         }
+    }
+
+    private func refreshCompatibility() async {
+        isLoadingCompatibility = true
+        compatibleStopIDs = await store.compatibleStopIDs(with: counterpartStopID)
+        isLoadingCompatibility = false
     }
 }
 

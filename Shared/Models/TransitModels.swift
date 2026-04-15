@@ -163,6 +163,39 @@ public struct LiveDeparture: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+public struct StationDeparture: Codable, Equatable, Identifiable, Sendable {
+    public let tripID: String
+    public let routeShortName: String
+    public let headsign: String
+    public let scheduledDepartureTime: Date
+    public let delaySeconds: Int
+    public let minutesUntilDeparture: Int
+
+    public var effectiveDepartureTime: Date {
+        scheduledDepartureTime.addingTimeInterval(TimeInterval(delaySeconds))
+    }
+
+    public var id: String {
+        "\(tripID)-\(scheduledDepartureTime.timeIntervalSince1970)"
+    }
+
+    public init(
+        tripID: String,
+        routeShortName: String,
+        headsign: String,
+        scheduledDepartureTime: Date,
+        delaySeconds: Int,
+        minutesUntilDeparture: Int
+    ) {
+        self.tripID = tripID
+        self.routeShortName = routeShortName
+        self.headsign = headsign
+        self.scheduledDepartureTime = scheduledDepartureTime
+        self.delaySeconds = delaySeconds
+        self.minutesUntilDeparture = minutesUntilDeparture
+    }
+}
+
 public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
     public let calendarEvent: CommuteEvent
     public let originStationID: StopID
