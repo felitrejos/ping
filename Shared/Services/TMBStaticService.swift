@@ -5,6 +5,55 @@ public actor TMBStaticService: TMBStaticServiceProviding {
     private struct ParsedCache: Sendable {
         let stopsByID: [String: TMBStop]
         let allStops: [TMBStop]
+        let stopSpatialIndex: TMBStopSpatialIndex
+    }
+
+    private struct GridCellKey: Hashable, Sendable {
+        let latitudeIndex: Int
+        let longitudeIndex: Int
+    }
+
+    private struct TMBStopSpatialIndex: Sendable {
+        private let cellSize: Double
+        private let stopsByCell: [GridCellKey: [TMBStop]]
+
+        init(stops: [TMBStop], cellSize: Double = 0.01) {
+            self.cellSize = cellSize
+
+            var buckets: [GridCellKey: [TMBStop]] = [:]
+            for stop in stops {
+                let key = GridCellKey(
+                    latitudeIndex: Self.bucketIndex(for: stop.coordinate.latitude, cellSize: cellSize),
+                    longitudeIndex: Self.bucketIndex(for: stop.coordinate.longitude, cellSize: cellSize)
+                )
+                buckets[key, default: []].append(stop)
+            }
+            stopsByCell = buckets
+        }
+
+        func stops(in region: TMBBoundingBox) -> [TMBStop] {
+            let minLatitudeIndex = Self.bucketIndex(for: region.minLatitude, cellSize: cellSize)
+            let maxLatitudeIndex = Self.bucketIndex(for: region.maxLatitude, cellSize: cellSize)
+            let minLongitudeIndex = Self.bucketIndex(for: region.minLongitude, cellSize: cellSize)
+            let maxLongitudeIndex = Self.bucketIndex(for: region.maxLongitude, cellSize: cellSize)
+
+            var result: [TMBStop] = []
+            for latitudeIndex in minLatitudeIndex ... maxLatitudeIndex {
+                for longitudeIndex in minLongitudeIndex ... maxLongitudeIndex {
+                    let key = GridCellKey(latitudeIndex: latitudeIndex, longitudeIndex: longitudeIndex)
+                    guard let bucket = stopsByCell[key] else {
+                        continue
+                    }
+                    result.append(contentsOf: bucket)
+                }
+            }
+
+            return result.filter { region.contains($0.coordinate) }
+        }
+
+        private static func bucketIndex(for coordinate: Double, cellSize: Double) -> Int {
+            Int(floor(coordinate / cellSize))
+        }
     }
 
     private var zipURL: URL?
@@ -32,7 +81,14 @@ public actor TMBStaticService: TMBStaticServiceProviding {
     }
 
     public func stops(in region: TMBBoundingBox) async throws -> [TMBStop] {
-        try loadCache().allStops.filter { region.contains($0.coordinate) }
+        let filtered = try loadCache().stopSpatialIndex.stops(in: region)
+        return filtered.sorted { first, second in
+            let nameOrder = first.name.localizedCaseInsensitiveCompare(second.name)
+            if nameOrder != .orderedSame {
+                return nameOrder == .orderedAscending
+            }
+            return first.id < second.id
+        }
     }
 
     public func stop(id: String) async throws -> TMBStop? {
@@ -48,13 +104,21 @@ extension TMBStaticService {
         }
 
         guard let zipURL else {
-            let emptyCache = ParsedCache(stopsByID: [:], allStops: [])
+            let emptyCache = ParsedCache(
+                stopsByID: [:],
+                allStops: [],
+                stopSpatialIndex: TMBStopSpatialIndex(stops: [])
+            )
             cache = emptyCache
             return emptyCache
         }
 
         guard FileManager.default.fileExists(atPath: zipURL.path) else {
-            let emptyCache = ParsedCache(stopsByID: [:], allStops: [])
+            let emptyCache = ParsedCache(
+                stopsByID: [:],
+                allStops: [],
+                stopSpatialIndex: TMBStopSpatialIndex(stops: [])
+            )
             cache = emptyCache
             return emptyCache
         }
@@ -103,7 +167,11 @@ extension TMBStaticService {
         }
         let stopsByID = Dictionary(uniqueKeysWithValues: allStops.map { ($0.id, $0) })
 
-        let parsedCache = ParsedCache(stopsByID: stopsByID, allStops: allStops)
+        let parsedCache = ParsedCache(
+            stopsByID: stopsByID,
+            allStops: allStops,
+            stopSpatialIndex: TMBStopSpatialIndex(stops: allStops)
+        )
         cache = parsedCache
         return parsedCache
     }

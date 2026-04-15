@@ -273,6 +273,19 @@ public final class PingStore {
         return (try? await tmbStaticService.stops(in: box)) ?? []
     }
 
+    public func fgcStops(in box: TransitBoundingBox) async -> [Stop] {
+        if let fgcStaticService = staticService as? FGCStaticService {
+            return (try? await fgcStaticService.stops(in: box)) ?? []
+        }
+
+        return availableStops.filter { stop in
+            guard let coordinate = stop.coordinate else {
+                return false
+            }
+            return box.contains(coordinate)
+        }
+    }
+
     public func tmbArrivals(for stop: TMBStop) async -> Result<[TMBArrival], TMBArrivalsError> {
         guard isTMBEnabled, let tmbRealtimeService else {
             return .failure(.noCredentials)

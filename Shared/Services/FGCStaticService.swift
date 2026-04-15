@@ -40,6 +40,8 @@ public actor FGCStaticService: StaticServiceProviding {
     private struct ParsedCache: Sendable {
         let stops: [StopID: Stop]
         let stopsSortedByName: [Stop]
+        let stationStopsByID: [StopID: Stop]
+        let stationSpatialIndex: FGCStopSpatialIndex
         let childStopIDs: [StopID: Set<StopID>]
         let parentStopID: [StopID: StopID]
         let routes: [String: GTFSRoute]
@@ -48,8 +50,63 @@ public actor FGCStaticService: StaticServiceProviding {
         let tripIDsByStopID: [StopID: [String]]
         let serviceCalendarsByID: [String: GTFSServiceCalendar]
         let serviceExceptionsByDayKey: [Int: [String: GTFSServiceExceptionType]]
-        let stationStopsByID: [StopID: Stop]
         let stopsByLine: [String: [Stop]]
+    }
+
+    private struct GridCellKey: Hashable, Sendable {
+        let latitudeIndex: Int
+        let longitudeIndex: Int
+    }
+
+    private struct FGCStopSpatialIndex: Sendable {
+        private let cellSize: Double
+        private let stopsByCell: [GridCellKey: [Stop]]
+
+        init(stops: [Stop], cellSize: Double = 0.01) {
+            self.cellSize = cellSize
+
+            var buckets: [GridCellKey: [Stop]] = [:]
+            for stop in stops {
+                guard let coordinate = stop.coordinate else {
+                    continue
+                }
+                let key = GridCellKey(
+                    latitudeIndex: Self.bucketIndex(for: coordinate.latitude, cellSize: cellSize),
+                    longitudeIndex: Self.bucketIndex(for: coordinate.longitude, cellSize: cellSize)
+                )
+                buckets[key, default: []].append(stop)
+            }
+            stopsByCell = buckets
+        }
+
+        func stops(in region: TransitBoundingBox) -> [Stop] {
+            let minLatitudeIndex = Self.bucketIndex(for: region.minLatitude, cellSize: cellSize)
+            let maxLatitudeIndex = Self.bucketIndex(for: region.maxLatitude, cellSize: cellSize)
+            let minLongitudeIndex = Self.bucketIndex(for: region.minLongitude, cellSize: cellSize)
+            let maxLongitudeIndex = Self.bucketIndex(for: region.maxLongitude, cellSize: cellSize)
+
+            var result: [Stop] = []
+            for latitudeIndex in minLatitudeIndex ... maxLatitudeIndex {
+                for longitudeIndex in minLongitudeIndex ... maxLongitudeIndex {
+                    let key = GridCellKey(latitudeIndex: latitudeIndex, longitudeIndex: longitudeIndex)
+                    guard let bucket = stopsByCell[key] else {
+                        continue
+                    }
+                    result.append(contentsOf: bucket)
+                }
+            }
+
+            return result.filter { stop in
+                guard let coordinate = stop.coordinate else {
+                    return false
+                }
+                return region.contains(coordinate)
+            }
+        }
+
+        private static func bucketIndex(for coordinate: Double, cellSize: Double) -> Int {
+            Int(floor(coordinate / cellSize))
+        }
     }
 
     private var zipURL: URL
@@ -134,6 +191,17 @@ public actor FGCStaticService: StaticServiceProviding {
 
     public func allStops() async throws -> [Stop] {
         try loadCache().stopsSortedByName
+    }
+
+    public func stops(in region: TransitBoundingBox) async throws -> [Stop] {
+        let stops = try loadCache().stationSpatialIndex.stops(in: region)
+        return stops.sorted { first, second in
+            let nameOrder = first.name.localizedCaseInsensitiveCompare(second.name)
+            if nameOrder != .orderedSame {
+                return nameOrder == .orderedAscending
+            }
+            return first.id < second.id
+        }
     }
 
     public func stopsForLine(_ lineName: String) async throws -> [Stop] {
@@ -393,6 +461,8 @@ extension FGCStaticService {
         let parsed = ParsedCache(
             stops: stops,
             stopsSortedByName: stationStops,
+            stationStopsByID: stationStopsByID,
+            stationSpatialIndex: FGCStopSpatialIndex(stops: stationStops),
             childStopIDs: childStopIDs,
             parentStopID: parentStopID,
             routes: routes,
@@ -401,7 +471,6 @@ extension FGCStaticService {
             tripIDsByStopID: tripIDsByStopID.mapValues(Array.init),
             serviceCalendarsByID: serviceCalendarsByID,
             serviceExceptionsByDayKey: serviceExceptionsByDayKey,
-            stationStopsByID: stationStopsByID,
             stopsByLine: stopsByLine
         )
         cache = parsed

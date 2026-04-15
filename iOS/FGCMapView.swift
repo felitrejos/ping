@@ -12,46 +12,32 @@ struct FGCMapView: View {
     @State private var destinationID: StopID?
     @State private var isTMBOverlayEnabled = UserSettings.tmbEnabled()
     @State private var isFGCOverlayEnabled = UserSettings.fgcEnabled()
-    @State private var shouldShowAllStations = false
     @State private var lastWalkingRouteRequestKey: WalkingRouteRequestKey?
     @State private var lastCameraRegion: MKCoordinateRegion?
+    @State private var visibleFGCStops: [Stop] = []
+    @State private var visibleFGCDotStops: [Stop] = []
+    @State private var fgcStopDisplayMode: StopDisplayMode = .hidden
     @State private var visibleTMBStops: [TMBStop] = []
+    @State private var visibleTMBDotStops: [TMBStop] = []
+    @State private var tmbStopDisplayMode: StopDisplayMode = .hidden
     @State private var selectedTMBStop: TMBStop?
     @State private var tmbArrivals: [TMBArrival] = []
     @State private var tmbLoadState: TMBLoadState = .idle
     @State private var nearbyTMBStops: [TMBStop] = []
+    @State private var closestFGCStations: [Stop] = []
+    @State private var closestFGCStationIDs: Set<StopID> = []
 
-    private let tmbZoomLatitudeDeltaThreshold: CLLocationDegrees = 0.06
-    private let maxVisibleTMBStops = 300
+    private let fgcInteractiveLatitudeDeltaThreshold: CLLocationDegrees = 0.05
+    private let fgcDotLatitudeDeltaThreshold: CLLocationDegrees = 0.18
+    private let tmbInteractiveLatitudeDeltaThreshold: CLLocationDegrees = 0.03
+    private let tmbDotLatitudeDeltaThreshold: CLLocationDegrees = 0.09
+    private let maxVisibleFGCInteractiveStops = 180
+    private let maxVisibleFGCDotStops = 500
+    private let maxVisibleTMBInteractiveStops = 120
+    private let maxVisibleTMBDotStops = 400
 
     private var stationsWithCoordinates: [Stop] {
         store.availableStops.filter { $0.coordinate != nil }
-    }
-
-    private var visibleStations: [Stop] {
-        guard !shouldShowAllStations else {
-            return stationsWithCoordinates
-        }
-
-        var prioritized: [Stop] = []
-        var seen = Set<StopID>()
-        let anchors = [originStop, destinationStop] + routeStops + closestStations
-        for station in anchors.compactMap({ $0 }) where seen.insert(station.id).inserted {
-            prioritized.append(station)
-        }
-
-        if prioritized.count >= 40 {
-            return prioritized
-        }
-
-        for station in stationsWithCoordinates where seen.insert(station.id).inserted {
-            prioritized.append(station)
-            if prioritized.count >= 40 {
-                break
-            }
-        }
-
-        return prioritized
     }
 
     private var userCoordinate: CLLocationCoordinate2D? {
@@ -72,18 +58,26 @@ struct FGCMapView: View {
         store.nextDeparture != nil || store.nextCommute != nil
     }
 
-    private var closestStations: [Stop] {
-        guard let userCoordinate else {
-            return []
-        }
-
-        let userLocation = CLLocation(latitude: userCoordinate.latitude, longitude: userCoordinate.longitude)
-        return stationsWithCoordinates
-            .sorted { first, second in
-                first.distance(from: userLocation) < second.distance(from: userLocation)
+    private var pinnedFGCStops: [Stop] {
+        var seen = Set<StopID>()
+        let anchors = [originStop, destinationStop, selectedStation] + routeStops + closestFGCStations
+        return anchors.compactMap { station in
+            guard let station else {
+                return nil
             }
-            .prefix(5)
-            .map { $0 }
+            guard station.coordinate != nil, seen.insert(station.id).inserted else {
+                return nil
+            }
+            return station
+        }
+    }
+
+    private var pinnedTMBStops: [TMBStop] {
+        var seen = Set<String>()
+        let anchors = [selectedTMBStop].compactMap { $0 } + nearbyTMBStops
+        return anchors.filter { stop in
+            seen.insert(stop.id).inserted
+        }
     }
 
     var body: some View {
@@ -94,7 +88,19 @@ struct FGCMapView: View {
             }
 
             if isFGCOverlayEnabled {
-                ForEach(visibleStations) { station in
+                if fgcStopDisplayMode == .dots {
+                    ForEach(visibleFGCDotStops) { station in
+                        if let coordinate = station.coordinate?.mapCoordinate {
+                            Annotation(station.name, coordinate: coordinate) {
+                                FGCStopDot()
+                                    .allowsHitTesting(false)
+                            }
+                            .annotationTitles(.hidden)
+                        }
+                    }
+                }
+
+                ForEach(visibleFGCStops) { station in
                     if let coordinate = station.coordinate?.mapCoordinate {
                         Annotation(station.name, coordinate: coordinate) {
                             Button {
@@ -104,7 +110,7 @@ struct FGCMapView: View {
                                 StationMarker(
                                     station: station,
                                     role: role(for: station),
-                                    isNearby: userCoordinate != nil && closestStations.contains(where: { $0.id == station.id })
+                                    isNearby: closestFGCStationIDs.contains(station.id)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -114,6 +120,16 @@ struct FGCMapView: View {
             }
 
             if isTMBOverlayEnabled {
+                if tmbStopDisplayMode == .dots {
+                    ForEach(visibleTMBDotStops) { stop in
+                        Annotation(stop.name, coordinate: stop.coordinate.mapCoordinate) {
+                            TMBStopDot()
+                                .allowsHitTesting(false)
+                        }
+                        .annotationTitles(.hidden)
+                    }
+                }
+
                 ForEach(visibleTMBStops) { stop in
                     Annotation(stop.name, coordinate: stop.coordinate.mapCoordinate) {
                         Button {
@@ -141,6 +157,7 @@ struct FGCMapView: View {
         .onMapCameraChange(frequency: .onEnd) { context in
             lastCameraRegion = context.region
             Task {
+                await refreshVisibleFGCStops(for: context.region)
                 await refreshVisibleTMBStops(for: context.region)
             }
         }
@@ -157,7 +174,7 @@ struct FGCMapView: View {
                 walkMinutes: store.walkingMinutes,
                 isUsingLiveLocation: store.isUsingLiveLocation,
                 routeStops: routeStops,
-                closestStations: closestStations,
+                closestStations: closestFGCStations,
                 closestBusStops: nearbyTMBStops,
                 hasUserLocation: userCoordinate != nil,
                 selectedStation: selectedStation,
@@ -193,37 +210,53 @@ struct FGCMapView: View {
         }
         .task {
             await reloadMapData()
-            scheduleFullStationLoad()
             isTMBOverlayEnabled = store.isTMBLayerPreferred
             isFGCOverlayEnabled = store.isFGCLayerPreferred
             if let lastCameraRegion {
+                await refreshVisibleFGCStops(for: lastCameraRegion)
                 await refreshVisibleTMBStops(for: lastCameraRegion)
             }
+            await refreshClosestFGCStations()
             await refreshNearbyTMBStops()
+            if let lastCameraRegion {
+                await refreshVisibleTMBStops(for: lastCameraRegion)
+            }
         }
         .refreshable {
             await store.refresh()
             await reloadMapData()
-            scheduleFullStationLoad()
+            if let lastCameraRegion {
+                await refreshVisibleFGCStops(for: lastCameraRegion)
+                await refreshVisibleTMBStops(for: lastCameraRegion)
+            }
+            await refreshClosestFGCStations()
+            await refreshNearbyTMBStops()
             if let lastCameraRegion {
                 await refreshVisibleTMBStops(for: lastCameraRegion)
             }
         }
         .onChange(of: store.availableStops) { _, _ in
-            shouldShowAllStations = false
             Task {
                 await reloadMapData()
-                scheduleFullStationLoad()
+                if let lastCameraRegion {
+                    await refreshVisibleFGCStops(for: lastCameraRegion)
+                    await refreshVisibleTMBStops(for: lastCameraRegion)
+                }
+                await refreshClosestFGCStations()
+                await refreshNearbyTMBStops()
                 if let lastCameraRegion {
                     await refreshVisibleTMBStops(for: lastCameraRegion)
                 }
-                await refreshNearbyTMBStops()
             }
         }
         .onChange(of: store.userLocation) { _, _ in
             Task {
                 await updateWalkingRoute()
+                await refreshClosestFGCStations()
                 await refreshNearbyTMBStops()
+                if let lastCameraRegion {
+                    await refreshVisibleTMBStops(for: lastCameraRegion)
+                }
             }
         }
         .onChange(of: hasActiveCommuteContext) { _, _ in
@@ -240,6 +273,8 @@ struct FGCMapView: View {
             if !isEnabled {
                 clearSelectedTMBStop()
                 visibleTMBStops = []
+                visibleTMBDotStops = []
+                tmbStopDisplayMode = .hidden
                 return
             }
 
@@ -255,18 +290,18 @@ struct FGCMapView: View {
             store.setFGCEnabled(isEnabled)
             if !isEnabled {
                 clearSelectedStation()
-            }
-        }
-    }
-
-    private func scheduleFullStationLoad() {
-        Task {
-            try? await Task.sleep(for: .milliseconds(450))
-            guard !Task.isCancelled else {
+                visibleFGCStops = []
+                visibleFGCDotStops = []
+                fgcStopDisplayMode = .hidden
                 return
             }
-            await MainActor.run {
-                shouldShowAllStations = true
+
+            guard let lastCameraRegion else {
+                return
+            }
+
+            Task {
+                await refreshVisibleFGCStops(for: lastCameraRegion)
             }
         }
     }
@@ -372,21 +407,133 @@ struct FGCMapView: View {
         originID = await store.selectedHomeStationID()
         destinationID = await store.selectedDestinationStationID()
         routeStops = await store.configuredRouteStops()
+        await refreshClosestFGCStations()
         await updateWalkingRoute()
         updateCamera()
+    }
+
+    private func refreshClosestFGCStations() async {
+        guard let userCoordinate else {
+            closestFGCStations = []
+            closestFGCStationIDs = []
+            return
+        }
+
+        let userLocation = CLLocation(latitude: userCoordinate.latitude, longitude: userCoordinate.longitude)
+        let nearest = stationsWithCoordinates
+            .sorted { first, second in
+                first.distance(from: userLocation) < second.distance(from: userLocation)
+            }
+            .prefix(5)
+            .map { $0 }
+
+        closestFGCStations = nearest
+        closestFGCStationIDs = Set(nearest.map(\.id))
+    }
+
+    private func refreshVisibleFGCStops(for region: MKCoordinateRegion) async {
+        guard isFGCOverlayEnabled else {
+            await MainActor.run {
+                fgcStopDisplayMode = .hidden
+                visibleFGCStops = []
+                visibleFGCDotStops = []
+            }
+            return
+        }
+
+        let mode = stopDisplayMode(
+            for: region.span.latitudeDelta,
+            interactiveThreshold: fgcInteractiveLatitudeDeltaThreshold,
+            dotsThreshold: fgcDotLatitudeDeltaThreshold
+        )
+        let regionBox = TransitBoundingBox(region: region)
+        let pinnedStopsInRegion = pinnedFGCStops.filter { stop in
+            guard let coordinate = stop.coordinate else {
+                return false
+            }
+            return regionBox.contains(coordinate)
+        }
+
+        guard mode != .hidden else {
+            await MainActor.run {
+                fgcStopDisplayMode = .hidden
+                visibleFGCStops = pinnedStopsInRegion
+                visibleFGCDotStops = []
+            }
+            return
+        }
+
+        let center = TransitCoordinate(
+            latitude: region.center.latitude,
+            longitude: region.center.longitude
+        )
+        let stops = await store.fgcStops(in: regionBox)
+
+        if mode == .interactive {
+            let sortedStops = stops.sorted { first, second in
+                guard let firstCoordinate = first.coordinate, let secondCoordinate = second.coordinate else {
+                    return false
+                }
+                return firstCoordinate.distanceSquared(to: center) < secondCoordinate.distanceSquared(to: center)
+            }
+
+            var interactiveStops = Array(sortedStops.prefix(maxVisibleFGCInteractiveStops))
+            interactiveStops = mergedUnique(first: pinnedStopsInRegion, second: interactiveStops)
+
+            await MainActor.run {
+                fgcStopDisplayMode = .interactive
+                visibleFGCStops = interactiveStops
+                visibleFGCDotStops = []
+            }
+            return
+        }
+
+        let pinnedIDs = Set(pinnedStopsInRegion.map(\.id))
+        let eligibleStops = stops.filter { !pinnedIDs.contains($0.id) }
+        let sampledStops = sampledByGrid(
+            eligibleStops,
+            targetCount: maxVisibleFGCDotStops,
+            region: region
+        ) { stop in
+            stop.coordinate ?? center
+        }
+
+        await MainActor.run {
+            fgcStopDisplayMode = .dots
+            visibleFGCStops = pinnedStopsInRegion
+            visibleFGCDotStops = sampledStops
+        }
     }
 
     private func refreshVisibleTMBStops(for region: MKCoordinateRegion) async {
         guard isTMBOverlayEnabled, store.isTMBEnabled else {
             await MainActor.run {
+                tmbStopDisplayMode = .hidden
                 visibleTMBStops = []
+                visibleTMBDotStops = []
             }
             return
         }
 
-        guard region.span.latitudeDelta <= tmbZoomLatitudeDeltaThreshold else {
+        let mode = stopDisplayMode(
+            for: region.span.latitudeDelta,
+            interactiveThreshold: tmbInteractiveLatitudeDeltaThreshold,
+            dotsThreshold: tmbDotLatitudeDeltaThreshold
+        )
+        let regionBox = TransitBoundingBox(region: region)
+        let pinnedStopsInRegion = pinnedTMBStops.filter { stop in
+            regionBox.contains(stop.coordinate)
+        }
+        let pinnedStopIDs = Set(pinnedStopsInRegion.map(\.id))
+
+        guard mode != .hidden else {
             await MainActor.run {
-                visibleTMBStops = []
+                tmbStopDisplayMode = .hidden
+                visibleTMBStops = pinnedStopsInRegion
+                visibleTMBDotStops = []
+                if let selectedTMBStop, !pinnedStopIDs.contains(selectedTMBStop.id) {
+                    clearSelectedTMBStop()
+                }
             }
             return
         }
@@ -401,9 +548,113 @@ struct FGCMapView: View {
             first.coordinate.distanceSquared(to: center) < second.coordinate.distanceSquared(to: center)
         }
 
-        await MainActor.run {
-            visibleTMBStops = Array(sortedStops.prefix(maxVisibleTMBStops))
+        if mode == .interactive {
+            var interactiveStops = Array(sortedStops.prefix(maxVisibleTMBInteractiveStops))
+            interactiveStops = mergedUnique(first: pinnedStopsInRegion, second: interactiveStops)
+            if interactiveStops.count > maxVisibleTMBInteractiveStops {
+                interactiveStops = Array(interactiveStops.prefix(maxVisibleTMBInteractiveStops))
+            }
+
+            await MainActor.run {
+                tmbStopDisplayMode = .interactive
+                visibleTMBStops = interactiveStops
+                visibleTMBDotStops = []
+                if let selectedTMBStop,
+                   !interactiveStops.contains(where: { $0.id == selectedTMBStop.id }) {
+                    clearSelectedTMBStop()
+                }
+            }
+            return
         }
+
+        let eligibleStops = sortedStops.filter { !pinnedStopIDs.contains($0.id) }
+        let sampledStops = sampledByGrid(
+            eligibleStops,
+            targetCount: maxVisibleTMBDotStops,
+            region: region
+        ) { $0.coordinate }
+
+        await MainActor.run {
+            tmbStopDisplayMode = .dots
+            visibleTMBStops = pinnedStopsInRegion
+            visibleTMBDotStops = sampledStops
+            if let selectedTMBStop, !pinnedStopIDs.contains(selectedTMBStop.id) {
+                clearSelectedTMBStop()
+            }
+        }
+    }
+
+    private func stopDisplayMode(
+        for latitudeDelta: CLLocationDegrees,
+        interactiveThreshold: CLLocationDegrees,
+        dotsThreshold: CLLocationDegrees
+    ) -> StopDisplayMode {
+        if latitudeDelta <= interactiveThreshold {
+            return .interactive
+        }
+        if latitudeDelta <= dotsThreshold {
+            return .dots
+        }
+        return .hidden
+    }
+
+    private func mergedUnique<Element: Identifiable>(
+        first: [Element],
+        second: [Element]
+    ) -> [Element] where Element.ID: Hashable {
+        var merged: [Element] = []
+        var seen = Set<Element.ID>()
+
+        for element in first where seen.insert(element.id).inserted {
+            merged.append(element)
+        }
+        for element in second where seen.insert(element.id).inserted {
+            merged.append(element)
+        }
+        return merged
+    }
+
+    private func sampledByGrid<Element>(
+        _ elements: [Element],
+        targetCount: Int,
+        region: MKCoordinateRegion,
+        coordinate: (Element) -> TransitCoordinate
+    ) -> [Element] {
+        guard elements.count > targetCount else {
+            return elements
+        }
+
+        let center = TransitCoordinate(
+            latitude: region.center.latitude,
+            longitude: region.center.longitude
+        )
+        let cellCountPerAxis = max(4, Int(sqrt(Double(targetCount))))
+        let latitudeCellSize = max(region.span.latitudeDelta / Double(cellCountPerAxis), 0.0015)
+        let longitudeCellSize = max(region.span.longitudeDelta / Double(cellCountPerAxis), 0.0015)
+        let minimumLatitude = region.center.latitude - region.span.latitudeDelta / 2
+        let minimumLongitude = region.center.longitude - region.span.longitudeDelta / 2
+
+        var buckets: [GridSampleCell: Element] = [:]
+        for element in elements {
+            let itemCoordinate = coordinate(element)
+            let latitudeIndex = Int(floor((itemCoordinate.latitude - minimumLatitude) / latitudeCellSize))
+            let longitudeIndex = Int(floor((itemCoordinate.longitude - minimumLongitude) / longitudeCellSize))
+            let key = GridSampleCell(latitudeIndex: latitudeIndex, longitudeIndex: longitudeIndex)
+
+            if let existing = buckets[key] {
+                let existingCoordinate = coordinate(existing)
+                if itemCoordinate.distanceSquared(to: center) < existingCoordinate.distanceSquared(to: center) {
+                    buckets[key] = element
+                }
+            } else {
+                buckets[key] = element
+            }
+        }
+
+        let sampled = buckets.values.sorted { first, second in
+            coordinate(first).distanceSquared(to: center) < coordinate(second).distanceSquared(to: center)
+        }
+        return Array(sampled.prefix(targetCount))
     }
 
     private func refreshNearbyTMBStops() async {
@@ -539,6 +790,17 @@ private struct WalkingRouteRequestKey: Equatable {
     }
 }
 
+private enum StopDisplayMode {
+    case hidden
+    case dots
+    case interactive
+}
+
+private struct GridSampleCell: Hashable {
+    let latitudeIndex: Int
+    let longitudeIndex: Int
+}
+
 private enum StationRole {
     case origin
     case destination
@@ -575,6 +837,18 @@ private struct StationMarker: View {
             }
             .shadow(color: .black.opacity(0.18), radius: 5, y: 2)
             .accessibilityLabel(station.name)
+    }
+}
+
+private struct FGCStopDot: View {
+    var body: some View {
+        Circle()
+            .fill(.blue.opacity(0.6))
+            .frame(width: 6, height: 6)
+            .overlay {
+                Circle()
+                    .stroke(.white.opacity(0.55), lineWidth: 0.7)
+            }
     }
 }
 
@@ -836,6 +1110,18 @@ private struct TMBBusStopMarker: View {
     }
 }
 
+private struct TMBStopDot: View {
+    var body: some View {
+        Circle()
+            .fill(.orange.opacity(0.55))
+            .frame(width: 5, height: 5)
+            .overlay {
+                Circle()
+                    .stroke(.white.opacity(0.45), lineWidth: 0.6)
+            }
+    }
+}
+
 private enum TMBLoadState: Equatable {
     case idle
     case loading
@@ -865,6 +1151,19 @@ private extension TransitCoordinate {
 }
 
 private extension TMBBoundingBox {
+    init(region: MKCoordinateRegion) {
+        let latitudeDelta = region.span.latitudeDelta / 2
+        let longitudeDelta = region.span.longitudeDelta / 2
+        self.init(
+            minLatitude: region.center.latitude - latitudeDelta,
+            maxLatitude: region.center.latitude + latitudeDelta,
+            minLongitude: region.center.longitude - longitudeDelta,
+            maxLongitude: region.center.longitude + longitudeDelta
+        )
+    }
+}
+
+private extension TransitBoundingBox {
     init(region: MKCoordinateRegion) {
         let latitudeDelta = region.span.latitudeDelta / 2
         let longitudeDelta = region.span.longitudeDelta / 2

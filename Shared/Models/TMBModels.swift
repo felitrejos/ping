@@ -68,4 +68,13 @@ public struct TMBBoundingBox: Equatable, Sendable {
             && coordinate.longitude >= minLongitude
             && coordinate.longitude <= maxLongitude
     }
+
+    public var transitBoundingBox: TransitBoundingBox {
+        TransitBoundingBox(
+            minLatitude: minLatitude,
+            maxLatitude: maxLatitude,
+            minLongitude: minLongitude,
+            maxLongitude: maxLongitude
+        )
+    }
 }

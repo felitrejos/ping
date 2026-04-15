@@ -12,6 +12,32 @@ public struct TransitCoordinate: Codable, Equatable, Sendable {
     }
 }
 
+public struct TransitBoundingBox: Equatable, Sendable {
+    public let minLatitude: Double
+    public let maxLatitude: Double
+    public let minLongitude: Double
+    public let maxLongitude: Double
+
+    public init(
+        minLatitude: Double,
+        maxLatitude: Double,
+        minLongitude: Double,
+        maxLongitude: Double
+    ) {
+        self.minLatitude = min(minLatitude, maxLatitude)
+        self.maxLatitude = max(minLatitude, maxLatitude)
+        self.minLongitude = min(minLongitude, maxLongitude)
+        self.maxLongitude = max(minLongitude, maxLongitude)
+    }
+
+    public func contains(_ coordinate: TransitCoordinate) -> Bool {
+        coordinate.latitude >= minLatitude
+            && coordinate.latitude <= maxLatitude
+            && coordinate.longitude >= minLongitude
+            && coordinate.longitude <= maxLongitude
+    }
+}
+
 public struct Stop: Codable, Equatable, Identifiable, Sendable {
     public let id: StopID
     public let name: String
