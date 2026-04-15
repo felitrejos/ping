@@ -5,7 +5,6 @@ import SwiftUI
 struct FGCMapView: View {
     @Environment(PingStore.self) private var store
     @State private var position: MapCameraPosition = .automatic
-    @State private var routeStops: [Stop] = []
     @State private var walkingRoute: MKPolyline?
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
@@ -62,7 +61,7 @@ struct FGCMapView: View {
 
     private var pinnedFGCStops: [Stop] {
         var seen = Set<StopID>()
-        let anchors = [originStop, destinationStop, selectedStation] + routeStops + closestFGCStations
+        let anchors = [selectedStation] + closestFGCStations
         return anchors.compactMap { station in
             guard let station else {
                 return nil
@@ -114,7 +113,6 @@ struct FGCMapView: View {
                             } label: {
                                 StationMarker(
                                     station: station,
-                                    role: role(for: station),
                                     isNearby: closestFGCStationIDs.contains(station.id)
                                 )
                             }
@@ -178,7 +176,6 @@ struct FGCMapView: View {
                 nextDeparture: store.nextDeparture,
                 walkMinutes: store.walkingMinutes,
                 isUsingLiveLocation: store.isUsingLiveLocation,
-                routeStops: routeStops,
                 closestStations: closestFGCStations,
                 closestBusStops: nearbyTMBStops,
                 hasUserLocation: userCoordinate != nil,
@@ -190,20 +187,6 @@ struct FGCMapView: View {
                 busLoadState: tmbLoadState,
                 onDismissStation: clearSelectedStation,
                 onDismissBusStop: clearSelectedTMBStop,
-                onSetOrigin: { station in
-                    clearSelectedStation()
-                    Task {
-                        await store.setHomeStation(station.id)
-                        await reloadMapData()
-                    }
-                },
-                onSetDestination: { station in
-                    clearSelectedStation()
-                    Task {
-                        await store.setDestinationStation(station.id)
-                        await reloadMapData()
-                    }
-                },
                 onRetryBusArrivals: {
                     guard let selectedTMBStop else {
                         return
@@ -407,24 +390,9 @@ struct FGCMapView: View {
         }
     }
 
-    private func role(for station: Stop) -> StationRole {
-        if station.id == originID {
-            return .origin
-        }
-        if station.id == destinationID {
-            return .destination
-        }
-        if routeStops.contains(where: { $0.id == station.id }) {
-            return .route
-        }
-
-        return .nearby
-    }
-
     private func reloadMapData() async {
         originID = await store.selectedHomeStationID()
         destinationID = await store.selectedDestinationStationID()
-        routeStops = await store.configuredRouteStops()
         await refreshClosestFGCStations()
         await updateWalkingRoute()
         updateCamera()
@@ -764,8 +732,7 @@ struct FGCMapView: View {
     }
 
     private func updateCamera() {
-        let routeCoordinates = routeStops.compactMap { $0.coordinate?.mapCoordinate }
-        var coordinates = routeCoordinates
+        var coordinates: [CLLocationCoordinate2D] = []
         if let userCoordinate {
             coordinates.append(userCoordinate)
         }
@@ -832,36 +799,16 @@ private struct GridSampleCell: Hashable {
     let longitudeIndex: Int
 }
 
-private enum StationRole {
-    case origin
-    case destination
-    case route
-    case nearby
-
-    var tint: Color {
-        switch self {
-        case .origin: .blue
-        case .destination, .route: .green
-        case .nearby: .white
-        }
-    }
-
-    var symbol: String {
-        "tram.fill"
-    }
-}
-
 private struct StationMarker: View {
     let station: Stop
-    let role: StationRole
     let isNearby: Bool
 
     var body: some View {
-        Image(systemName: role.symbol)
-            .font(.system(size: role == .nearby ? 12 : 14, weight: .bold))
-            .foregroundStyle(role == .nearby ? .blue : .white)
-            .frame(width: isNearby || role != .nearby ? 32 : 24, height: isNearby || role != .nearby ? 32 : 24)
-            .background(role.tint, in: Circle())
+        Image(systemName: "tram.fill")
+            .font(.system(size: isNearby ? 14 : 12, weight: .bold))
+            .foregroundStyle(isNearby ? .white : .blue)
+            .frame(width: isNearby ? 32 : 24, height: isNearby ? 32 : 24)
+            .background(isNearby ? .blue : .white, in: Circle())
             .overlay {
                 Circle()
                     .stroke(.blue.opacity(isNearby ? 0.9 : 0.25), lineWidth: isNearby ? 3 : 1)
@@ -889,7 +836,6 @@ private struct MapStatusPanel: View {
     let nextDeparture: LiveDeparture?
     let walkMinutes: Int
     let isUsingLiveLocation: Bool
-    let routeStops: [Stop]
     let closestStations: [Stop]
     let closestBusStops: [TMBStop]
     let hasUserLocation: Bool
@@ -901,8 +847,6 @@ private struct MapStatusPanel: View {
     let busLoadState: TMBLoadState
     let onDismissStation: () -> Void
     let onDismissBusStop: () -> Void
-    let onSetOrigin: (Stop) -> Void
-    let onSetDestination: (Stop) -> Void
     let onRetryBusArrivals: () -> Void
     let onRetryStationDepartures: () -> Void
 
@@ -957,7 +901,7 @@ private struct MapStatusPanel: View {
 
                 Spacer()
             }
-            Text("\(max(routeStops.count - 1, 0)) station hops from GTFS")
+            Text("Route selected")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -1059,16 +1003,6 @@ private struct MapStatusPanel: View {
                         .buttonStyle(.bordered)
                 }
             }
-
-            HStack(spacing: 10) {
-                stationActionButton("From here", systemImage: "target", isPrimary: true) {
-                    onSetOrigin(station)
-                }
-
-                stationActionButton("To here", systemImage: "flag.checkered", isPrimary: false) {
-                    onSetDestination(station)
-                }
-            }
         }
         .overlay(alignment: .topTrailing) {
             Button(action: onDismissStation) {
@@ -1154,20 +1088,6 @@ private struct MapStatusPanel: View {
             .accessibilityLabel("Close bus stop details")
             .offset(x: 4, y: -8)
         }
-    }
-
-    @ViewBuilder
-    private func stationActionButton(
-        _ title: String,
-        systemImage: String,
-        isPrimary: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        let button = Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .frame(maxWidth: .infinity)
-        }
-        if isPrimary { button.buttonStyle(.glassProminent) } else { button.buttonStyle(.glass) }
     }
 }
 
