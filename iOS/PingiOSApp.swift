@@ -1,5 +1,7 @@
 import BackgroundTasks
 import SwiftUI
+import UIKit
+import UserNotifications
 #if canImport(AppIntents)
 import AppIntents
 #endif
@@ -9,6 +11,7 @@ struct PingiOSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var store = AppContainer.shared.store
     @State private var notificationScheduler = AppContainer.shared.notificationScheduler
+    @UIApplicationDelegateAdaptor(PingAppDelegate.self) private var appDelegate
 
     var body: some Scene {
         WindowGroup {
@@ -49,13 +52,31 @@ enum AppContainer {
     static let shared = IOSContainer()
 }
 
+/// Registers as the `UNUserNotificationCenter` delegate so scheduled notifications still show
+/// their banner + play their sound when the app is in the foreground (iOS suppresses banners
+/// for the active app by default, which is wrong for commute alerts).
+final class PingAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    nonisolated func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
+    }
+}
+
 @MainActor
 final class IOSContainer {
     let shared = SharedContainer()
-    lazy var notificationScheduler = NotificationScheduler(
-        engine: shared.engine,
-        walkingMinutesProvider: { [shared] in shared.store.walkingMinutes }
-    )
+    lazy var notificationScheduler = NotificationScheduler(engine: shared.engine)
 
     var store: PingStore {
         shared.store

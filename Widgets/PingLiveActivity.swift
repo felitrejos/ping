@@ -36,39 +36,46 @@ struct PingLiveActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text("Leave in")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            let parts = leaveInParts(for: context.state)
-                            if parts.isLongForm {
-                                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                    Text(parts.leadingValue)
-                                        .font(.system(size: 22, weight: .heavy, design: .rounded))
-                                        .lineLimit(1)
-                                    Text(parts.leadingUnit)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                    Text(parts.trailingValue ?? "")
-                                        .font(.system(size: 22, weight: .heavy, design: .rounded))
-                                        .lineLimit(1)
-                                    Text(parts.trailingUnit ?? "")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
-                                .fixedSize(horizontal: true, vertical: false)
+                            if context.state.phase == .missed {
+                                Text("Missed")
+                                    .font(.system(size: 26, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(.red)
+                                    .lineLimit(1)
                             } else {
-                                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                    Text(parts.leadingValue)
-                                        .font(.system(size: 26, weight: .heavy, design: .rounded))
-                                        .lineLimit(1)
-                                    Text(parts.leadingUnit)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
+                                Text("Leave in")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                let parts = leaveInParts(for: context.state)
+                                if parts.isLongForm {
+                                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                        Text(parts.leadingValue)
+                                            .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                            .lineLimit(1)
+                                        Text(parts.leadingUnit)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                        Text(parts.trailingValue ?? "")
+                                            .font(.system(size: 22, weight: .heavy, design: .rounded))
+                                            .lineLimit(1)
+                                        Text(parts.trailingUnit ?? "")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                    .fixedSize(horizontal: true, vertical: false)
+                                } else {
+                                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                                        Text(parts.leadingValue)
+                                            .font(.system(size: 26, weight: .heavy, design: .rounded))
+                                            .lineLimit(1)
+                                        Text(parts.leadingUnit)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                    .fixedSize(horizontal: true, vertical: false)
                                 }
-                                .fixedSize(horizontal: true, vertical: false)
                             }
                             Spacer()
                         }
@@ -136,39 +143,46 @@ struct PingLiveActivityWidget: Widget {
             }
 
             HStack(alignment: .firstTextBaseline) {
-                Text("Leave in")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                let parts = leaveInParts(for: context.state)
-                if parts.isLongForm {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(parts.leadingValue)
-                            .font(.system(size: 32, weight: .heavy, design: .rounded))
-                            .lineLimit(1)
-                        Text(parts.leadingUnit)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                        Text(parts.trailingValue ?? "")
-                            .font(.system(size: 32, weight: .heavy, design: .rounded))
-                            .lineLimit(1)
-                        Text(parts.trailingUnit ?? "")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    .fixedSize(horizontal: true, vertical: false)
+                if context.state.phase == .missed {
+                    Text("Missed")
+                        .font(.system(size: 36, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.red)
+                        .lineLimit(1)
                 } else {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(parts.leadingValue)
-                            .font(.system(size: 36, weight: .heavy, design: .rounded))
-                            .lineLimit(1)
-                        Text(parts.leadingUnit)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                    Text("Leave in")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    let parts = leaveInParts(for: context.state)
+                    if parts.isLongForm {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(parts.leadingValue)
+                                .font(.system(size: 32, weight: .heavy, design: .rounded))
+                                .lineLimit(1)
+                            Text(parts.leadingUnit)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            Text(parts.trailingValue ?? "")
+                                .font(.system(size: 32, weight: .heavy, design: .rounded))
+                                .lineLimit(1)
+                            Text(parts.trailingUnit ?? "")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .fixedSize(horizontal: true, vertical: false)
+                    } else {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(parts.leadingValue)
+                                .font(.system(size: 36, weight: .heavy, design: .rounded))
+                                .lineLimit(1)
+                            Text(parts.leadingUnit)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                        .fixedSize(horizontal: true, vertical: false)
                     }
-                    .fixedSize(horizontal: true, vertical: false)
                 }
                 Spacer()
             }

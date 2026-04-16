@@ -20,16 +20,6 @@ public struct HeroCountdownParts: Sendable {
         self.trailingUnit = trailingUnit
         self.isLongForm = isLongForm
     }
-
-    public var plainText: String {
-        if isLongForm {
-            let trailingValueText = trailingValue ?? "0"
-            let trailingUnitText = trailingUnit ?? ""
-            return "\(leadingValue)\(leadingUnit) \(trailingValueText)\(trailingUnitText)"
-        }
-
-        return "\(leadingValue)\(leadingUnit)"
-    }
 }
 
 public enum CountdownFormatting {

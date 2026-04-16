@@ -9,19 +9,27 @@ public struct PingActivityAttributes: ActivityAttributes, Sendable {
         public let rideMinutes: Int
         public let departureTimestamp: TimeInterval
         public let arrivalTimestamp: TimeInterval
+        /// Tracking phase. `nil` decodes to `.tracking` so older Live Activities still render.
+        public let phaseRaw: String?
 
         public init(
             minutesUntilDeparture: Int,
             walkMinutes: Int,
             rideMinutes: Int,
             departureTime: Date,
-            arrivalTime: Date
+            arrivalTime: Date,
+            phase: TrackingPhase = .tracking
         ) {
             self.minutesUntilDeparture = minutesUntilDeparture
             self.walkMinutes = walkMinutes
             self.rideMinutes = rideMinutes
             self.departureTimestamp = departureTime.timeIntervalSince1970
             self.arrivalTimestamp = arrivalTime.timeIntervalSince1970
+            self.phaseRaw = phase.rawValue
+        }
+
+        public var phase: TrackingPhase {
+            phaseRaw.flatMap(TrackingPhase.init(rawValue:)) ?? .tracking
         }
 
         public var leaveInMinutes: Int {

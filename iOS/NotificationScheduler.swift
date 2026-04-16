@@ -1,4 +1,3 @@
-@preconcurrency import ActivityKit
 import BackgroundTasks
 import Foundation
 import UserNotifications
@@ -11,17 +10,13 @@ final class NotificationScheduler {
 
     private let engine: CommuteEngine
     private let center: UNUserNotificationCenter
-    private let walkingMinutesProvider: () -> Int
-    private var currentActivity: Activity<PingActivityAttributes>?
 
     init(
         engine: CommuteEngine,
-        center: UNUserNotificationCenter = .current(),
-        walkingMinutesProvider: @escaping () -> Int = { 0 }
+        center: UNUserNotificationCenter = .current()
     ) {
         self.engine = engine
         self.center = center
-        self.walkingMinutesProvider = walkingMinutesProvider
     }
 
     func registerBackgroundTasks() {
@@ -47,12 +42,10 @@ final class NotificationScheduler {
             let plan = try await engine.nextCommute()
             try await cancelStaleNotifications(activePlan: plan)
             guard let plan, let train = plan.trainOptions.first else {
-                await endLiveActivity()
                 return
             }
 
             try await scheduleNotification(for: plan, train: train)
-            await updateLiveActivity(for: plan, train: train)
             submitBackgroundRefresh()
         } catch {
             submitBackgroundRefresh()
@@ -100,48 +93,6 @@ final class NotificationScheduler {
                 identifier.hasPrefix("ping.commute.") && identifier != activeIdentifier
             }
         center.removePendingNotificationRequests(withIdentifiers: stale)
-    }
-
-    private func updateLiveActivity(for plan: CommutePlan, train: LiveDeparture) async {
-        let minutes = train.minutesUntilDeparture
-        guard (1...30).contains(minutes) else {
-            await endLiveActivity()
-            return
-        }
-
-        let walkMin = walkingMinutesProvider()
-        let rideMin = max(1, Int((train.arrivalTime.timeIntervalSince(train.scheduledTime) / 60).rounded()))
-        let attributes = PingActivityAttributes(
-            destinationName: train.destinationStopID,
-            lineName: UserSettings.selectedLine()
-        )
-        let contentState = PingActivityAttributes.ContentState(
-            minutesUntilDeparture: minutes,
-            walkMinutes: walkMin,
-            rideMinutes: rideMin,
-            departureTime: train.effectiveDepartureTime,
-            arrivalTime: train.effectiveArrivalTime
-        )
-
-        if let currentActivity {
-            await currentActivity.update(
-                ActivityContent(state: contentState, staleDate: train.effectiveDepartureTime)
-            )
-        } else {
-            currentActivity = try? Activity.request(
-                attributes: attributes,
-                content: ActivityContent(state: contentState, staleDate: train.effectiveDepartureTime)
-            )
-        }
-    }
-
-    private func endLiveActivity() async {
-        guard let currentActivity else {
-            return
-        }
-
-        await currentActivity.end(nil, dismissalPolicy: .immediate)
-        self.currentActivity = nil
     }
 
     private func submitBackgroundRefresh() {
