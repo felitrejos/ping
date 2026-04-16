@@ -18,12 +18,6 @@ Uses SwiftUI's `.colorEffect()` / `.distortionEffect()` modifiers (iOS 17+, no U
 - [ ] **Noise texture on card backgrounds** — near-invisible grain (±3% luminance) over `TrainHeroCard` and `NoticeCard` backgrounds for tactile depth on OLED. One shader, many callsites. `iOS/ContentView.swift` → `ShaderLibrary.noiseOverlay(.float(0.03))`.
 - [ ] **Radial pulse on origin station marker** — expanding ring fades out from origin `StationMarker` on the map (~2s repeat, SwiftUI scale+opacity animation, no shader strictly required but can be done with a `.colorEffect` falloff shader). `iOS/FGCMapView.swift` → `StationMarker`.
 
-## Map: TMB bus stops
-
-Completed baseline integration (GTFS static load, zoom-gated rendering, and tap-to-load arrivals). Remaining follow-ups:
-
-- [ ] **TMB delay model** — enrich realtime layer so delay is computed as `iBus arrival timestamp − static scheduled time`.
-
 ## Haptic Feedback
 
 Uses SwiftUI's `.sensoryFeedback` modifier (iOS 17+) — no UIKit needed. All feedback is contextual and tied to meaningful moments, not decorative.
@@ -39,13 +33,3 @@ Extend the existing `NotificationScheduler` with `UNNotificationAction` categori
 
 - [ ] **"Switch to next train" action** — add a `UNNotificationAction` to the missed-train notification (ties into the `TrackingLocked` missed-train TODO). Tapping it triggers the switch via a background notification handler without foregrounding the app. `iOS/NotificationScheduler.swift` + `iOS/AppDelegate` / scene delegate notification handler.
 - [ ] **"Snooze 5 min" action** — on the "leave now" reminder, allow a 5-minute snooze that reschedules the notification. `iOS/NotificationScheduler.swift`.
-
-## Siri & App Intents
-
-Uses the App Intents framework (iOS 16+). No SiriKit legacy code needed. Intents live in a new `iOS/Intents/` group.
-
-- [ ] **`NextDepartureIntent`** — zero-parameter intent using the saved home→work route from settings. Siri response: *"Next train departs in 8 minutes at 9:42, arriving at Sarrià at 9:56."* Donate on every app launch so Siri proactively suggests it on the lock screen after learning the morning pattern. `iOS/Intents/NextDepartureIntent.swift`.
-- [ ] **`DeparturesBetweenStopsIntent`** — two-parameter intent with `origin: StopEntity` and `destination: StopEntity`. Resolves stop names against the GTFS static dataset. Handles disambiguation when multiple stops match a query (e.g. "Gràcia" matches several). Siri prompts for missing parameters automatically. `iOS/Intents/DeparturesBetweenStopsIntent.swift`.
-- [ ] **`StopEntity`** — `AppEntity` wrapping `Stop`, with `StringSearchableEntityQuery` backed by `FGCStaticService.searchStops()`. Required for Siri to resolve spoken stop names. `iOS/Intents/StopEntity.swift`.
-- [ ] **`PingShortcutsProvider`** — `AppShortcutsProvider` that surfaces both intents in the Shortcuts app with suggested phrases (e.g. *"Next train in Ping"*, *"Departures from [origin] to [destination] in Ping"*). `iOS/Intents/PingShortcutsProvider.swift`.
-- [ ] **Intent donation** — call `NextDepartureIntent.donate()` each time the user searches a route, so Siri learns the most-used pairs and proactively suggests them.

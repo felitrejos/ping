@@ -325,12 +325,48 @@ public final class PingStore {
         do {
             let identifier = stop.code ?? stop.id
             let arrivals = try await tmbRealtimeService.arrivals(stopID: identifier)
-            return .success(arrivals)
+            let enriched = await enrichWithScheduledDelays(arrivals, at: stop)
+            return .success(enriched)
         } catch let error as TMBArrivalsError {
             return .failure(error)
         } catch {
             return .failure(.network(error))
         }
+    }
+
+    private func enrichWithScheduledDelays(_ arrivals: [TMBArrival], at stop: TMBStop) async -> [TMBArrival] {
+        guard let concrete = tmbStaticService as? TMBStaticService else {
+            return arrivals
+        }
+
+        var enriched: [TMBArrival] = []
+        enriched.reserveCapacity(arrivals.count)
+        for arrival in arrivals {
+            let scheduled = await concrete.scheduledArrival(
+                stopID: stop.id,
+                routeShortName: arrival.routeShortName,
+                destination: arrival.destination,
+                target: arrival.arrivalDate
+            )
+            guard let scheduled else {
+                enriched.append(arrival)
+                continue
+            }
+
+            let delaySeconds = Int(arrival.arrivalDate.timeIntervalSince(scheduled))
+            enriched.append(
+                TMBArrival(
+                    routeShortName: arrival.routeShortName,
+                    destination: arrival.destination,
+                    arrivalDate: arrival.arrivalDate,
+                    minutesAway: arrival.minutesAway,
+                    isRealtime: arrival.isRealtime,
+                    scheduledArrivalDate: scheduled,
+                    delaySeconds: delaySeconds
+                )
+            )
+        }
+        return enriched
     }
 
     public func fgcDepartures(from stopID: StopID, limit: Int = 6) async -> Result<[StationDeparture], FGCDeparturesError> {

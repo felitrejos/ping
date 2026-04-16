@@ -10,6 +10,7 @@
 		01743C27B00F7D9D46FC522D /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		08B813432A1CE2F8EA021B5E /* FGCServiceAlertsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */; };
 		0974690191FE6BA0E491752A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
+		0EFE186DE74B68C8FA123B66 /* ServiceAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */; };
 		104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		1368753B7835AE2E382A2AD8 /* PingShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAEBFE9C2FC73C1E803C56E /* PingShortcutsProvider.swift */; };
 		147E741C8A3E4AC0C8DE49B7 /* CountdownFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0C9AEC2A818BFB13C981D /* CountdownFormatting.swift */; };
@@ -32,7 +33,9 @@
 		3F9B5D15ECA8CE05316E5315 /* NextDepartureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3C9CDFE14736D12CF5C621 /* NextDepartureIntent.swift */; };
 		3FBC4856F15E27FDD3CCAC45 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */; };
 		43A1013CA02B274A22649FDE /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */; };
+		46A6DD87F6EC320B9CF227A6 /* ServiceAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */; };
 		4D2252E6F3967AECBCA1AEE7 /* TransitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */; };
+		4E144B7157426835D4B1ABD6 /* ServiceAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */; };
 		4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		5064C6430D05B37DF97E8027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3416EE5192208E30B00DC270 /* Assets.xcassets */; };
 		5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */; };
@@ -160,6 +163,7 @@
 		AB7D09DE8E676407C04F9A77 /* FGCMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCMapView.swift; sourceTree = "<group>"; };
 		AC31FED7C10F1A506C456CC1 /* PingiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingiOSApp.swift; sourceTree = "<group>"; };
 		B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitModels.swift; sourceTree = "<group>"; };
+		B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAlertPresentation.swift; sourceTree = "<group>"; };
 		B507486A4EDE12BD849698F0 /* TMBKeys.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TMBKeys.example.xcconfig; sourceTree = "<group>"; };
 		BC3C0AD4259B2666BB0B36D5 /* TMBiBusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBiBusService.swift; sourceTree = "<group>"; };
 		C8E26F7DCEA7F1C43435440A /* TMBModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBModels.swift; sourceTree = "<group>"; };
@@ -272,6 +276,7 @@
 			isa = PBXGroup;
 			children = (
 				5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */,
+				B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */,
 				09116DEBE6559278706A92A0 /* SharedSettingsView.swift */,
 			);
 			path = Views;
@@ -520,6 +525,7 @@
 				19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */,
 				932EC972ED8C347EFC8E8A61 /* PingStore.swift in Sources */,
 				C9083D12373B742A1A2355AA /* PingWidgetsBundle.swift in Sources */,
+				0EFE186DE74B68C8FA123B66 /* ServiceAlertPresentation.swift in Sources */,
 				32AF7EAF012F00CC01B1BDCC /* ServiceProtocols.swift in Sources */,
 				1BE4C21EEB8DF810A62E1355 /* SharedContainer.swift in Sources */,
 				DC6025EAF943A409288298E7 /* SharedSettingsView.swift in Sources */,
@@ -558,6 +564,7 @@
 				1368753B7835AE2E382A2AD8 /* PingShortcutsProvider.swift in Sources */,
 				AC4AC5B5B45FEB0940182F73 /* PingStore.swift in Sources */,
 				B4165D0E47C25A6403012345 /* PingiOSApp.swift in Sources */,
+				4E144B7157426835D4B1ABD6 /* ServiceAlertPresentation.swift in Sources */,
 				BDD43B13E54FEA8E1EA682AB /* ServiceProtocols.swift in Sources */,
 				3FBC4856F15E27FDD3CCAC45 /* SharedContainer.swift in Sources */,
 				8F38E3A3850FBC1E9F0B178F /* SharedSettingsView.swift in Sources */,
@@ -591,6 +598,7 @@
 				1D477E9706D39F1A82C5F628 /* PingActivityAttributes.swift in Sources */,
 				ABBC85D0544F5FFBA02D1984 /* PingMacApp.swift in Sources */,
 				DAF55A7C2B6906E3AFD0078B /* PingStore.swift in Sources */,
+				46A6DD87F6EC320B9CF227A6 /* ServiceAlertPresentation.swift in Sources */,
 				43A1013CA02B274A22649FDE /* ServiceProtocols.swift in Sources */,
 				C2E86D705A15F946A33A6B76 /* SharedContainer.swift in Sources */,
 				BB552271A2211508A2471963 /* SharedSettingsView.swift in Sources */,

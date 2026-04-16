@@ -420,19 +420,20 @@ struct ContentView: View {
         let alerts = actionableServiceAlerts
         if !alerts.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
-                if let primaryAlert = alerts.max(by: { severityRank($0.severity) < severityRank($1.severity) }) {
+                if let primaryAlert = ServiceAlertPresentation.primaryAlert(from: alerts) {
                     NoticeCard(
                         title: primaryAlert.title,
                         message: primaryAlert.details,
                         systemImage: "exclamationmark.triangle.fill",
-                        tint: severityColor(primaryAlert.severity)
+                        tint: ServiceAlertPresentation.color(for: primaryAlert.severity)
                     )
                 }
 
-                if !lineStatusRows.isEmpty {
+                let rows = ServiceAlertPresentation.lineStatusRows(from: alerts)
+                if !rows.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(lineStatusRows) { row in
+                            ForEach(rows) { row in
                                 HStack(spacing: 6) {
                                     Text(row.line)
                                         .font(.caption2.weight(.bold))
@@ -440,9 +441,9 @@ struct ContentView: View {
                                         .frame(width: 28, height: 20)
                                         .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-                                    Text(severityLabel(row.severity))
+                                    Text(ServiceAlertPresentation.label(for: row.severity))
                                         .font(.caption.weight(.semibold))
-                                        .foregroundStyle(severityColor(row.severity))
+                                        .foregroundStyle(ServiceAlertPresentation.color(for: row.severity))
                                 }
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
@@ -460,67 +461,8 @@ struct ContentView: View {
         }
     }
 
-    private var lineStatusRows: [LineStatusRow] {
-        var severityByLine: [String: ServiceAlertSeverity] = [:]
-        for alert in actionableServiceAlerts {
-            for line in alert.affectedLines {
-                let current = severityByLine[line]
-                if let current {
-                    if severityRank(alert.severity) > severityRank(current) {
-                        severityByLine[line] = alert.severity
-                    }
-                } else {
-                    severityByLine[line] = alert.severity
-                }
-            }
-        }
-
-        return severityByLine
-            .map { LineStatusRow(line: $0.key, severity: $0.value) }
-            .sorted { $0.line.localizedStandardCompare($1.line) == .orderedAscending }
-    }
-
     private var actionableServiceAlerts: [ServiceAlert] {
-        store.activeServiceAlerts.filter { $0.severity != .info }
-    }
-
-    private func severityRank(_ severity: ServiceAlertSeverity) -> Int {
-        switch severity {
-        case .info:
-            0
-        case .minor:
-            1
-        case .major:
-            2
-        case .closure:
-            3
-        }
-    }
-
-    private func severityColor(_ severity: ServiceAlertSeverity) -> Color {
-        switch severity {
-        case .info:
-            .blue
-        case .minor:
-            .yellow
-        case .major:
-            .orange
-        case .closure:
-            .red
-        }
-    }
-
-    private func severityLabel(_ severity: ServiceAlertSeverity) -> String {
-        switch severity {
-        case .info:
-            "Info"
-        case .minor:
-            "Minor"
-        case .major:
-            "Major"
-        case .closure:
-            "Closure"
-        }
+        ServiceAlertPresentation.actionableAlerts(from: store.activeServiceAlerts)
     }
 
     @ViewBuilder
@@ -1070,36 +1012,6 @@ private struct NoTrainsCard: View {
         .frame(maxWidth: .infinity)
         .padding(32)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
-    }
-}
-
-private struct AlertsFreshnessCaption: View {
-    let lastUpdated: Date
-    private let staleThreshold: TimeInterval = 15 * 60
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { timeline in
-            let isStale = timeline.date.timeIntervalSince(lastUpdated) >= staleThreshold
-
-            HStack(spacing: 0) {
-                Text("Updated ")
-                Text(lastUpdated, style: .relative)
-                if isStale {
-                    Text(" · may be outdated")
-                }
-            }
-            .font(.caption2)
-            .foregroundStyle(isStale ? .orange : .secondary)
-        }
-    }
-}
-
-private struct LineStatusRow: Identifiable {
-    let line: String
-    let severity: ServiceAlertSeverity
-
-    var id: String {
-        line
     }
 }
 

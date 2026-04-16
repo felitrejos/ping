@@ -204,7 +204,7 @@ struct MenuBarView: View {
         VStack(spacing: 0) {
             Divider().padding(.horizontal, 16)
             VStack(alignment: .leading, spacing: 10) {
-                if let primaryAlert = actionableServiceAlerts.max(by: { severityRank($0.severity) < severityRank($1.severity) }) {
+                if let primaryAlert = ServiceAlertPresentation.primaryAlert(from: actionableServiceAlerts) {
                     alertCard(
                         title: primaryAlert.title,
                         message: primaryAlert.details,
@@ -212,10 +212,11 @@ struct MenuBarView: View {
                     )
                 }
 
-                if !lineStatusRows.isEmpty {
+                let rows = ServiceAlertPresentation.lineStatusRows(from: actionableServiceAlerts)
+                if !rows.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            ForEach(lineStatusRows) { row in
+                            ForEach(rows) { row in
                                 HStack(spacing: 6) {
                                     Text(row.line)
                                         .font(.caption2.weight(.bold))
@@ -223,9 +224,9 @@ struct MenuBarView: View {
                                         .frame(width: 28, height: 18)
                                         .background(.blue, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-                                    Text(severityLabel(row.severity))
+                                    Text(ServiceAlertPresentation.label(for: row.severity))
                                         .font(.caption.weight(.semibold))
-                                        .foregroundStyle(severityColor(row.severity))
+                                        .foregroundStyle(ServiceAlertPresentation.color(for: row.severity))
                                 }
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 6)
@@ -236,7 +237,7 @@ struct MenuBarView: View {
                 }
 
                 if let lastUpdated = store.serviceAlertsLastUpdated {
-                    AlertsFreshnessCaptionMac(lastUpdated: lastUpdated)
+                    AlertsFreshnessCaption(lastUpdated: lastUpdated)
                 }
             }
             .padding(.horizontal, 16)
@@ -245,9 +246,10 @@ struct MenuBarView: View {
     }
 
     private func alertCard(title: String, message: String?, severity: ServiceAlertSeverity) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        let tint = ServiceAlertPresentation.color(for: severity)
+        return HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(severityColor(severity))
+                .foregroundStyle(tint)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.callout.weight(.semibold))
@@ -260,70 +262,11 @@ struct MenuBarView: View {
             }
         }
         .padding(10)
-        .background(severityColor(severity).opacity(0.13), in: RoundedRectangle(cornerRadius: 10))
+        .background(tint.opacity(0.13), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var actionableServiceAlerts: [ServiceAlert] {
-        store.activeServiceAlerts.filter { $0.severity != .info }
-    }
-
-    private var lineStatusRows: [LineStatusRow] {
-        var severityByLine: [String: ServiceAlertSeverity] = [:]
-
-        for alert in actionableServiceAlerts {
-            for line in alert.affectedLines {
-                if let current = severityByLine[line] {
-                    if severityRank(alert.severity) > severityRank(current) {
-                        severityByLine[line] = alert.severity
-                    }
-                } else {
-                    severityByLine[line] = alert.severity
-                }
-            }
-        }
-
-        return severityByLine
-            .map { LineStatusRow(line: $0.key, severity: $0.value) }
-            .sorted { $0.line.localizedStandardCompare($1.line) == .orderedAscending }
-    }
-
-    private func severityRank(_ severity: ServiceAlertSeverity) -> Int {
-        switch severity {
-        case .info:
-            0
-        case .minor:
-            1
-        case .major:
-            2
-        case .closure:
-            3
-        }
-    }
-
-    private func severityColor(_ severity: ServiceAlertSeverity) -> Color {
-        switch severity {
-        case .info:
-            .blue
-        case .minor:
-            .yellow
-        case .major:
-            .orange
-        case .closure:
-            .red
-        }
-    }
-
-    private func severityLabel(_ severity: ServiceAlertSeverity) -> String {
-        switch severity {
-        case .info:
-            "Info"
-        case .minor:
-            "Minor"
-        case .major:
-            "Major"
-        case .closure:
-            "Closure"
-        }
+        ServiceAlertPresentation.actionableAlerts(from: store.activeServiceAlerts)
     }
 
     // MARK: - Favorite stations
@@ -687,36 +630,6 @@ struct MenuBarView: View {
 
     private var routeTitle: String {
         "\(originName) → \(destinationName)"
-    }
-}
-
-private struct AlertsFreshnessCaptionMac: View {
-    let lastUpdated: Date
-    private let staleThreshold: TimeInterval = 15 * 60
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { timeline in
-            let isStale = timeline.date.timeIntervalSince(lastUpdated) >= staleThreshold
-
-            HStack(spacing: 0) {
-                Text("Updated ")
-                Text(lastUpdated, style: .relative)
-                if isStale {
-                    Text(" · may be outdated")
-                }
-            }
-            .font(.caption2)
-            .foregroundStyle(isStale ? .orange : .secondary)
-        }
-    }
-}
-
-private struct LineStatusRow: Identifiable {
-    let line: String
-    let severity: ServiceAlertSeverity
-
-    var id: String {
-        line
     }
 }
 

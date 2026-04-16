@@ -5,13 +5,11 @@ import SwiftUI
 struct FGCMapView: View {
     @Environment(PingStore.self) private var store
     @State private var position: MapCameraPosition = .automatic
-    @State private var walkingRoute: MKPolyline?
     @State private var selectedStation: Stop?
     @State private var originID: StopID?
     @State private var destinationID: StopID?
     @State private var isTMBOverlayEnabled = UserSettings.tmbEnabled()
     @State private var isFGCOverlayEnabled = UserSettings.fgcEnabled()
-    @State private var lastWalkingRouteRequestKey: WalkingRouteRequestKey?
     @State private var lastCameraRegion: MKCoordinateRegion?
     @State private var visibleFGCStops: [Stop] = []
     @State private var visibleFGCDotStops: [Stop] = []
@@ -55,10 +53,6 @@ struct FGCMapView: View {
         return stationsWithCoordinates.first { $0.id == destinationID }
     }
 
-    private var hasActiveCommuteContext: Bool {
-        store.nextDeparture != nil || store.nextCommute != nil
-    }
-
     private var pinnedFGCStops: [Stop] {
         var seen = Set<StopID>()
         let anchors = [selectedStation] + closestFGCStations
@@ -83,11 +77,6 @@ struct FGCMapView: View {
 
     var body: some View {
         Map(position: $position) {
-            if let walkingRoute {
-                MapPolyline(walkingRoute)
-                    .stroke(.blue, lineWidth: 5)
-            }
-
             if isFGCOverlayEnabled {
                 if fgcStopDisplayMode == .dots {
                     ForEach(visibleFGCDotStops) { station in
@@ -250,16 +239,12 @@ struct FGCMapView: View {
         }
         .onChange(of: store.userLocation) { _, _ in
             Task {
-                await updateWalkingRoute()
                 await refreshClosestFGCStations()
                 await refreshNearbyTMBStops()
                 if let lastCameraRegion {
                     await refreshVisibleTMBStops(for: lastCameraRegion)
                 }
             }
-        }
-        .onChange(of: hasActiveCommuteContext) { _, _ in
-            Task { await updateWalkingRoute() }
         }
         .onChange(of: store.homeStationID) { _, _ in
             Task { await reloadMapData() }
@@ -394,7 +379,6 @@ struct FGCMapView: View {
         originID = await store.selectedHomeStationID()
         destinationID = await store.selectedDestinationStationID()
         await refreshClosestFGCStations()
-        await updateWalkingRoute()
         updateCamera()
     }
 
@@ -701,36 +685,6 @@ struct FGCMapView: View {
         }
     }
 
-    private func updateWalkingRoute() async {
-        guard hasActiveCommuteContext else {
-            lastWalkingRouteRequestKey = nil
-            walkingRoute = nil
-            return
-        }
-
-        guard
-            let userCoordinate,
-            let originCoordinate = originStop?.coordinate?.mapCoordinate
-        else {
-            lastWalkingRouteRequestKey = nil
-            walkingRoute = nil
-            return
-        }
-
-        let requestKey = WalkingRouteRequestKey(source: userCoordinate, destination: originCoordinate)
-        guard requestKey != lastWalkingRouteRequestKey else {
-            return
-        }
-
-        lastWalkingRouteRequestKey = requestKey
-        let route = await Self.walkingRoute(from: userCoordinate, to: originCoordinate)
-        guard requestKey == lastWalkingRouteRequestKey else {
-            return
-        }
-
-        walkingRoute = route
-    }
-
     private func updateCamera() {
         var coordinates: [CLLocationCoordinate2D] = []
         if let userCoordinate {
@@ -747,45 +701,6 @@ struct FGCMapView: View {
         position = .region(region)
     }
 
-    private static func walkingRoute(
-        from source: CLLocationCoordinate2D,
-        to destination: CLLocationCoordinate2D
-    ) async -> MKPolyline? {
-        let request = MKDirections.Request()
-        request.source = mapItem(for: source)
-        request.destination = mapItem(for: destination)
-        request.transportType = .walking
-
-        do {
-            return try await MKDirections(request: request).calculate().routes.first?.polyline
-        } catch {
-            return nil
-        }
-    }
-
-    private static func mapItem(for coordinate: CLLocationCoordinate2D) -> MKMapItem {
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        return MKMapItem(location: location, address: nil)
-    }
-
-}
-
-private struct WalkingRouteRequestKey: Equatable {
-    let sourceLatitudeBucket: Int
-    let sourceLongitudeBucket: Int
-    let destinationLatitudeBucket: Int
-    let destinationLongitudeBucket: Int
-
-    init(source: CLLocationCoordinate2D, destination: CLLocationCoordinate2D) {
-        sourceLatitudeBucket = Self.bucket(source.latitude)
-        sourceLongitudeBucket = Self.bucket(source.longitude)
-        destinationLatitudeBucket = Self.bucket(destination.latitude)
-        destinationLongitudeBucket = Self.bucket(destination.longitude)
-    }
-
-    private static func bucket(_ value: CLLocationDegrees) -> Int {
-        Int((value * 10_000).rounded())
-    }
 }
 
 private enum StopDisplayMode {
@@ -980,7 +895,7 @@ private struct MapStatusPanel: View {
 
                                 Spacer()
 
-                                Text("\(departure.minutesUntilDeparture) min")
+                                Text(CountdownFormatting.compactMinutesText(minutes: departure.minutesUntilDeparture))
                                     .font(.subheadline.weight(.semibold))
                                     .monospacedDigit()
                             }
@@ -1052,9 +967,20 @@ private struct MapStatusPanel: View {
 
                                 Spacer()
 
-                                Text("\(arrival.minutesAway) min")
-                                    .font(.subheadline.weight(.semibold))
-                                    .monospacedDigit()
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text(CountdownFormatting.compactMinutesText(minutes: arrival.minutesAway))
+                                        .font(.subheadline.weight(.semibold))
+                                        .monospacedDigit()
+
+                                    if arrival.hasMeaningfulDelay {
+                                        Text(arrival.delayMinutes > 0
+                                            ? "+\(arrival.delayMinutes) min"
+                                            : "\(arrival.delayMinutes) min")
+                                            .font(.caption2.weight(.semibold))
+                                            .monospacedDigit()
+                                            .foregroundStyle(arrival.delayMinutes > 0 ? .orange : .green)
+                                    }
+                                }
                             }
                         }
                     }

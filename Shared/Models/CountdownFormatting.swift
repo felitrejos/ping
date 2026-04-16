@@ -73,4 +73,20 @@ public enum CountdownFormatting {
 
         return "\(minutes)m \(seconds)s"
     }
+
+    /// Compact countdown for minute-resolution values (e.g. next-arrival labels on the map).
+    /// Falls back to hours when the countdown crosses 60 minutes so labels don't drift to
+    /// "90 min" / "300 min" territory.
+    public static func compactMinutesText(minutes: Int) -> String {
+        let normalized = max(0, minutes)
+        if normalized >= 60 {
+            let hours = normalized / 60
+            let remainder = normalized % 60
+            if remainder == 0 {
+                return "\(hours) h"
+            }
+            return "\(hours) h \(remainder) min"
+        }
+        return "\(normalized) min"
+    }
 }

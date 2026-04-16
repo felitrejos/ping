@@ -28,19 +28,35 @@ public struct TMBArrival: Equatable, Sendable {
     public let arrivalDate: Date
     public let minutesAway: Int
     public let isRealtime: Bool
+    /// Scheduled arrival from the static GTFS feed, when we were able to match one.
+    public let scheduledArrivalDate: Date?
+    /// `arrivalDate − scheduledArrivalDate` in seconds. Positive means the bus is running late.
+    public let delaySeconds: Int
 
     public init(
         routeShortName: String,
         destination: String,
         arrivalDate: Date,
         minutesAway: Int,
-        isRealtime: Bool
+        isRealtime: Bool,
+        scheduledArrivalDate: Date? = nil,
+        delaySeconds: Int = 0
     ) {
         self.routeShortName = routeShortName
         self.destination = destination
         self.arrivalDate = arrivalDate
         self.minutesAway = minutesAway
         self.isRealtime = isRealtime
+        self.scheduledArrivalDate = scheduledArrivalDate
+        self.delaySeconds = delaySeconds
+    }
+
+    public var hasMeaningfulDelay: Bool {
+        abs(delaySeconds) >= 60
+    }
+
+    public var delayMinutes: Int {
+        delaySeconds / 60
     }
 }
 
