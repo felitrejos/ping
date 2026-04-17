@@ -307,6 +307,25 @@ public enum CalendarAuthorizationState: String, Codable, Equatable, Sendable {
     }
 }
 
+/// A user-saved origin/destination pair shown as a one-tap chip on the home screen.
+///
+/// Station favorites (`favoriteStationIDs`) give quick access to a single station;
+/// `SavedRoute` captures the more common daily-commute case of a specific direction (e.g.
+/// Home → Work, Work → Home) that the user wants to apply in a single tap.
+public struct SavedRoute: Codable, Equatable, Identifiable, Sendable, Hashable {
+    public let originID: StopID
+    public let destinationID: StopID
+
+    public var id: String {
+        "\(originID)->\(destinationID)"
+    }
+
+    public init(originID: StopID, destinationID: StopID) {
+        self.originID = originID
+        self.destinationID = destinationID
+    }
+}
+
 public enum UserSettings {
     public enum Keys {
         public static let homeStationID = "ping.userHomeStation"
@@ -316,6 +335,7 @@ public enum UserSettings {
         public static let selectedLine = "ping.selectedLine"
         public static let menuBarSleepMode = "ping.menuBarSleepMode"
         public static let favoriteStationIDs = "ping.favoriteStationIDs"
+        public static let savedRoutes = "ping.savedRoutes"
         public static let didMigrateLegacyDefaultRoute = "ping.didMigrateLegacyDefaultRoute"
         public static let tmbEnabled = "ping.tmbEnabled"
         public static let fgcEnabled = "ping.fgcEnabled"
@@ -463,6 +483,45 @@ public enum UserSettings {
 
         if let encoded = try? JSONEncoder().encode(cleaned) {
             defaults.set(encoded, forKey: Keys.favoriteStationIDs)
+        }
+    }
+
+    public static func savedRoutes(defaults: UserDefaults = .standard) -> [SavedRoute] {
+        guard let data = defaults.data(forKey: Keys.savedRoutes) else {
+            return []
+        }
+
+        let decoded = (try? JSONDecoder().decode([SavedRoute].self, from: data)) ?? []
+        var seen: Set<String> = []
+        return decoded.filter { route in
+            // Drop routes whose stops have been renamed / removed, self-routes, and duplicates.
+            guard isConfiguredStopID(route.originID),
+                  isConfiguredStopID(route.destinationID),
+                  route.originID != route.destinationID,
+                  !seen.contains(route.id) else {
+                return false
+            }
+            seen.insert(route.id)
+            return true
+        }
+    }
+
+    public static func setSavedRoutes(_ routes: [SavedRoute], defaults: UserDefaults = .standard) {
+        let cleaned = routes
+            .filter { isConfiguredStopID($0.originID) && isConfiguredStopID($0.destinationID) && $0.originID != $0.destinationID }
+            .reduce(into: [SavedRoute]()) { result, route in
+                if !result.contains(where: { $0.id == route.id }) {
+                    result.append(route)
+                }
+            }
+
+        if cleaned.isEmpty {
+            defaults.removeObject(forKey: Keys.savedRoutes)
+            return
+        }
+
+        if let encoded = try? JSONEncoder().encode(cleaned) {
+            defaults.set(encoded, forKey: Keys.savedRoutes)
         }
     }
 

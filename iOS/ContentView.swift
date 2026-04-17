@@ -1,5 +1,6 @@
-import SwiftUI
+import Combine
 import CoreLocation
+import SwiftUI
 import UserNotifications
 #if canImport(AppIntents)
 import AppIntents
@@ -26,16 +27,22 @@ struct ContentView: View {
     @State private var activeStationPicker: StationPickerTarget?
     @State private var routeSearchCommitted = false
     @State private var isSearchingRoute = false
+    @State private var isServiceAlertsSheetPresented = false
+    /// Wall clock used to re-evaluate `timeOfDaySuggestion`. Ticking at a minute cadence
+    /// is plenty — the suggestion only crosses morning/evening thresholds on the hour.
+    @State private var suggestionClock = Date()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     pingHeader
+                    serviceStatusPill
                     routeSection
+                    timeOfDaySuggestion
                     quickSwitchSection
+                    savedRoutesSection
                     searchRoutesButton
-                    serviceAlertsSection
                     statusBanner
                     calendarSection
                 }
@@ -83,6 +90,12 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
             Task { await tracker.syncWithStore(store) }
+            // Refresh the suggestion clock on foreground so a user who keeps the app open
+            // across morning → evening sees the right card without waiting for the next tick.
+            suggestionClock = Date()
+        }
+        .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { date in
+            suggestionClock = date
         }
         .task {
             await tracker.syncWithStore(store)
@@ -142,47 +155,61 @@ struct ContentView: View {
             .renderingMode(.template)
             .resizable()
             .scaledToFit()
-            .foregroundStyle(Color.white)
+            .foregroundStyle(.primary)
     }
 
+    /// Single grouped card for the origin/destination picker.
+    ///
+    /// Layout borrows from Apple Maps: two rows separated by a hairline, with a circular swap
+    /// affordance floating over the divider on the trailing edge. The card-level background
+    /// replaces the two per-field backgrounds we used to stack, so the whole thing reads as one
+    /// primary search control rather than three loose elements.
     private var routeSection: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 0) {
-                    stationPickerField(
-                        title: "ORIGIN",
-                        value: selectedOriginName ?? "Choose station"
-                    ) {
-                        activeStationPicker = .origin
-                    }
-
-                    stationPickerField(
-                        title: "DESTINATION",
-                        value: selectedDestinationName ?? "Choose station",
-                        topPadding: 14
-                    ) {
-                        activeStationPicker = .destination
-                    }
+        ZStack(alignment: .trailing) {
+            VStack(spacing: 0) {
+                stationPickerRow(
+                    title: "ORIGIN",
+                    value: selectedOriginName ?? "Choose station"
+                ) {
+                    activeStationPicker = .origin
                 }
 
-                Button {
-                    guard hasPendingDefaultRoute else {
-                        return
-                    }
-                    swapPendingRoute()
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                        .font(.headline.weight(.semibold))
-                        .frame(width: 34, height: 34)
+                Divider()
+                    .padding(.leading, 16)
+
+                stationPickerRow(
+                    title: "DESTINATION",
+                    value: selectedDestinationName ?? "Choose station"
+                ) {
+                    activeStationPicker = .destination
                 }
-                .buttonStyle(.bordered)
-                .foregroundStyle(.secondary)
-                .opacity(hasPendingDefaultRoute ? 1 : 0.45)
-                .disabled(!hasPendingDefaultRoute)
-                .accessibilityLabel("Swap origin and destination")
             }
-            .padding(.bottom, 4)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+
+            swapRouteButton
+                .padding(.trailing, 10)
         }
+    }
+
+    private var swapRouteButton: some View {
+        Button {
+            guard hasPendingDefaultRoute else { return }
+            swapPendingRoute()
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 36, height: 36)
+                .background {
+                    Circle()
+                        .fill(Color(.tertiarySystemBackground))
+                        .overlay(Circle().stroke(Color(.separator), lineWidth: 0.5))
+                }
+        }
+        .buttonStyle(.plain)
+        .opacity(hasPendingDefaultRoute ? 1 : 0.4)
+        .disabled(!hasPendingDefaultRoute)
+        .accessibilityLabel("Swap origin and destination")
     }
 
     @ViewBuilder
@@ -260,8 +287,295 @@ struct ContentView: View {
         .padding(.top, -2)
     }
 
+    // MARK: - Saved routes
+
+    /// One-tap origin/destination chips.
+    ///
+    /// Tapping a chip applies the route and immediately runs a search — that's the common
+    /// intent (switching between Home → Work and Work → Home), so we skip the intermediate
+    /// popover. Long-press surfaces a destructive "Remove" action via `contextMenu`. The
+    /// trailing `+` in the header saves the currently-pending route when it's configured and
+    /// not already saved.
+    @ViewBuilder
+    private var savedRoutesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Text("Saved routes")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    guard let origin = selectedOriginID,
+                          let destination = selectedDestinationID else { return }
+                    store.addSavedRoute(origin: origin, destination: destination)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(canSaveCurrentRoute ? Color.blue : Color.secondary.opacity(0.4))
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSaveCurrentRoute)
+                .accessibilityLabel("Save current route")
+            }
+
+            if !store.savedRoutes.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(store.savedRoutes) { route in
+                            savedRouteChip(route)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .padding(.horizontal, -16)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "bookmark")
+                        .foregroundStyle(.secondary)
+                    Text("Tap the + above to save this route for one-tap switching later.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func savedRouteChip(_ route: SavedRoute) -> some View {
+        let originName = stationName(for: route.originID) ?? route.originID
+        let destName = stationName(for: route.destinationID) ?? route.destinationID
+
+        Button {
+            applySavedRoute(route)
+        } label: {
+            HStack(spacing: 6) {
+                Text(originName)
+                Image(systemName: "arrow.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                Text(destName)
+            }
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(Color(.secondarySystemBackground), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button(role: .destructive) {
+                store.removeSavedRoute(route)
+            } label: {
+                Label("Remove", systemImage: "trash")
+            }
+        }
+        .accessibilityLabel("Apply route \(originName) to \(destName)")
+    }
+
+    private var canSaveCurrentRoute: Bool {
+        guard let origin = selectedOriginID,
+              let destination = selectedDestinationID,
+              origin != destination else {
+            return false
+        }
+        return !store.isRouteSaved(origin: origin, destination: destination)
+    }
+
+    private func applySavedRoute(_ route: SavedRoute) {
+        // Fill the pending origin/destination only. The user still has to hit "Search routes"
+        // to commit — same mental model as tapping a favorite station, and it avoids surprising
+        // navigation when the user is mid-glance.
+        setPendingOrigin(route.originID)
+        setPendingDestination(route.destinationID)
+    }
+
+    // MARK: - Service status pill
+
+    /// Ambient one-line FGC health summary under the header.
+    ///
+    /// Reads from `store.activeServiceAlerts` — no new network calls. Info alerts are
+    /// excluded (they're announcements, not disruptions), so the pill only goes tappable
+    /// when there's at least one actionable alert. Otherwise it's a static "all running"
+    /// reassurance.
+    private var serviceStatusPill: some View {
+        let actionable = actionableServiceAlerts.count
+        let hasActionable = actionable > 0
+
+        let tint: Color = hasActionable ? .orange : .green
+        let systemImage = hasActionable ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
+        let label = hasActionable
+            ? "FGC · \(actionable) alert\(actionable == 1 ? "" : "s")"
+            : "FGC · All lines running"
+
+        let pillBody = HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.caption.weight(.semibold))
+            Text(label)
+                .font(.caption.weight(.semibold))
+            Spacer(minLength: 0)
+            if hasActionable {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(tint.opacity(0.6))
+            }
+        }
+        .foregroundStyle(tint)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(tint.opacity(0.12), in: Capsule())
+
+        return Group {
+            if hasActionable {
+                Button {
+                    isServiceAlertsSheetPresented = true
+                } label: {
+                    pillBody
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(label). Tap to see details.")
+                .accessibilityAddTraits(.isButton)
+            } else {
+                pillBody
+                    .accessibilityElement(children: .combine)
+            }
+        }
+        .sheet(isPresented: $isServiceAlertsSheetPresented) {
+            ServiceAlertsSheet(alerts: store.activeServiceAlerts)
+        }
+    }
+
+    // MARK: - Time-of-day suggestion
+
+    /// A contextual one-tap nudge based on the wall clock + configured home station.
+    ///
+    /// Two triggers:
+    ///   - Morning (05:00–11:59) + pending origin is not `homeStationID` + home is known
+    ///     → `"Start from home?"` sets pending origin to home.
+    ///   - Evening (17:00–23:59) + pending origin is `homeStationID` + pending destination
+    ///     is set and is not home → `"Heading home?"` swaps origin and destination.
+    ///
+    /// Returns `EmptyView` otherwise; driven by a 60 s `TimelineView` tick so the card
+    /// appears/disappears as the hour rolls without a full scene refresh.
+    @ViewBuilder
+    private var timeOfDaySuggestion: some View {
+        // Using a plain `if let` (instead of wrapping in a TimelineView) is deliberate:
+        // SwiftUI's VStack collapses spacing around a nil branch, but treats a TimelineView
+        // containing EmptyView as a real zero-size view and still applies full spacing. So
+        // when there's no suggestion we render literally nothing, and `suggestionClock`
+        // drives recomputation via .onReceive in the root body.
+        if let suggestion = resolveTimeOfDaySuggestion(at: suggestionClock) {
+            timeOfDayCard(suggestion)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+
+    private enum TimeOfDaySuggestion: Equatable {
+        case startFromHome(homeID: StopID, homeName: String)
+        case reverseToHome
+
+        var title: String {
+            switch self {
+            case .startFromHome: "Start from home?"
+            case .reverseToHome: "Heading home?"
+            }
+        }
+
+        var subtitle: String {
+            switch self {
+            case .startFromHome(_, let homeName): "Set \(homeName) as origin."
+            case .reverseToHome: "Reverse today's route."
+            }
+        }
+
+        var actionLabel: String {
+            switch self {
+            case .startFromHome: "Use home"
+            case .reverseToHome: "Reverse"
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .startFromHome: "house.fill"
+            case .reverseToHome: "arrow.uturn.backward"
+            }
+        }
+    }
+
+    private func resolveTimeOfDaySuggestion(at date: Date) -> TimeOfDaySuggestion? {
+        let hour = Calendar.current.component(.hour, from: date)
+        guard let homeID = store.homeStationID else { return nil }
+
+        // Morning path — user probably wants to start from home.
+        if (5...11).contains(hour),
+           selectedOriginID != homeID,
+           let homeName = stationName(for: homeID) {
+            return .startFromHome(homeID: homeID, homeName: homeName)
+        }
+
+        // Evening path — user probably wants to head back home. Requires a fully-configured
+        // outbound route so the "reverse" action has something to operate on.
+        if (17...23).contains(hour),
+           selectedOriginID == homeID,
+           let destinationID = selectedDestinationID,
+           destinationID != homeID {
+            return .reverseToHome
+        }
+
+        return nil
+    }
+
+    private func timeOfDayCard(_ suggestion: TimeOfDaySuggestion) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: suggestion.systemImage)
+                .font(.title3)
+                .foregroundStyle(.blue)
+                .frame(width: 32, height: 32)
+                .background(Color.blue.opacity(0.12), in: Circle())
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(suggestion.title)
+                    .font(.subheadline.weight(.semibold))
+                Text(suggestion.subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                applyTimeOfDaySuggestion(suggestion)
+            } label: {
+                Text(suggestion.actionLabel)
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
+            .controlSize(.small)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private func applyTimeOfDaySuggestion(_ suggestion: TimeOfDaySuggestion) {
+        switch suggestion {
+        case .startFromHome(let homeID, _):
+            setPendingOrigin(homeID)
+        case .reverseToHome:
+            swapPendingRoute()
+        }
+    }
+
     private var searchRoutesButton: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 6) {
             Button {
                 if !store.isLocationAccessGranted {
                     if store.isLocationAccessDenied {
@@ -287,6 +601,18 @@ struct ContentView: View {
             .tint(store.isLocationAccessGranted ? .blue : .orange)
             .controlSize(.large)
             .disabled(isSearchingRoute || (store.isLocationAccessGranted && !hasPendingDefaultRoute))
+
+            // "Allow Once" on the iOS prompt grants location only for that session, so the user
+            // sees this CTA again on every launch. Nudge toward "While Using the App" (persistent)
+            // before they see the system prompt. Only shown when undetermined — not when denied,
+            // since that path goes to Settings.
+            if !store.isLocationAccessGranted && !store.isLocationAccessDenied {
+                Text("Tip: pick \u{201C}While Using the App\u{201D} to avoid re-enabling every launch.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+            }
         }
     }
 
@@ -362,36 +688,35 @@ struct ContentView: View {
         routeSearchCommitted = true
     }
 
-    private func stationPickerField(
+    /// A single row inside the unified route card — no background, no trailing icon.
+    ///
+    /// The parent `routeSection` provides the card background and the floating swap button, so
+    /// this row only needs to render the label + value. Right padding reserves space so that
+    /// long station names don't run under the swap button overlay.
+    private func stationPickerRow(
         title: String,
         value: String,
-        topPadding: CGFloat = 0,
         action: @escaping () -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .tracking(0.3)
-                .padding(.top, topPadding)
-                .padding(.bottom, 4)
-
-            Button(action: action) {
-                HStack(spacing: 8) {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.caption2.weight(.semibold))
+                        .tracking(0.4)
+                        .foregroundStyle(.secondary)
                     Text(value)
                         .font(.title3)
                         .foregroundStyle(selectedLabelColor(for: value))
                         .lineLimit(1)
-                    Spacer()
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
-                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                Spacer(minLength: 56)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 
     private func selectedLabelColor(for value: String) -> Color {
@@ -643,16 +968,13 @@ struct ContentView: View {
             } else if let plan = nextCalendarCommute {
                 commuteRow(plan)
             } else {
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "calendar.badge.exclamationmark")
+                HStack(spacing: 10) {
+                    Image(systemName: "calendar")
                         .foregroundStyle(.secondary)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("No upcoming calendar commutes")
-                            .font(.subheadline.weight(.semibold))
-                        Text("Add events with a location to see route suggestions here.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Nothing upcoming.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1393,6 +1715,7 @@ private struct TrackingHapticsModifier: ViewModifier {
 /// hero card is already the largest element on screen and a bigger bump reads as gimmicky.
 private struct LeaveNowBumpModifier: ViewModifier {
     let tracker: CommuteTracker
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var bumpScale: CGFloat = 1.0
 
     private var leaveNowBucket: TrackingHapticsModifier.LeaveNowBucket {
@@ -1405,6 +1728,10 @@ private struct LeaveNowBumpModifier: ViewModifier {
             .scaleEffect(bumpScale)
             .onChange(of: leaveNowBucket) { oldValue, newValue in
                 guard oldValue == .onTime, newValue == .leaveNow else { return }
+                // Reduce Motion: keep the haptic (fired by TrackingHapticsModifier) but skip the
+                // visual scale. No fallback flash — the existing phase-driven countdown color and
+                // the status banner already carry the "you need to move" signal without motion.
+                guard !reduceMotion else { return }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
                     bumpScale = 1.03
                 } completion: {
@@ -1628,5 +1955,139 @@ private struct NoticeCard: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Service alerts sheet
+
+/// Modal list of every *actionable* FGC alert, sorted by severity (most severe first).
+///
+/// `.info` alerts are filtered out entirely — they're announcements, not disruptions, and
+/// including them makes the sheet feel noisy. Each row unpacks what the inline pill can only
+/// summarize: full title, full details, affected line badges, and (when present) a validity
+/// window.
+private struct ServiceAlertsSheet: View {
+    let alerts: [ServiceAlert]
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var sortedAlerts: [ServiceAlert] {
+        alerts
+            .filter { $0.severity != .info }
+            .sorted { lhs, rhs in
+                let lRank = ServiceAlertPresentation.rank(for: lhs.severity)
+                let rRank = ServiceAlertPresentation.rank(for: rhs.severity)
+                if lRank != rRank { return lRank > rRank }
+                // Stable tiebreaker so the list doesn't shuffle across refreshes.
+                return lhs.id < rhs.id
+            }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if sortedAlerts.isEmpty {
+                    ContentUnavailableView(
+                        "No alerts",
+                        systemImage: "checkmark.circle",
+                        description: Text("FGC is not reporting any service alerts right now.")
+                    )
+                } else {
+                    List {
+                        ForEach(sortedAlerts) { alert in
+                            ServiceAlertRow(alert: alert)
+                                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("Service alerts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
+
+private struct ServiceAlertRow: View {
+    let alert: ServiceAlert
+
+    var body: some View {
+        let tint = ServiceAlertPresentation.color(for: alert.severity)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(ServiceAlertPresentation.label(for: alert.severity).uppercased())
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(tint, in: Capsule())
+
+                if !alert.affectedLines.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(alert.affectedLines, id: \.self) { line in
+                            Text(line)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color(.tertiarySystemBackground), in: Capsule())
+                                .overlay(Capsule().stroke(Color(.separator), lineWidth: 0.5))
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+
+            Text(alert.title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            if let details = alert.details, !details.isEmpty {
+                Text(details)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let window = validityWindowLabel {
+                Label(window, systemImage: "clock")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    /// Formats `startDate` / `endDate` into a short human-readable window, or `nil` when we
+    /// have neither. Three shapes: both set (`"10:30 → 14:00"`, same-day short), start-only
+    /// (`"From 10:30"`), end-only (`"Until 14:00"`).
+    private var validityWindowLabel: String? {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateStyle = .medium
+        dayFormatter.timeStyle = .short
+
+        switch (alert.startDate, alert.endDate) {
+        case (let start?, let end?):
+            let calendar = Calendar.current
+            if calendar.isDate(start, inSameDayAs: end) {
+                return "\(formatter.string(from: start)) → \(formatter.string(from: end))"
+            }
+            return "\(dayFormatter.string(from: start)) → \(dayFormatter.string(from: end))"
+        case (let start?, nil):
+            return "From \(dayFormatter.string(from: start))"
+        case (nil, let end?):
+            return "Until \(dayFormatter.string(from: end))"
+        case (nil, nil):
+            return nil
+        }
     }
 }

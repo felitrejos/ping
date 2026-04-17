@@ -118,6 +118,10 @@ private actor EngineStaticService: StaticServiceProviding {
     func routeStops(origin: StopID, destination: StopID) async throws -> [Stop] {
         []
     }
+
+    func linesForStop(_ stopID: StopID) async throws -> [String] {
+        []
+    }
 }
 
 private actor EngineCalendarService: CalendarServiceProviding {

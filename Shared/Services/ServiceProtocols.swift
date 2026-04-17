@@ -7,6 +7,9 @@ public protocol StaticServiceProviding: Sendable {
     func searchStops(matching query: String) async throws -> [Stop]
     func lineForRoute(origin: StopID, destination: StopID) async throws -> String?
     func routeStops(origin: StopID, destination: StopID) async throws -> [Stop]
+    /// All FGC line short names (e.g. "S1", "R5") that serve the given stop, sorted for a
+    /// stable display order. Returns an empty array for unknown stops.
+    func linesForStop(_ stopID: StopID) async throws -> [String]
 }
 
 public protocol RealtimeServiceProviding: Sendable {

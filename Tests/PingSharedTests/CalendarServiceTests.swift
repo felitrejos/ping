@@ -122,4 +122,8 @@ private actor StubStaticService: StaticServiceProviding {
     func routeStops(origin: StopID, destination: StopID) async throws -> [Stop] {
         []
     }
+
+    func linesForStop(_ stopID: StopID) async throws -> [String] {
+        []
+    }
 }

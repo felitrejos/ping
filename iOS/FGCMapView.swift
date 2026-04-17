@@ -746,18 +746,28 @@ private struct StationMarker: View {
 /// The timeline-based phase is a pure function of wall-clock time, so recycled markers pick up
 /// mid-cycle and stay in sync with each other.
 private struct NearbyStationPulse: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let period: TimeInterval = 2.2
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            let now = timeline.date.timeIntervalSinceReferenceDate
-            let progress = (now.truncatingRemainder(dividingBy: period)) / period
-
+        if reduceMotion {
+            // Reduce Motion: render a single static halo at mid-pulse so "this is your nearby
+            // station" is still discoverable without the expanding ring. Same color, same alpha.
             Circle()
-                .stroke(Color.blue.opacity(0.55), lineWidth: 2)
-                .scaleEffect(1.0 + 1.2 * progress)
-                .opacity(1.0 - progress)
+                .stroke(Color.blue.opacity(0.35), lineWidth: 2)
+                .scaleEffect(1.4)
                 .allowsHitTesting(false)
+        } else {
+            TimelineView(.animation) { timeline in
+                let now = timeline.date.timeIntervalSinceReferenceDate
+                let progress = (now.truncatingRemainder(dividingBy: period)) / period
+
+                Circle()
+                    .stroke(Color.blue.opacity(0.55), lineWidth: 2)
+                    .scaleEffect(1.0 + 1.2 * progress)
+                    .opacity(1.0 - progress)
+                    .allowsHitTesting(false)
+            }
         }
     }
 }

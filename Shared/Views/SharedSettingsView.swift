@@ -21,7 +21,6 @@ public struct SharedSettingsView: View {
             routeSection
             #endif
             favoritesSection
-            walkingSection
             calendarSection
         }
         .formStyle(.grouped)
@@ -291,53 +290,6 @@ public struct SharedSettingsView: View {
         return stop.id
     }
     #endif
-
-    private var walkingSection: some View {
-        Section {
-            if store.isUsingLiveLocation {
-                LabeledContent {
-                    Text("\(store.walkingMinutes) min")
-                        .monospacedDigit()
-                } label: {
-                    Label("To station", systemImage: "location.fill")
-                }
-                Text("Based on your current location")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else if store.isLocationAccessDenied {
-                Text("Location access is required to calculate walking time.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                #if os(macOS)
-                Button("Open System Settings") {
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-                .font(.subheadline)
-                #elseif canImport(UIKit) && !os(watchOS)
-                OpenSettingsButton()
-                    .font(.subheadline)
-                #endif
-            } else {
-                if store.isLocationAccessGranted && !store.hasConfiguredRoute {
-                    Text("Set an origin station to calculate walking time.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Enable location access to calculate walking time.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Button("Enable location access") {
-                        store.requestLocationAccess()
-                    }
-                    .font(.subheadline.weight(.semibold))
-                }
-            }
-        } header: {
-            Text("Walking time")
-        }
-    }
 
     private var calendarSection: some View {
         Section {

@@ -289,6 +289,15 @@ public actor FGCStaticService: StaticServiceProviding {
         try loadCache().stopsByLine[lineName] ?? []
     }
 
+    public func linesForStop(_ stopID: StopID) async throws -> [String] {
+        guard let lines = try loadCache().linesByStopID[stopID] else {
+            return []
+        }
+        // Sort so the dots render in a deterministic order across app launches. Lexicographic
+        // ordering matches how FGC labels lines (R1, R2, …, S1, S2, …).
+        return lines.sorted()
+    }
+
     public func searchStops(matching query: String) async throws -> [Stop] {
         let normalizedQuery = normalize(query)
         guard !normalizedQuery.isEmpty else {

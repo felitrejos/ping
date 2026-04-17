@@ -12,6 +12,7 @@ public final class PingStore {
     public var availableStops: [Stop] = []
     public var lineStops: [Stop] = []
     public private(set) var favoriteStationIDs: [StopID] = UserSettings.favoriteStationIDs()
+    public private(set) var savedRoutes: [SavedRoute] = UserSettings.savedRoutes()
     public var activeServiceAlerts: [ServiceAlert] = []
     public var serviceAlertsLastUpdated: Date?
     public var calendarAuthorization: CalendarAuthorizationState = .notDetermined
@@ -81,6 +82,15 @@ public final class PingStore {
         favoriteStationIDs.map { stopID in
             availableStops.first(where: { $0.id == stopID }) ?? Stop(id: stopID, name: stopID)
         }
+    }
+
+    /// FGC line short names serving each known stop. Populated alongside `availableStops` on
+    /// refresh; readers get a synchronous lookup to avoid blocking SwiftUI body rebuilds on
+    /// async service calls when rendering favorites / station chips.
+    public private(set) var linesByStopID: [StopID: [String]] = [:]
+
+    public func lines(for stopID: StopID) -> [String] {
+        linesByStopID[stopID] ?? []
     }
 
     private let engine: CommuteEngine
@@ -178,6 +188,7 @@ public final class PingStore {
             favoriteStationIDs = UserSettings.favoriteStationIDs()
             availableStops = try await staticService.allStops()
             compatibleStopIDsCache.removeAll()
+            linesByStopID = await loadLinesByStopID(for: availableStops)
             await reloadLineStops()
             await updateWalkingETA()
             commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
@@ -431,6 +442,34 @@ public final class PingStore {
         UserSettings.setFavoriteStationIDs(favoriteStationIDs)
     }
 
+    // MARK: - Saved routes
+
+    public func addSavedRoute(origin: StopID, destination: StopID) {
+        guard UserSettings.isConfiguredStopID(origin),
+              UserSettings.isConfiguredStopID(destination),
+              origin != destination else {
+            return
+        }
+
+        let route = SavedRoute(originID: origin, destinationID: destination)
+        guard !savedRoutes.contains(where: { $0.id == route.id }) else {
+            return
+        }
+
+        savedRoutes.append(route)
+        UserSettings.setSavedRoutes(savedRoutes)
+    }
+
+    public func removeSavedRoute(_ route: SavedRoute) {
+        savedRoutes.removeAll { $0.id == route.id }
+        UserSettings.setSavedRoutes(savedRoutes)
+    }
+
+    public func isRouteSaved(origin: StopID, destination: StopID) -> Bool {
+        let id = SavedRoute(originID: origin, destinationID: destination).id
+        return savedRoutes.contains { $0.id == id }
+    }
+
     private func autoDetectLine() async {
         guard
             let origin = await calendarService.userHomeStation(),
@@ -592,6 +631,24 @@ public final class PingStore {
         } catch {
             lineStops = []
         }
+    }
+
+    /// Batch-fetches `linesForStop` for every available stop, returning a `[StopID: [String]]`
+    /// lookup keyed by stop. On failure we drop the stop from the map; callers treat a missing
+    /// entry identically to an empty list, so a partial failure just means fewer colored dots.
+    private func loadLinesByStopID(for stops: [Stop]) async -> [StopID: [String]] {
+        var map: [StopID: [String]] = [:]
+        for stop in stops {
+            do {
+                let lines = try await staticService.linesForStop(stop.id)
+                if !lines.isEmpty {
+                    map[stop.id] = lines
+                }
+            } catch {
+                continue
+            }
+        }
+        return map
     }
 
 }
