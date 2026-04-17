@@ -493,6 +493,7 @@ struct ContentView: View {
                     onSwitchToNextTrain: { Task { await tracker.switchToNextTrain(store: store) } }
                 )
                 .modifier(TrackingHapticsModifier(tracker: tracker))
+                .modifier(LeaveNowBumpModifier(tracker: tracker))
             } else {
                 NoTrainsCard()
             }
@@ -1141,7 +1142,7 @@ private struct TrainHeroCard: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
 
-                HeroCountdownValue(targetDate: leaveByDate)
+                HeroCountdownValue(targetDate: leaveByDate, phase: phase)
             }
             Spacer(minLength: 0)
         }
@@ -1285,6 +1286,20 @@ private struct CountdownText: View {
 
 private struct HeroCountdownValue: View {
     let targetDate: Date
+    var phase: TrackingPhase = .planning
+
+    /// Tint for the big countdown digits.
+    ///
+    /// We keep `.primary` for the neutral states so the number reads as "status quo, all good"
+    /// and only escalate to orange/red when the tracker actually flags trouble. This lets the
+    /// color itself carry the urgency signal without needing a separate animated border.
+    private var digitColor: Color {
+        switch phase {
+        case .likelyMissed: .orange
+        case .missed: .red
+        case .planning, .tracking: .primary
+        }
+    }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
@@ -1295,7 +1310,9 @@ private struct HeroCountdownValue: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(parts.leadingValue)
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
-                        .contentTransition(.numericText())
+                        .monospacedDigit()
+                        .foregroundStyle(digitColor)
+                        .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.leadingUnit)
                         .font(.callout)
@@ -1303,7 +1320,9 @@ private struct HeroCountdownValue: View {
                         .lineLimit(1)
                     Text(parts.trailingValue ?? "")
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
-                        .contentTransition(.numericText())
+                        .monospacedDigit()
+                        .foregroundStyle(digitColor)
+                        .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.trailingUnit ?? "")
                         .font(.callout)
@@ -1315,7 +1334,9 @@ private struct HeroCountdownValue: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(parts.leadingValue)
                         .font(.system(size: 56, weight: .heavy, design: .rounded))
-                        .contentTransition(.numericText())
+                        .monospacedDigit()
+                        .foregroundStyle(digitColor)
+                        .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.leadingUnit)
                         .font(.callout)
@@ -1325,6 +1346,7 @@ private struct HeroCountdownValue: View {
                 .fixedSize(horizontal: true, vertical: false)
             }
         }
+        .animation(.smooth(duration: 0.3), value: phase)
     }
 }
 
@@ -1360,6 +1382,37 @@ private struct TrackingHapticsModifier: ViewModifier {
             return .idle
         }
         return minutes > 2 ? .above : .underTwo
+    }
+}
+
+/// One-shot spring "bump" on the hero card when the leave-now threshold first trips.
+///
+/// Shares its transition detection logic with `TrackingHapticsModifier.leaveNowBucket` so the
+/// visual beat lands in sync with the heavy haptic — user feels it and sees it at the same time.
+/// Scale goes 1.0 → 1.03 → 1.0 via chained springs; we keep the amplitude small because the
+/// hero card is already the largest element on screen and a bigger bump reads as gimmicky.
+private struct LeaveNowBumpModifier: ViewModifier {
+    let tracker: CommuteTracker
+    @State private var bumpScale: CGFloat = 1.0
+
+    private var leaveNowBucket: TrackingHapticsModifier.LeaveNowBucket {
+        guard tracker.isTrackingLocked else { return .idle }
+        return tracker.bufferSeconds > 30 ? .onTime : .leaveNow
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(bumpScale)
+            .onChange(of: leaveNowBucket) { oldValue, newValue in
+                guard oldValue == .onTime, newValue == .leaveNow else { return }
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                    bumpScale = 1.03
+                } completion: {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                        bumpScale = 1.0
+                    }
+                }
+            }
     }
 }
 

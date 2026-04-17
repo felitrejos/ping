@@ -728,8 +728,37 @@ private struct StationMarker: View {
                 Circle()
                     .stroke(.blue.opacity(isNearby ? 0.9 : 0.25), lineWidth: isNearby ? 3 : 1)
             }
+            .background {
+                if isNearby {
+                    NearbyStationPulse()
+                }
+            }
             .shadow(color: .black.opacity(0.18), radius: 5, y: 2)
             .accessibilityLabel(station.name)
+    }
+}
+
+/// Expanding "live" ring behind the user's closest FGC station.
+///
+/// Drawn by a `TimelineView` rather than an `.animation(...).repeatForever(...)` driven by
+/// `onAppear` state, because map annotations get created and destroyed as the user pans/zooms;
+/// an `onAppear`-driven animation would reset its phase on every recycle and read as jittery.
+/// The timeline-based phase is a pure function of wall-clock time, so recycled markers pick up
+/// mid-cycle and stay in sync with each other.
+private struct NearbyStationPulse: View {
+    private let period: TimeInterval = 2.2
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let now = timeline.date.timeIntervalSinceReferenceDate
+            let progress = (now.truncatingRemainder(dividingBy: period)) / period
+
+            Circle()
+                .stroke(Color.blue.opacity(0.55), lineWidth: 2)
+                .scaleEffect(1.0 + 1.2 * progress)
+                .opacity(1.0 - progress)
+                .allowsHitTesting(false)
+        }
     }
 }
 
