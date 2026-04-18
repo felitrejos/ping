@@ -29,15 +29,18 @@ public enum ServiceAlertPresentation {
     }
 
     public static func label(for severity: ServiceAlertSeverity) -> String {
+        // We localize here (rather than at the SwiftUI layer) because the value is consumed
+        // both as a `Text` badge and as a plain string for accessibility / widget snapshots,
+        // and `Text(_ verbatim: String)` would otherwise ship the English copy as-is.
         switch severity {
         case .info:
-            "Info"
+            String(localized: "Info", comment: "Severity label for a purely informational service alert.")
         case .minor:
-            "Minor"
+            String(localized: "Minor", comment: "Severity label for a minor service alert.")
         case .major:
-            "Major"
+            String(localized: "Major", comment: "Severity label for a major service alert.")
         case .closure:
-            "Closure"
+            String(localized: "Closure", comment: "Severity label for a service alert that closes a line.")
         }
     }
 

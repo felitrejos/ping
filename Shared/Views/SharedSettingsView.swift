@@ -27,7 +27,7 @@ public struct SharedSettingsView: View {
         .navigationTitle("Settings")
         .sheet(isPresented: $isFavoritePickerPresented) {
             StationSearchPickerView(
-                title: "Add Favorite",
+                title: String(localized: "Add Favorite"),
                 availableStops: store.availableStops,
                 excludedStopIDs: Set(store.favoriteStationIDs),
                 selectedStopID: nil,
@@ -285,7 +285,7 @@ public struct SharedSettingsView: View {
     #if os(macOS)
     private func favoriteDetailText(stop: Stop, index: Int) -> String {
         if index == 0 {
-            return "Primary"
+            return String(localized: "Primary", comment: "Detail label for the first favorite station, treated as the primary.")
         }
         return stop.id
     }
@@ -350,9 +350,9 @@ private enum RoutePickerTarget: String, Identifiable {
     var title: String {
         switch self {
         case .origin:
-            "Choose Origin"
+            String(localized: "Choose Origin")
         case .destination:
-            "Choose Destination"
+            String(localized: "Choose Destination")
         }
     }
 }
@@ -485,14 +485,18 @@ private struct StationSearchPickerView: View {
 
     private var subtitleText: String {
         if isLoading {
-            return "Searching stations..."
+            return String(localized: "Searching stations...")
         }
 
         if displayedStops.isEmpty {
-            return "No stations found"
+            return String(localized: "No stations found")
         }
 
-        return "\(displayedStops.count) stations"
+        let count = displayedStops.count
+        return String(
+            localized: "\(count) stations",
+            comment: "Station picker subtitle with the number of visible stations."
+        )
     }
 
     var body: some View {

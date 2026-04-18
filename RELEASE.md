@@ -1,77 +1,39 @@
 # Release Guide
 
-This guide covers direct macOS distribution using `scripts/release-macos.sh`.
+I'm not paying for the Apple Developer Program, so Ping ships as an **unsigned
+macOS DMG** built straight from the repo. If that ever changes I would update this.
 
-## Fast Path (No Paid Developer Program)
-
-Use unsigned mode (default) to produce a DMG without notarization:
-
-```bash
-./scripts/release-macos.sh
-```
-
-Output:
-
-- `build/release/Ping.dmg`
-
-Notes:
-
-- This does **not** require paid Apple Developer Program membership.
-- Users may see Gatekeeper warnings when opening/downloading.
-
-## Paid Path (Developer ID + Notarization)
-
-Use this path for trusted distribution with fewer warnings.
-
-### One-time setup
-
-1. Join Apple Developer Program (paid).
-2. Install a **Developer ID Application** certificate in Keychain Access.
-3. Create an app-specific password for your Apple ID.
-4. Store notarization credentials:
-
-```bash
-xcrun notarytool store-credentials "ping-notary" \
-  --apple-id "you@example.com" \
-  --team-id "YOURTEAMID" \
-  --password "xxxx-xxxx-xxxx-xxxx"
-```
-
-### Per release
-
-```bash
-SIGNING_MODE=developer-id \
-NOTARIZE=1 \
-NOTARY_PROFILE=ping-notary \
-TEAM_ID=YOURTEAMID \
-./scripts/release-macos.sh
-```
-
-## Script Summary
-
-Script path:
+## Building the DMG
 
 ```bash
 ./scripts/release-macos.sh
 ```
 
-What it does:
+The DMG ends up at:
 
-1. Builds or archives the app (depending on `SIGNING_MODE`)
-2. Produces `Ping.app`
-3. Creates `.dmg`
-4. Optionally notarizes + staples the DMG
+```text
+build/release/Ping.dmg
+```
 
-## Key Environment Variables
+What the script does:
 
-- `SIGNING_MODE=unsigned|developer-id` (default: `unsigned`)
-- `NOTARIZE=0|1` (default: `0`)
-- `NOTARY_PROFILE=<profile>`
-- `TEAM_ID=<team id>`
-- `APP_NAME`, `SCHEME`, `PROJECT`, `CONFIGURATION` if needed
+1. Builds `Ping macOS` (`Release`) with `CODE_SIGNING_ALLOWED=NO`
+2. Ad-hoc signs the resulting `Ping.app`
+3. Packages it into a UDZO `.dmg`
 
-## Common Notes
+## What You Will See
 
-- Run from repository root.
-- Notarization requires `SIGNING_MODE=developer-id`.
-- Sparkle 2 is intentionally not included yet; it can be layered on top later.
+Because the app is unsigned, Gatekeeper will complain on first launch.
+
+- Right-click the app → **Open** → **Open** in the dialog, or
+- Strip the quarantine attribute from the terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Ping.app
+```
+
+## Notes
+
+- Run it from the repo root.
+- If you've never opened the project locally, run `xcodegen generate` first
+  so `Ping.xcodeproj` exists.

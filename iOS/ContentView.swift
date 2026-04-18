@@ -58,7 +58,9 @@ struct ContentView: View {
             NavigationStack {
                 StationPickerSheet(
                     stops: store.availableStops,
-                    title: target == .origin ? "Choose Origin" : "Choose Destination",
+                    title: target == .origin
+                        ? String(localized: "Choose Origin")
+                        : String(localized: "Choose Destination"),
                     counterpartStopID: target == .origin ? selectedDestinationID : selectedOriginID,
                     excludedStopIDs: Set([target == .origin ? selectedDestinationID : selectedOriginID].compactMap { $0 })
                 ) { stop in
@@ -407,9 +409,18 @@ struct ContentView: View {
 
         let tint: Color = hasActionable ? .orange : .green
         let systemImage = hasActionable ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
-        let label = hasActionable
-            ? "FGC · \(actionable) alert\(actionable == 1 ? "" : "s")"
-            : "FGC · All lines running"
+        // Use separate singular/plural keys so localizers get the plural forms right — English's
+        // trivial `+s` rule doesn't transfer to Catalan or Spanish agreement rules.
+        let label: String
+        if hasActionable {
+            if actionable == 1 {
+                label = String(localized: "FGC · \(actionable) alert", comment: "Status pill, singular form.")
+            } else {
+                label = String(localized: "FGC · \(actionable) alerts", comment: "Status pill, plural form.")
+            }
+        } else {
+            label = String(localized: "FGC · All lines running")
+        }
 
         let pillBody = HStack(spacing: 6) {
             Image(systemName: systemImage)
@@ -479,22 +490,27 @@ struct ContentView: View {
 
         var title: String {
             switch self {
-            case .startFromHome: "Start from home?"
-            case .reverseToHome: "Heading home?"
+            case .startFromHome: String(localized: "Start from home?")
+            case .reverseToHome: String(localized: "Heading home?")
             }
         }
 
         var subtitle: String {
             switch self {
-            case .startFromHome(_, let homeName): "Set \(homeName) as origin."
-            case .reverseToHome: "Reverse today's route."
+            case .startFromHome(_, let homeName):
+                String(
+                    localized: "Set \(homeName) as origin.",
+                    comment: "Time-of-day suggestion subtitle. Placeholder is the home station name."
+                )
+            case .reverseToHome:
+                String(localized: "Reverse today's route.")
             }
         }
 
         var actionLabel: String {
             switch self {
-            case .startFromHome: "Use home"
-            case .reverseToHome: "Reverse"
+            case .startFromHome: String(localized: "Use home")
+            case .reverseToHome: String(localized: "Reverse")
             }
         }
 
@@ -618,12 +634,14 @@ struct ContentView: View {
 
     private var searchRoutesButtonTitle: String {
         if isSearchingRoute {
-            return "Searching..."
+            return String(localized: "Searching...")
         }
         if !store.isLocationAccessGranted {
-            return store.isLocationAccessDenied ? "Open settings to enable location" : "Enable location to search routes"
+            return store.isLocationAccessDenied
+                ? String(localized: "Open settings to enable location")
+                : String(localized: "Enable location to search routes")
         }
-        return "Search routes"
+        return String(localized: "Search routes")
     }
 
     private func openAppSettings() {
@@ -698,14 +716,17 @@ struct ContentView: View {
         value: String,
         action: @escaping () -> Void
     ) -> some View {
+        // Both `title` and `value` can be either a literal key ("ORIGIN", "Choose station")
+        // or a runtime station name. `LocalizedStringKey` handles both: literals resolve to
+        // their translations, station names miss the catalog and render verbatim.
         Button(action: action) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
+                    Text(LocalizedStringKey(title))
                         .font(.caption2.weight(.semibold))
                         .tracking(0.4)
                         .foregroundStyle(.secondary)
-                    Text(value)
+                    Text(LocalizedStringKey(value))
                         .font(.title3)
                         .foregroundStyle(selectedLabelColor(for: value))
                         .lineLimit(1)
@@ -720,6 +741,8 @@ struct ContentView: View {
     }
 
     private func selectedLabelColor(for value: String) -> Color {
+        // `value` is the raw (un-localized) fallback used in `stationPickerRow`. We branch on the
+        // English source so the colour stays consistent regardless of language.
         value == "Choose station" ? .secondary : .primary
     }
 

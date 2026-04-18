@@ -8,7 +8,10 @@ struct NextDepartureIntent: AppIntent {
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         guard let origin = try await PingIntentSupport.nearestStation() else {
-            let message = "I couldn't find your closest station. Enable location access for Ping and try again."
+            let message = String(
+                localized: "I couldn't find your closest station. Enable location access for Ping and try again.",
+                comment: "Siri response when the device has no usable location."
+            )
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
 
@@ -27,23 +30,36 @@ struct NextDepartureIntent: AppIntent {
             .prefix(3)
 
         guard let first = departures.first else {
-            let message = "No upcoming departures found from \(origin.name) right now."
+            let message = String(
+                localized: "No upcoming departures found from \(origin.name) right now.",
+                comment: "Siri response when there are no upcoming departures."
+            )
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
 
-        let primaryText = "\(first.departure.routeShortName) to \(first.departure.headsign) in \(first.minutes) min"
+        let formatDeparture: (TrainDeparture, Int) -> String = { dep, minutes in
+            String(
+                localized: "\(dep.routeShortName) to \(dep.headsign) in \(minutes) min",
+                comment: "Siri-friendly train summary. Placeholders: route code, headsign, minutes until departure."
+            )
+        }
+        let primaryText = formatDeparture(first.departure, first.minutes)
         let extraText = departures
             .dropFirst()
-            .map { item in
-                "\(item.departure.routeShortName) to \(item.departure.headsign) in \(item.minutes) min"
-            }
+            .map { formatDeparture($0.departure, $0.minutes) }
             .joined(separator: ", ")
 
         let message: String
         if extraText.isEmpty {
-            message = "Closest station is \(origin.name). Next train: \(primaryText)."
+            message = String(
+                localized: "Closest station is \(origin.name). Next train: \(primaryText).",
+                comment: "Siri response summarising the single next departure."
+            )
         } else {
-            message = "Closest station is \(origin.name). Next trains: \(primaryText), then \(extraText)."
+            message = String(
+                localized: "Closest station is \(origin.name). Next trains: \(primaryText), then \(extraText).",
+                comment: "Siri response summarising the next few departures."
+            )
         }
 
         return .result(value: message, dialog: IntentDialog(stringLiteral: message))

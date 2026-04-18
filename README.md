@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Never miss your train — FGC commute assistant for iPhone, Mac, and Live Activities</strong>
+  <strong>Never miss your train. FGC commute assistant for iPhone, Mac, and Live Activities</strong>
 </p>
 
 <p align="center">
@@ -36,13 +36,15 @@
 
 ---
 
-## Quick Start
+## Status
 
-1. Launch iOS or macOS target from Xcode.
-2. Pick origin and destination stations.
-3. Tap `Search routes`.
-4. Optionally add favorite stations in Settings.
-5. Optionally enable location/calendar access for walking ETA and commute suggestions.
+Ping is open source and **built to run from Xcode**. There is no App
+Store or TestFlight build. That would require a paid Apple Developer Program
+license and I'm not paying for it. Until then:
+
+- **iOS**: clone the repo, open in Xcode, and run on your own device or Simulator.
+- **macOS**: either run from Xcode, or grab the unsigned `Ping.dmg` built
+  locally via `scripts/release-macos.sh` (see `RELEASE.md`).
 
 ---
 
@@ -51,7 +53,7 @@
 Requirements:
 
 - Xcode with iOS 26+ and macOS 26+ SDKs
-- `xcodegen`
+- [`xcodegen`](https://github.com/yonaskolb/XcodeGen)
 - `protoc` (only needed when regenerating GTFS Realtime generated code)
 
 ```bash
@@ -61,20 +63,32 @@ xcodegen generate
 open Ping.xcodeproj
 ```
 
-Then select `Ping iOS` or `Ping macOS` and run.
+Then select `Ping iOS` or `Ping macOS` and run. The iOS target needs a free
+personal Apple ID signed into Xcode to run on a physical device.
 
-### TMB API Keys (iOS)
+### TMB API keys (iOS only)
 
-To enable TMB map stops + iBus arrivals:
+TMB map stops and iBus arrivals need API keys. Without them the FGC side of
+the app works fine, but the TMB map layer stays empty.
 
-1. Copy `iOS/Config/TMBKeys.example.xcconfig` to `iOS/Config/TMBKeys.xcconfig`
-2. Fill:
+1. Copy `iOS/Config/TMBKeys.example.xcconfig` to `iOS/Config/TMBKeys.xcconfig`.
+2. Fill in:
    - `TMB_APP_ID_PRIMARY`
    - `TMB_APP_KEY_PRIMARY`
    - `TMB_APP_ID_BACKUP`
    - `TMB_APP_KEY_BACKUP`
 
-`TMBKeys.xcconfig` is gitignored and used by the iOS target config.
+`TMBKeys.xcconfig` is gitignored and picked up by the iOS target config.
+
+---
+
+## Quick Start (in-app)
+
+1. Launch iOS or macOS target from Xcode.
+2. Pick origin and destination stations.
+3. Tap `Search routes`.
+4. Optionally add favorite stations in Settings.
+5. Enable location/calendar access for walking ETA and commute suggestions.
 
 ---
 
@@ -131,7 +145,7 @@ Regenerate the project after target/dependency changes:
 xcodegen generate
 ```
 
-Release and notarization guide:
+Unsigned macOS DMG build:
 
 ```text
 RELEASE.md

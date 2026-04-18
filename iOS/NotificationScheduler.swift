@@ -66,8 +66,12 @@ final class NotificationScheduler {
         }
 
         let content = UNMutableNotificationContent()
-        content.title = "Ping"
-        content.body = "Leave now for \(plan.calendarEvent.title) · Train at \(train.effectiveDepartureTime.formatted(date: .omitted, time: .shortened))"
+        content.title = String(localized: "Ping", comment: "App name used as the notification title.")
+        let trainTime = train.effectiveDepartureTime.formatted(date: .omitted, time: .shortened)
+        content.body = String(
+            localized: "Leave now for \(plan.calendarEvent.title) · Train at \(trainTime)",
+            comment: "Leave-now notification body. First placeholder is the calendar event title, second is the train departure time."
+        )
         content.sound = .default
 
         let triggerDate = plan.recommendedDeparture.addingTimeInterval(-300)

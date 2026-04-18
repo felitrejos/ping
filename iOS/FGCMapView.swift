@@ -305,9 +305,9 @@ struct FGCMapView: View {
         layerToggleButton(
             isOn: isFGCOverlayEnabled,
             systemImage: "tram.fill",
-            onLabel: "Disable FGC station overlay",
-            offLabel: "Enable FGC station overlay",
-            hint: "Shows FGC train stations on the map"
+            onLabel: String(localized: "Disable FGC station overlay"),
+            offLabel: String(localized: "Enable FGC station overlay"),
+            hint: String(localized: "Shows FGC train stations on the map")
         ) {
             isFGCOverlayEnabled.toggle()
         }
@@ -318,9 +318,9 @@ struct FGCMapView: View {
         layerToggleButton(
             isOn: isTMBOverlayEnabled,
             systemImage: "bus.fill",
-            onLabel: "Disable TMB bus overlay",
-            offLabel: "Enable TMB bus overlay",
-            hint: "Shows nearby TMB bus stops on the map when zoomed in"
+            onLabel: String(localized: "Disable TMB bus overlay"),
+            offLabel: String(localized: "Enable TMB bus overlay"),
+            hint: String(localized: "Shows nearby TMB bus stops on the map when zoomed in")
         ) {
             isTMBOverlayEnabled.toggle()
         }
@@ -827,8 +827,11 @@ private struct MapStatusPanel: View {
     private func activeRouteSummary(_ departure: LiveDeparture) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Go to \(origin?.name ?? "the station")", systemImage: isUsingLiveLocation ? "location.fill" : "figure.walk")
-                    .font(.headline)
+                Label(
+                    "Go to \(origin?.name ?? String(localized: "the station"))",
+                    systemImage: isUsingLiveLocation ? "location.fill" : "figure.walk"
+                )
+                .font(.headline)
                 Spacer()
             }
             HStack {
@@ -876,12 +879,12 @@ private struct MapStatusPanel: View {
             }
             if hasUserLocation {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("FGC: \(joinedStationNames(from: closestStations.map(\.name), fallback: "No nearby stations"))")
+                    Text("FGC: \(joinedStationNames(from: closestStations.map(\.name), fallback: String(localized: "No nearby stations")))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
 
-                    Text("TMB: \(joinedStationNames(from: closestBusStops.map(\.name), fallback: "No nearby stops"))")
+                    Text("TMB: \(joinedStationNames(from: closestBusStops.map(\.name), fallback: String(localized: "No nearby stops")))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)

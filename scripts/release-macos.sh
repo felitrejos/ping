@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Release script for direct macOS distribution.
-# Supports two signing modes:
-# - unsigned (default): no paid Apple Developer Program required
-# - developer-id: archive/export path for notarized distribution
+# Build an unsigned macOS DMG for direct distribution.
 #
-# Default flow (unsigned):
-# 1) Build macOS app (Release)
-# 2) Ad-hoc sign app bundle
-# 3) Create DMG
+# This script is intentionally scoped to the "no paid Apple Developer Program"
+# path: it produces an ad-hoc signed .app bundled into a .dmg. Users will see
+# Gatekeeper warnings on first launch (right-click > Open, or `xattr -dr
+# com.apple.quarantine Ping.app`). That is the cost of not paying Apple.
 #
-# Optional notarization is only available in developer-id mode.
+# If a Developer ID certificate and notarization ever become available,
+# signing + notarization should be layered on top via a separate workflow
+# (or by editing this script) rather than complicating the happy path here.
+#
+# Flow:
+# 1) Build macOS app (Release) with code signing disabled
+# 2) Ad-hoc sign the app bundle so macOS recognises it as a valid package
+# 3) Create a UDZO DMG containing the app
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
@@ -25,16 +29,6 @@ BUILD_DIR="${BUILD_DIR:-build/release}"
 EXPORT_PATH="${EXPORT_PATH:-${BUILD_DIR}/export}"
 DMG_PATH="${DMG_PATH:-${BUILD_DIR}/${APP_NAME}.dmg}"
 DMG_VOLUME_NAME="${DMG_VOLUME_NAME:-${APP_NAME}}"
-SIGNING_MODE="${SIGNING_MODE:-unsigned}" # unsigned | developer-id
-
-# developer-id mode variables
-ARCHIVE_PATH="${ARCHIVE_PATH:-${BUILD_DIR}/${APP_NAME}.xcarchive}"
-EXPORT_METHOD="${EXPORT_METHOD:-developer-id}"
-TEAM_ID="${TEAM_ID:-}"
-
-# notarization variables
-NOTARIZE="${NOTARIZE:-0}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 
 if ! command -v xcodebuild >/dev/null 2>&1; then
   echo "error: xcodebuild not found"
@@ -48,93 +42,37 @@ fi
 
 if [[ ! -d "${PROJECT}" && ! -f "${PROJECT}" ]]; then
   echo "error: project not found at ${PROJECT}"
-  exit 1
-fi
-
-if [[ "${SIGNING_MODE}" != "unsigned" && "${SIGNING_MODE}" != "developer-id" ]]; then
-  echo "error: SIGNING_MODE must be 'unsigned' or 'developer-id'"
-  exit 1
-fi
-
-if [[ "${NOTARIZE}" == "1" && "${SIGNING_MODE}" != "developer-id" ]]; then
-  echo "error: notarization requires SIGNING_MODE=developer-id"
+  echo "hint: run 'xcodegen generate' first"
   exit 1
 fi
 
 mkdir -p "${BUILD_DIR}"
-rm -rf "${EXPORT_PATH}" "${DMG_PATH}" "${ARCHIVE_PATH}"
+rm -rf "${EXPORT_PATH}" "${DMG_PATH}"
 
-if [[ "${SIGNING_MODE}" == "developer-id" ]]; then
-  if [[ -z "${TEAM_ID}" ]]; then
-    TEAM_ID="$(xcodebuild -project "${PROJECT}" -scheme "${SCHEME}" -showBuildSettings 2>/dev/null | awk '/DEVELOPMENT_TEAM = / { print $3; exit }')"
-  fi
+DERIVED_DATA_PATH="${BUILD_DIR}/DerivedData"
 
-  if [[ -z "${TEAM_ID}" ]]; then
-    echo "error: TEAM_ID is required for developer-id mode"
-    exit 1
-  fi
+echo "==> Building ${SCHEME} (${CONFIGURATION}) [unsigned]"
+xcodebuild \
+  -project "${PROJECT}" \
+  -scheme "${SCHEME}" \
+  -configuration "${CONFIGURATION}" \
+  -destination "platform=macOS" \
+  -derivedDataPath "${DERIVED_DATA_PATH}" \
+  CODE_SIGNING_ALLOWED=NO \
+  build
 
-  EXPORT_OPTIONS_PLIST="${BUILD_DIR}/ExportOptions.plist"
-  cat > "${EXPORT_OPTIONS_PLIST}" <<PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>method</key>
-  <string>${EXPORT_METHOD}</string>
-  <key>teamID</key>
-  <string>${TEAM_ID}</string>
-</dict>
-</plist>
-PLIST
-
-  echo "==> Archiving ${SCHEME} (${CONFIGURATION})"
-  xcodebuild \
-    -project "${PROJECT}" \
-    -scheme "${SCHEME}" \
-    -configuration "${CONFIGURATION}" \
-    -archivePath "${ARCHIVE_PATH}" \
-    archive
-
-  echo "==> Exporting app (${EXPORT_METHOD})"
-  xcodebuild \
-    -exportArchive \
-    -archivePath "${ARCHIVE_PATH}" \
-    -exportPath "${EXPORT_PATH}" \
-    -exportOptionsPlist "${EXPORT_OPTIONS_PLIST}"
-
-  APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
-else
-  DERIVED_DATA_PATH="${BUILD_DIR}/DerivedData"
-
-  echo "==> Building ${SCHEME} (${CONFIGURATION}) [unsigned mode]"
-  xcodebuild \
-    -project "${PROJECT}" \
-    -scheme "${SCHEME}" \
-    -configuration "${CONFIGURATION}" \
-    -destination "platform=macOS" \
-    -derivedDataPath "${DERIVED_DATA_PATH}" \
-    CODE_SIGNING_ALLOWED=NO \
-    build
-
-  BUILT_APP_PATH="${DERIVED_DATA_PATH}/Build/Products/${CONFIGURATION}/${APP_NAME}.app"
-  if [[ ! -d "${BUILT_APP_PATH}" ]]; then
-    echo "error: built app not found at ${BUILT_APP_PATH}"
-    exit 1
-  fi
-
-  mkdir -p "${EXPORT_PATH}"
-  cp -R "${BUILT_APP_PATH}" "${EXPORT_PATH}/${APP_NAME}.app"
-  APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
-
-  # Ad-hoc sign so macOS treats bundle as a valid code-signed app package.
-  codesign --force --deep --sign - "${APP_PATH}"
-fi
-
-if [[ ! -d "${APP_PATH}" ]]; then
-  echo "error: app not found at ${APP_PATH}"
+BUILT_APP_PATH="${DERIVED_DATA_PATH}/Build/Products/${CONFIGURATION}/${APP_NAME}.app"
+if [[ ! -d "${BUILT_APP_PATH}" ]]; then
+  echo "error: built app not found at ${BUILT_APP_PATH}"
   exit 1
 fi
+
+mkdir -p "${EXPORT_PATH}"
+cp -R "${BUILT_APP_PATH}" "${EXPORT_PATH}/${APP_NAME}.app"
+APP_PATH="${EXPORT_PATH}/${APP_NAME}.app"
+
+echo "==> Ad-hoc signing ${APP_PATH}"
+codesign --force --deep --sign - "${APP_PATH}"
 
 echo "==> Creating DMG at ${DMG_PATH}"
 hdiutil create \
@@ -144,25 +82,7 @@ hdiutil create \
   -format UDZO \
   "${DMG_PATH}"
 
-if [[ "${NOTARIZE}" == "1" ]]; then
-  if [[ -z "${NOTARY_PROFILE}" ]]; then
-    echo "error: NOTARIZE=1 requires NOTARY_PROFILE"
-    exit 1
-  fi
-
-  echo "==> Notarizing DMG"
-  xcrun notarytool submit "${DMG_PATH}" --keychain-profile "${NOTARY_PROFILE}" --wait
-
-  echo "==> Stapling notarization ticket"
-  xcrun stapler staple "${DMG_PATH}"
-  xcrun stapler validate "${DMG_PATH}"
-fi
-
 echo ""
 echo "Release artifact ready: ${DMG_PATH}"
-echo "Signing mode: ${SIGNING_MODE}"
-if [[ "${NOTARIZE}" == "1" ]]; then
-  echo "Notarization: completed"
-else
-  echo "Notarization: skipped"
-fi
+echo "Note: unsigned build. Users may need to right-click > Open on first launch,"
+echo "or run: xattr -dr com.apple.quarantine \"${APP_NAME}.app\""

@@ -600,15 +600,19 @@ struct MenuBarView: View {
     }
 
     private func fallbackCard(_ title: String, _ message: String, _ icon: String) -> some View {
+        // Wrap both fields in `LocalizedStringKey` so SwiftUI looks the values up in the strings
+        // catalog. Literal callsites ("Set route", etc.) resolve to translations; runtime strings
+        // (e.g. a system error message coming out of the store) fall through to verbatim display
+        // when the key is missing — which is exactly what we want.
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 5) {
                 Image(systemName: icon)
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(.headline)
             }
-            Text(message)
+            Text(LocalizedStringKey(message))
                 .font(.callout)
                 .foregroundStyle(.secondary)
         }
@@ -622,14 +626,14 @@ struct MenuBarView: View {
             return store.availableStops.first(where: { $0.id == dep.destinationStopID })?.name ?? dep.destinationStopID
         }
         guard let destinationID = store.destinationStationID else {
-            return "Destination"
+            return String(localized: "Destination")
         }
         return store.availableStops.first(where: { $0.id == destinationID })?.name ?? destinationID
     }
 
     private var originName: String {
         guard let originID = store.homeStationID else {
-            return "Origin"
+            return String(localized: "Origin")
         }
 
         return store.availableStops.first(where: { $0.id == originID })?.name ?? originID

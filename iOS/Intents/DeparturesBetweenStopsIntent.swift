@@ -21,7 +21,7 @@ struct DeparturesBetweenStopsIntent: AppIntent {
 
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         guard origin.id != destination.id else {
-            let message = "Origin and destination must be different stations."
+            let message = String(localized: "Origin and destination must be different stations.")
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
 
@@ -33,7 +33,10 @@ struct DeparturesBetweenStopsIntent: AppIntent {
         )
 
         guard !departures.isEmpty else {
-            let message = "No upcoming departures found from \(origin.name) to \(destination.name)."
+            let message = String(
+                localized: "No upcoming departures found from \(origin.name) to \(destination.name).",
+                comment: "Siri response when there are no upcoming departures between two stations."
+            )
             return .result(value: message, dialog: IntentDialog(stringLiteral: message))
         }
 
@@ -43,7 +46,10 @@ struct DeparturesBetweenStopsIntent: AppIntent {
                 return "\(departureTime) (\(departure.minutesUntilDeparture) min)"
             }
             .joined(separator: ", ")
-        let message = "Next departures from \(origin.name) to \(destination.name): \(summary)."
+        let message = String(
+            localized: "Next departures from \(origin.name) to \(destination.name): \(summary).",
+            comment: "Siri response summarising the next departures between two stations."
+        )
 
         return .result(value: message, dialog: IntentDialog(stringLiteral: message))
     }
