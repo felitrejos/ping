@@ -4,8 +4,8 @@ import PackageDescription
 let package = Package(
     name: "Ping",
     platforms: [
-        .macOS("15.0"),
-        .iOS("18.0"),
+        .macOS("26.0"),
+        .iOS("26.0"),
     ],
     products: [
         .library(

@@ -468,7 +468,7 @@ struct MenuBarView: View {
                 } else if let plan = nextCalendarCommute {
                     commuteRow(plan)
                 } else {
-                    Text("No upcoming calendar commutes. Add events with a location to see route suggestions here.")
+                    Text("Nothing upcoming. Add a location to a calendar event to see commute suggestions here.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -585,11 +585,18 @@ struct MenuBarView: View {
     }
 
     private var errorCard: some View {
-        fallbackCard("Could not refresh", store.lastErrorMessage ?? "", "exclamationmark.triangle.fill")
+        let detail = store.lastErrorMessage?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let message = (detail?.isEmpty == false ? detail : nil)
+            ?? "Couldn't reach FGC. Check your connection — we'll retry on the next refresh."
+        return fallbackCard("Couldn't refresh", message, "exclamationmark.triangle.fill")
     }
 
     private var emptyCard: some View {
-        fallbackCard("No upcoming trains", "No upcoming trains right now.", "tram.fill")
+        fallbackCard(
+            "No upcoming trains",
+            "Service may have wound down for the night. Ping will keep refreshing in the background.",
+            "tram.fill"
+        )
     }
 
     private func fallbackCard(_ title: String, _ message: String, _ icon: String) -> some View {

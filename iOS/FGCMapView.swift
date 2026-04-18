@@ -914,9 +914,10 @@ private struct MapStatusPanel: View {
             switch stationLoadState {
             case .idle:
                 if stationDepartures.isEmpty {
-                    Text("No upcoming trains at this station.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    CompactEmptyState(
+                        title: "No upcoming trains",
+                        detail: "FGC isn't reporting any departures from here right now."
+                    )
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(Array(stationDepartures.prefix(5).enumerated()), id: \.offset) { _, departure in
@@ -986,9 +987,10 @@ private struct MapStatusPanel: View {
             switch busLoadState {
             case .idle:
                 if busArrivals.isEmpty {
-                    Text("No upcoming buses at this stop.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    CompactEmptyState(
+                        title: "No upcoming buses",
+                        detail: "TMB isn't reporting any arrivals at this stop right now."
+                    )
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(Array(busArrivals.prefix(5).enumerated()), id: \.offset) { _, arrival in

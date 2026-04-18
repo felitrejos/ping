@@ -10,7 +10,7 @@ calendar-aware suggestions, widgets, and a Live Activity.
 
 ## Build
 
-- Swift 6.3, macOS 15+, iOS 18+
+- Swift 6.3, macOS 26+, iOS 26+
 - `swift build` — shared library
 - `swift test` — run tests
 - `xcodegen` regenerates `Ping.xcodeproj` from `project.yml`

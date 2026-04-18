@@ -14,6 +14,7 @@
 		104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		1368753B7835AE2E382A2AD8 /* PingShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAEBFE9C2FC73C1E803C56E /* PingShortcutsProvider.swift */; };
 		147E741C8A3E4AC0C8DE49B7 /* CountdownFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0C9AEC2A818BFB13C981D /* CountdownFormatting.swift */; };
+		195EB8DCCA60F7F542BC5EBE /* TrackingHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14A908FCE4C00BC53EA483F /* TrackingHaptics.swift */; };
 		19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C9F3AD2BEE5C5DE7E3367E /* PingLiveActivity.swift */; };
 		1A2DEDBDEDF7C64547B74F5E /* PingWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1AB8E31041A73E53E7F10460 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
@@ -38,6 +39,7 @@
 		4E144B7157426835D4B1ABD6 /* ServiceAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */; };
 		4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		5064C6430D05B37DF97E8027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3416EE5192208E30B00DC270 /* Assets.xcassets */; };
+		5106E8538704E39397022D5D /* CommuteTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321DC818061EE5A1BD6AD30 /* CommuteTracker.swift */; };
 		5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */; };
 		5BDD31290D712E0B058FC570 /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
 		65DEB3330E579F858FACE482 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 936C59BAA7286F130195CDB1 /* Assets.xcassets */; };
@@ -75,11 +77,13 @@
 		B7C0C2139450C386F3ACE7B6 /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
 		B8F8609DC50FB7853FA024BE /* CommuteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADCB994A8C6B7A7D64301D0 /* CommuteEngine.swift */; };
 		BB552271A2211508A2471963 /* SharedSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09116DEBE6559278706A92A0 /* SharedSettingsView.swift */; };
+		BD174F5A1830F1FEFA2CCA77 /* StationPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FDDF099B2353C158FBEF5D2 /* StationPickerSheet.swift */; };
 		BDD43B13E54FEA8E1EA682AB /* ServiceProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */; };
 		C2E86D705A15F946A33A6B76 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */; };
 		C37FE713C41C15A05724536E /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 7832DD8A33D463BD92DB21C0 /* SwiftProtobuf */; };
 		C53798F8DD5225721CF59683 /* TMBCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDCA8C1DC65C32D84A436B35 /* TMBCredentialProvider.swift */; };
 		C9083D12373B742A1A2355AA /* PingWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71068AB1DAF04AD2B1273F1B /* PingWidgetsBundle.swift */; };
+		C9F95458CCC92023448D0728 /* EmptyStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC304044FFDE79AB5E9C8372 /* EmptyStates.swift */; };
 		CA6750903F49CB66C3256DDE /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
 		CCF6627DF8D5F89B9EBE8786 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = D44F74B49E2D1C955FF1C6AC /* SwiftProtobuf */; };
 		CDC027511142806B6917D508 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 3AF62F9122E1AE1EBFFB27FC /* SwiftProtobuf */; };
@@ -97,10 +101,13 @@
 		E75BB5DDF6D2AF7CF44C08A6 /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 0C956243B7E2E4347C7324A8 /* google_transit.zip */; };
 		E7E08C69B3EF823979AA849A /* PingIntentSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4120580139BA17E7B9EF291C /* PingIntentSupport.swift */; };
 		E7FD7B7038A90727A9616E87 /* FGCStaticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */; };
+		EA50BB7C4D25800E21840575 /* NoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64494DA54CC31BF4EC4EAFCB /* NoticeCard.swift */; };
 		EF86E05E078BB547077CE388 /* TMBiBusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC3C0AD4259B2666BB0B36D5 /* TMBiBusService.swift */; };
 		F1C24314D054FF12B3EF291C /* WalkingETAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */; };
 		F6469B3C431F67893C24DA14 /* CountdownFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0C9AEC2A818BFB13C981D /* CountdownFormatting.swift */; };
 		F646A62D262DB7FFD6950B2A /* TMBCredentialProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDCA8C1DC65C32D84A436B35 /* TMBCredentialProvider.swift */; };
+		F9B621CDF1928887D2546556 /* TrainHeroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF601D48624FC4A1B81BE025 /* TrainHeroCard.swift */; };
+		FC04413D3CB9823A6736F3B2 /* ServiceAlertsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E19E83B0824E4A792B703E /* ServiceAlertsSheet.swift */; };
 		FCE4BAF831EBDA74EB187ED4 /* FGCStaticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */; };
 		FD0D238CA4614905A5B00910 /* TransitModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */; };
 /* End PBXBuildFile section */
@@ -130,6 +137,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		02E19E83B0824E4A792B703E /* ServiceAlertsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAlertsSheet.swift; sourceTree = "<group>"; };
 		079962CAD515A7859A25A9F5 /* Ping macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ping macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0848B20C357FCC356EF7F3B6 /* CalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarService.swift; sourceTree = "<group>"; };
 		086EA666598EBF38A0F20AC4 /* GTFSUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GTFSUpdateService.swift; sourceTree = "<group>"; };
@@ -145,10 +153,12 @@
 		3416EE5192208E30B00DC270 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		35D1B6EF5FF939EBFCA0274A /* PingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingStore.swift; sourceTree = "<group>"; };
 		4120580139BA17E7B9EF291C /* PingIntentSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingIntentSupport.swift; sourceTree = "<group>"; };
+		4321DC818061EE5A1BD6AD30 /* CommuteTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteTracker.swift; sourceTree = "<group>"; };
 		5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommutePresentation.swift; sourceTree = "<group>"; };
 		55937ED73F88BD9D5C9B43CC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5BC28C3FAABBF6CE8BFBFCB3 /* WalkingETAService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkingETAService.swift; sourceTree = "<group>"; };
 		5EAEBFE9C2FC73C1E803C56E /* PingShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingShortcutsProvider.swift; sourceTree = "<group>"; };
+		64494DA54CC31BF4EC4EAFCB /* NoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticeCard.swift; sourceTree = "<group>"; };
 		6A9ACB3C37DA3383A4FD2DFE /* FGCStaticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCStaticService.swift; sourceTree = "<group>"; };
 		71068AB1DAF04AD2B1273F1B /* PingWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingWidgetsBundle.swift; sourceTree = "<group>"; };
 		785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCRealtimeService.swift; sourceTree = "<group>"; };
@@ -157,6 +167,7 @@
 		89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
 		8DAF48A42884B0276B96B3D0 /* TMBKeys.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TMBKeys.xcconfig; sourceTree = "<group>"; };
 		8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCServiceAlertsService.swift; sourceTree = "<group>"; };
+		8FDDF099B2353C158FBEF5D2 /* StationPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationPickerSheet.swift; sourceTree = "<group>"; };
 		936C59BAA7286F130195CDB1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		93A0C9AEC2A818BFB13C981D /* CountdownFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownFormatting.swift; sourceTree = "<group>"; };
 		9C3C9CDFE14736D12CF5C621 /* NextDepartureIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDepartureIntent.swift; sourceTree = "<group>"; };
@@ -166,6 +177,8 @@
 		B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceAlertPresentation.swift; sourceTree = "<group>"; };
 		B507486A4EDE12BD849698F0 /* TMBKeys.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TMBKeys.example.xcconfig; sourceTree = "<group>"; };
 		BC3C0AD4259B2666BB0B36D5 /* TMBiBusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBiBusService.swift; sourceTree = "<group>"; };
+		BF601D48624FC4A1B81BE025 /* TrainHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrainHeroCard.swift; sourceTree = "<group>"; };
+		C14A908FCE4C00BC53EA483F /* TrackingHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingHaptics.swift; sourceTree = "<group>"; };
 		C8E26F7DCEA7F1C43435440A /* TMBModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBModels.swift; sourceTree = "<group>"; };
 		CA5FA06E76693881D06F589E /* TMBStaticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBStaticService.swift; sourceTree = "<group>"; };
 		CDCA8C1DC65C32D84A436B35 /* TMBCredentialProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMBCredentialProvider.swift; sourceTree = "<group>"; };
@@ -176,6 +189,7 @@
 		DFFA8280E737C667FBAE5836 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EADCB994A8C6B7A7D64301D0 /* CommuteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteEngine.swift; sourceTree = "<group>"; };
 		F2C9F3AD2BEE5C5DE7E3367E /* PingLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingLiveActivity.swift; sourceTree = "<group>"; };
+		FC304044FFDE79AB5E9C8372 /* EmptyStates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStates.swift; sourceTree = "<group>"; };
 		FE7C0BA5C9E843B26C6646AC /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -233,6 +247,8 @@
 				AC31FED7C10F1A506C456CC1 /* PingiOSApp.swift */,
 				3A4DE5F6A55063866ADE21E3 /* Config */,
 				D9A9707536FCF0E3531449AA /* Intents */,
+				93D8393C8C2902C078937ED9 /* Tracking */,
+				9E979F4D0D2CA0C2031BAD8E /* Views */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -292,6 +308,27 @@
 				B3F71D67F0D81B6040AA5BD8 /* TransitModels.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		93D8393C8C2902C078937ED9 /* Tracking */ = {
+			isa = PBXGroup;
+			children = (
+				4321DC818061EE5A1BD6AD30 /* CommuteTracker.swift */,
+				C14A908FCE4C00BC53EA483F /* TrackingHaptics.swift */,
+			);
+			path = Tracking;
+			sourceTree = "<group>";
+		};
+		9E979F4D0D2CA0C2031BAD8E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FC304044FFDE79AB5E9C8372 /* EmptyStates.swift */,
+				64494DA54CC31BF4EC4EAFCB /* NoticeCard.swift */,
+				02E19E83B0824E4A792B703E /* ServiceAlertsSheet.swift */,
+				8FDDF099B2353C158FBEF5D2 /* StationPickerSheet.swift */,
+				BF601D48624FC4A1B81BE025 /* TrainHeroCard.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		A02423B6C8B08B7EA8498178 = {
@@ -546,10 +583,12 @@
 				E635A68794CD5AA26EA2F05A /* CalendarService.swift in Sources */,
 				B8F8609DC50FB7853FA024BE /* CommuteEngine.swift in Sources */,
 				4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */,
+				5106E8538704E39397022D5D /* CommuteTracker.swift in Sources */,
 				1AB8E31041A73E53E7F10460 /* Constants.swift in Sources */,
 				3C2A81BEAB593F72099C43E7 /* ContentView.swift in Sources */,
 				D3D854D5CABEE57488E3BDA1 /* CountdownFormatting.swift in Sources */,
 				385EB72F40F801E6A931541B /* DeparturesBetweenStopsIntent.swift in Sources */,
+				C9F95458CCC92023448D0728 /* EmptyStates.swift in Sources */,
 				A1EAFBCBAE9B54813B007D85 /* FGCMapView.swift in Sources */,
 				75E6D413E297F0B77363A7EB /* FGCRealtimeService.swift in Sources */,
 				8BB4ADD3B4174225A3005E31 /* FGCServiceAlertsService.swift in Sources */,
@@ -558,6 +597,7 @@
 				2534C877459955F6AF577722 /* GTFSUpdateService.swift in Sources */,
 				E071F79744758EE7AD9CBE8D /* LocationService.swift in Sources */,
 				3F9B5D15ECA8CE05316E5315 /* NextDepartureIntent.swift in Sources */,
+				EA50BB7C4D25800E21840575 /* NoticeCard.swift in Sources */,
 				95AEC08B4D11031D852A5A31 /* NotificationScheduler.swift in Sources */,
 				6C9FB2712C5D91C9FA190806 /* PingActivityAttributes.swift in Sources */,
 				E7E08C69B3EF823979AA849A /* PingIntentSupport.swift in Sources */,
@@ -565,14 +605,18 @@
 				AC4AC5B5B45FEB0940182F73 /* PingStore.swift in Sources */,
 				B4165D0E47C25A6403012345 /* PingiOSApp.swift in Sources */,
 				4E144B7157426835D4B1ABD6 /* ServiceAlertPresentation.swift in Sources */,
+				FC04413D3CB9823A6736F3B2 /* ServiceAlertsSheet.swift in Sources */,
 				BDD43B13E54FEA8E1EA682AB /* ServiceProtocols.swift in Sources */,
 				3FBC4856F15E27FDD3CCAC45 /* SharedContainer.swift in Sources */,
 				8F38E3A3850FBC1E9F0B178F /* SharedSettingsView.swift in Sources */,
+				BD174F5A1830F1FEFA2CCA77 /* StationPickerSheet.swift in Sources */,
 				689068B45D8F7A938BB3EA9F /* StopEntity.swift in Sources */,
 				F646A62D262DB7FFD6950B2A /* TMBCredentialProvider.swift in Sources */,
 				2ED06D07BA6056C3CB8586C0 /* TMBModels.swift in Sources */,
 				D6E479D20057B159FAEDE0E1 /* TMBStaticService.swift in Sources */,
 				EF86E05E078BB547077CE388 /* TMBiBusService.swift in Sources */,
+				195EB8DCCA60F7F542BC5EBE /* TrackingHaptics.swift in Sources */,
+				F9B621CDF1928887D2546556 /* TrainHeroCard.swift in Sources */,
 				4D2252E6F3967AECBCA1AEE7 /* TransitModels.swift in Sources */,
 				35CAED546B20E60067E6EDA2 /* WalkingETAService.swift in Sources */,
 				5BDD31290D712E0B058FC570 /* gtfs-realtime.pb.swift in Sources */,

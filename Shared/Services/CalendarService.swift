@@ -196,14 +196,12 @@ public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
     }
 
     private func mapItem(for coordinate: TransitCoordinate) -> MKMapItem {
-        MKMapItem(
-            placemark: MKPlacemark(
-                coordinate: CLLocationCoordinate2D(
-                    latitude: coordinate.latitude,
-                    longitude: coordinate.longitude
-                )
-            )
-        )
+        // iOS/macOS 26 deprecated the placemark-based initializer in favor of a
+        // location + address pair. We don't have a postal address for an FGC stop
+        // (and `MKDirections` doesn't need one for a walking-time query), so we
+        // pass `nil` and let MapKit treat the coordinate as the source of truth.
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        return MKMapItem(location: location, address: nil)
     }
 }
 
