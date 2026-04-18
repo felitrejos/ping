@@ -44,7 +44,7 @@ license and I'm not paying for it. Until then:
 
 - **iOS**: clone the repo, open in Xcode, and run on your own device or Simulator.
 - **macOS**: either run from Xcode, or grab the unsigned `Ping.dmg` built
-  locally via `scripts/release-macos.sh` (see `RELEASE.md`).
+  locally via `scripts/release-macos.sh` (see [`RELEASE.md`](RELEASE.md)).
 
 ---
 
@@ -145,11 +145,7 @@ Regenerate the project after target/dependency changes:
 xcodegen generate
 ```
 
-Unsigned macOS DMG build:
-
-```text
-RELEASE.md
-```
+Unsigned macOS DMG build: see [`RELEASE.md`](RELEASE.md).
 
 ---
 
