@@ -24,29 +24,11 @@
         }
       }
     },
-    "+ %lld min walk" : {
-      "comment" : "Fragment showing the walking time from the destination station to the event location.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+ %lld min caminant"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+ %lld min walk"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+ %lld min caminando"
-          }
-        }
-      }
+    "%@" : {
+
+    },
+    "%@ min walk" : {
+
     },
     "%@. Tap to see details." : {
       "comment" : "Accessibility label for the tappable service-status pill. Placeholder is the already-formatted summary.",
@@ -71,6 +53,9 @@
           }
         }
       }
+    },
+    "%@m walk" : {
+
     },
     "%1$@ to %2$@" : {
       "comment" : "Map route summary. Placeholders are origin and destination station names.",
@@ -239,6 +224,36 @@
           }
         }
       }
+    },
+    "→" : {
+
+    },
+    "+ %lld min walk" : {
+      "comment" : "Fragment showing the walking time from the destination station to the event location.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min caminant"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min walk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min caminando"
+          }
+        }
+      }
+    },
+    "+%@ min" : {
+
     },
     "+%lld min" : {
       "comment" : "Delay badge shown next to a delayed train, e.g. \"+3 min\".",
