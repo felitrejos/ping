@@ -12,13 +12,11 @@
 		0974690191FE6BA0E491752A /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
 		0EFE186DE74B68C8FA123B66 /* ServiceAlertPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D903980085315FF4B4D258 /* ServiceAlertPresentation.swift */; };
 		104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
-		11E01DE730D49CB2D225F9AF /* CalendarDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC101315790D3841DD78683 /* CalendarDiagnosticLog.swift */; };
 		1368753B7835AE2E382A2AD8 /* PingShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EAEBFE9C2FC73C1E803C56E /* PingShortcutsProvider.swift */; };
 		147E741C8A3E4AC0C8DE49B7 /* CountdownFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93A0C9AEC2A818BFB13C981D /* CountdownFormatting.swift */; };
 		195EB8DCCA60F7F542BC5EBE /* TrackingHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14A908FCE4C00BC53EA483F /* TrackingHaptics.swift */; };
 		19CD972E2CC04CA050F1B213 /* PingLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C9F3AD2BEE5C5DE7E3367E /* PingLiveActivity.swift */; };
 		1A2DEDBDEDF7C64547B74F5E /* PingWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0D5D409C2FB4A77056B2A6C0 /* PingWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		1A9A2B216ACD4C5C17BEEA8E /* CalendarDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC101315790D3841DD78683 /* CalendarDiagnosticLog.swift */; };
 		1AB8E31041A73E53E7F10460 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFBBA38E50BC24A005019E4 /* Constants.swift */; };
 		1BE4C21EEB8DF810A62E1355 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C75E76DCB3DEEC9B70E3A1E /* SharedContainer.swift */; };
 		1D477E9706D39F1A82C5F628 /* PingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D331C2014B7604CC25374615 /* PingActivityAttributes.swift */; };
@@ -43,7 +41,6 @@
 		4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5379482E39EA459D2F5BD0AB /* CommutePresentation.swift */; };
 		5064C6430D05B37DF97E8027 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3416EE5192208E30B00DC270 /* Assets.xcassets */; };
 		5106E8538704E39397022D5D /* CommuteTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321DC818061EE5A1BD6AD30 /* CommuteTracker.swift */; };
-		51A073314DF54AE0591E4D13 /* CalendarDiagnosticLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC101315790D3841DD78683 /* CalendarDiagnosticLog.swift */; };
 		5653133E221E4023561C17EB /* google_transit.zip in Resources */ = {isa = PBXBuildFile; fileRef = 0C956243B7E2E4347C7324A8 /* google_transit.zip */; };
 		5806D5873EC4807F3F693F8C /* GTFSCSVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BF55AAFA539FEB2A7027F /* GTFSCSVParser.swift */; };
 		5BDD31290D712E0B058FC570 /* gtfs-realtime.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D85FE3C938B33CFEA23B20 /* gtfs-realtime.pb.swift */; };
@@ -173,7 +170,6 @@
 		7E7C8DDDED26E37FAA6DC31C /* Ping iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Ping iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		865F7F251E18A7108701FA7D /* DeparturesBetweenStopsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeparturesBetweenStopsIntent.swift; sourceTree = "<group>"; };
 		89F1BFB7DEF8969629E8B9F5 /* ServiceProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceProtocols.swift; sourceTree = "<group>"; };
-		8BC101315790D3841DD78683 /* CalendarDiagnosticLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDiagnosticLog.swift; sourceTree = "<group>"; };
 		8DAF48A42884B0276B96B3D0 /* TMBKeys.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TMBKeys.xcconfig; sourceTree = "<group>"; };
 		8E49CC5FF169EDA3EBDFB32E /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FGCServiceAlertsService.swift; sourceTree = "<group>"; };
@@ -377,7 +373,6 @@
 		BB111787A0E0419C526FE3EF /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				8BC101315790D3841DD78683 /* CalendarDiagnosticLog.swift */,
 				0848B20C357FCC356EF7F3B6 /* CalendarService.swift */,
 				785FE802F746A55BA44BA96B /* FGCRealtimeService.swift */,
 				8F5B41BDABF69E1CC6379929 /* FGCServiceAlertsService.swift */,
@@ -574,7 +569,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A9A2B216ACD4C5C17BEEA8E /* CalendarDiagnosticLog.swift in Sources */,
 				852B191579D98F352FC69946 /* CalendarService.swift in Sources */,
 				A19389CEAAF931F5AFC229C0 /* CommuteEngine.swift in Sources */,
 				104054F7558DAEF73A31BE9C /* CommutePresentation.swift in Sources */,
@@ -608,7 +602,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				11E01DE730D49CB2D225F9AF /* CalendarDiagnosticLog.swift in Sources */,
 				E635A68794CD5AA26EA2F05A /* CalendarService.swift in Sources */,
 				B8F8609DC50FB7853FA024BE /* CommuteEngine.swift in Sources */,
 				4F8400F2D810DC0E7A0074C5 /* CommutePresentation.swift in Sources */,
@@ -656,7 +649,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				51A073314DF54AE0591E4D13 /* CalendarDiagnosticLog.swift in Sources */,
 				6B903A7090BF99F60373BE2B /* CalendarService.swift in Sources */,
 				E309FDA8BA288ED387C1E7B7 /* CommuteEngine.swift in Sources */,
 				924F4B37052816475EC14F9B /* CommutePresentation.swift in Sources */,

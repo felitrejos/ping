@@ -39,7 +39,6 @@ public actor CalendarService: CalendarServiceProviding {
     public func upcomingCommutes(within hours: Int) async throws -> [CommuteEvent] {
         let status = eventProvider.authorizationStatus()
         guard status.isAuthorized else {
-            CalendarDiagnosticLog.write("upcomingCommutes: not authorized (\(status))")
             return []
         }
 
@@ -48,30 +47,15 @@ public actor CalendarService: CalendarServiceProviding {
         let records = try await eventProvider.fetchEvents(from: startDate, to: endDate)
         let stops = try await staticService.allStops()
 
-        CalendarDiagnosticLog.beginSnapshot(
-            window: (startDate, endDate),
-            totalRecords: records.count
-        )
-
         var commutes: [CommuteEvent] = []
         let sortedRecords = records.sorted(by: { $0.startDate < $1.startDate })
         for record in sortedRecords {
-            let coordinate = await coordinateForRecord(record)
-            guard let coordinate else {
-                CalendarDiagnosticLog.record(
-                    record,
-                    disposition: "DROPPED: no geo coordinate and could not geocode location"
-                )
+            guard let coordinate = await coordinateForRecord(record) else {
                 continue
             }
             let resolution = await resolveStation(
                 coordinate: coordinate,
                 from: stops
-            )
-            let coordinateOrigin = record.coordinate != nil ? "from EventKit" : "geocoded from location string"
-            CalendarDiagnosticLog.record(
-                record,
-                disposition: "KEPT (\(coordinateOrigin)) -> resolvedStation=\(resolution.stationID ?? "nil"), candidates=\(resolution.candidateStationIDs)"
             )
             commutes.append(
                 CommuteEvent(
@@ -86,7 +70,6 @@ public actor CalendarService: CalendarServiceProviding {
             )
         }
 
-        CalendarDiagnosticLog.finish(commuteCount: commutes.count)
         return commutes
     }
 
