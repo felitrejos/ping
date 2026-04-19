@@ -272,7 +272,7 @@ struct MenuBarView: View {
     // MARK: - Favorite stations
 
     private var hasFavoriteStationsSection: Bool {
-        !store.favoriteStations.isEmpty
+        store.hasConfiguredDefaultRoute
     }
 
     private var favoriteStationsSection: some View {
@@ -462,17 +462,18 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
 
                 if !store.calendarAuthorization.isAuthorized {
-                    Text("Enable calendar access in Settings to get commute suggestions from your upcoming events.")
+                    Text("Enable calendar access")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if let plan = nextCalendarCommute {
                     commuteRow(plan)
                 } else {
-                    Text("Nothing upcoming. Add a location to a calendar event to see commute suggestions here.")
+                    Text("Nothing upcoming.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }

@@ -182,12 +182,12 @@ public struct SharedSettingsView: View {
     @ViewBuilder
     private var favoritesSection: some View {
         Section {
+            #if os(macOS)
             if store.favoriteStations.isEmpty {
                 Text("No favorites yet. Add stations you use most for quick switching.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                #if os(macOS)
                 List(selection: $selectedFavoriteID) {
                     ForEach(Array(store.favoriteStations.enumerated()), id: \.element.id) { index, stop in
                         HStack(spacing: 10) {
@@ -211,35 +211,41 @@ public struct SharedSettingsView: View {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .stroke(.quaternary)
                 )
+            }
 
-                HStack(spacing: 0) {
-                    Button {
-                        isFavoritePickerPresented = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .buttonStyle(.plain)
-                    .frame(width: 28, height: 24)
-
-                    Divider()
-                        .frame(height: 14)
-                        .padding(.horizontal, 2)
-
-                    Button {
-                        guard let selectedFavoriteID else { return }
-                        store.removeFavoriteStation(selectedFavoriteID)
-                        self.selectedFavoriteID = nil
-                    } label: {
-                        Image(systemName: "minus")
-                    }
-                    .buttonStyle(.plain)
-                    .frame(width: 28, height: 24)
-                    .disabled(selectedFavoriteID == nil)
+            HStack(spacing: 0) {
+                Button {
+                    isFavoritePickerPresented = true
+                } label: {
+                    Image(systemName: "plus")
                 }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 2)
-                .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                #else
+                .buttonStyle(.plain)
+                .frame(width: 28, height: 24)
+
+                Divider()
+                    .frame(height: 14)
+                    .padding(.horizontal, 2)
+
+                Button {
+                    guard let selectedFavoriteID else { return }
+                    store.removeFavoriteStation(selectedFavoriteID)
+                    self.selectedFavoriteID = nil
+                } label: {
+                    Image(systemName: "minus")
+                }
+                .buttonStyle(.plain)
+                .frame(width: 28, height: 24)
+                .disabled(selectedFavoriteID == nil)
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(.fill.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            #else
+            if store.favoriteStations.isEmpty {
+                Text("No favorites yet. Add stations you use most for quick switching.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
                 ForEach(store.favoriteStations) { stop in
                     HStack(spacing: 10) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -263,13 +269,11 @@ public struct SharedSettingsView: View {
                             store.removeFavoriteStation(stop.id)
                         }
                     }
-                }   
+                }
                 .onMove(perform: store.moveFavoriteStations(fromOffsets:toOffset:))
                 .environment(\.editMode, .constant(.active))
-                #endif
             }
 
-            #if !os(macOS)
             Button("Add new favorite") {
                 isFavoritePickerPresented = true
             }
