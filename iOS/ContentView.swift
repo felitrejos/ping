@@ -28,8 +28,6 @@ struct ContentView: View {
     @State private var routeSearchCommitted = false
     @State private var isSearchingRoute = false
     @State private var isServiceAlertsSheetPresented = false
-    /// Wall clock used to re-evaluate `timeOfDaySuggestion`. Ticking at a minute cadence
-    /// is plenty — the suggestion only crosses morning/evening thresholds on the hour.
     @State private var suggestionClock = Date()
 
     var body: some View {
@@ -1084,12 +1082,3 @@ struct ContentView: View {
     }
 
 }
-
-// Subviews & helpers extracted to:
-//   - iOS/Tracking/CommuteTracker.swift
-//   - iOS/Tracking/TrackingHaptics.swift
-//   - iOS/Views/TrainHeroCard.swift
-//   - iOS/Views/StationPickerSheet.swift
-//   - iOS/Views/NoticeCard.swift
-//   - iOS/Views/ServiceAlertsSheet.swift
-//   - iOS/Views/EmptyStates.swift

@@ -25,11 +25,10 @@
 
 `Ping` helps you choose a route fast and know exactly when to leave.
 
-- Find the best next train between two FGC stations
 - Track upcoming departures and delay-aware leave times
 - Save favorite stations for quick route switching
 - Get calendar-aware commute suggestions in one tap
-- Browse TMB bus stops on the map (zoom-gated for performance)
+- Browse TMB bus stops on the map
 - Tap a TMB stop to load upcoming iBus arrivals
 - Receive iPhone leave reminders and Live Activity trip tracking
 - See GTFS-Realtime service alerts in iOS and macOS
