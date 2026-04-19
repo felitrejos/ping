@@ -4,28 +4,68 @@ import Testing
 
 struct CommuteEngineTests {
     @Test
-    func nextCommuteUsesOnTimeDeparture() async throws {
+    func picksLatestTrainThatStillArrivesBeforeEvent() async throws {
+        // Event starts at 3_600. buffer=180, walk=480. Target arrival: 3_420.
+        // TRIP_1 arrives 1_800, TRIP_2 arrives 2_300. Both fit, TRIP_2 is the
+        // latest one we can still catch.
         let engine = makeEngine(delays: [:], now: Date(timeIntervalSince1970: 100))
 
         let plan = try await engine.nextCommute()
 
         #expect(plan != nil)
-        #expect(plan?.trainOptions.first?.delaySeconds == 0)
-        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 640))
+        #expect(plan?.trainOptions.count == 2)
+        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 1_140))
     }
 
     @Test
-    func delayedTrainShiftsRecommendedDeparture() async throws {
-        let engine = makeEngine(delays: ["TRIP_1": ["ST_HOME": 300]], now: Date(timeIntervalSince1970: 100))
+    func delayedLatestTrainShiftsRecommendedDeparture() async throws {
+        let engine = makeEngine(
+            delays: ["TRIP_2": ["ST_HOME": 300]],
+            now: Date(timeIntervalSince1970: 100)
+        )
 
         let plan = try await engine.nextCommute()
 
-        #expect(plan?.trainOptions.first?.delaySeconds == 300)
-        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 940))
+        #expect(plan?.trainOptions.count == 2)
+        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 1_440))
+    }
+
+    @Test
+    func fallsBackToEarliestCatchableWhenNothingArrivesOnTime() async throws {
+        // Every option arrives after the event starts, so there is no on-time
+        // candidate. The engine should fall back to the earliest train we can
+        // still catch instead of refusing to return a plan.
+        let engine = makeEngine(
+            departures: [
+                TrainDeparture(
+                    tripID: "TRIP_1",
+                    departureTime: Date(timeIntervalSince1970: 4_000),
+                    arrivalTime: Date(timeIntervalSince1970: 4_500),
+                    headsign: "City",
+                    routeShortName: "S1"
+                ),
+                TrainDeparture(
+                    tripID: "TRIP_2",
+                    departureTime: Date(timeIntervalSince1970: 5_000),
+                    arrivalTime: Date(timeIntervalSince1970: 5_500),
+                    headsign: "City",
+                    routeShortName: "S1"
+                ),
+            ],
+            delays: [:],
+            now: Date(timeIntervalSince1970: 100)
+        )
+
+        let plan = try await engine.nextCommute()
+
+        #expect(plan?.trainOptions.first?.tripID == "TRIP_1")
+        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 3_340))
     }
 
     @Test
     func missedTrainFallsForwardToNextOption() async throws {
+        // TRIP_1 leave-by is already in the past. Engine should fall through to
+        // TRIP_2 even though it is not the on-time latest candidate.
         let engine = makeEngine(
             departures: [
                 TrainDeparture(

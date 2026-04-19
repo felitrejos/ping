@@ -978,14 +978,20 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Button {
-                applyCommutePlan(plan)
-            } label: {
-                Label("Use this route", systemImage: "arrow.triangle.branch")
-                    .font(.subheadline.weight(.semibold))
+            if isCurrentRoutePlan(plan) {
+                Label("Matches current route", systemImage: "checkmark.circle")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+            } else {
+                Button {
+                    applyCommutePlan(plan)
+                } label: {
+                    Label("Use this route", systemImage: "arrow.triangle.branch")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
         }
         .padding(14)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
@@ -998,8 +1004,12 @@ struct ContentView: View {
 
             if !store.calendarAuthorization.isAuthorized {
                 calendarAccessCard
-            } else if let plan = nextCalendarCommute {
-                commuteRow(plan)
+            } else if !calendarPlans.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(calendarPlans) { plan in
+                        commuteRow(plan)
+                    }
+                }
             } else {
                 HStack(spacing: 10) {
                     Image(systemName: "calendar")
@@ -1054,8 +1064,8 @@ struct ContentView: View {
         setPendingDestination(plan.destinationStationID)
     }
 
-    private var nextCalendarCommute: CommutePlan? {
-        store.commutePlans.first { !isCurrentRoutePlan($0) }
+    private var calendarPlans: [CommutePlan] {
+        Array(store.commutePlans.prefix(5))
     }
 
     private var upcomingDepartureRows: [LiveDeparture] {

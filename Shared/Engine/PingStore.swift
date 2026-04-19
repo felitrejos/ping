@@ -191,7 +191,7 @@ public final class PingStore {
             linesByStopID = await loadLinesByStopID(for: availableStops)
             await reloadLineStops()
             await updateWalkingETA()
-            commutePlans = filterCommutesNearCurrentLocation(try await engine.commutePlans(within: 12))
+            commutePlans = try await engine.commutePlans(within: 12)
             nextCommute = commutePlans.first
             (nextDeparture, upcomingDepartures) = try await defaultDepartures()
             await refreshServiceAlerts()
@@ -553,24 +553,6 @@ public final class PingStore {
         }
 
         dynamicWalkingMinutes = await walkingETAService.walkingMinutes(from: coordinate, to: homeStop)
-    }
-
-    private func filterCommutesNearCurrentLocation(_ plans: [CommutePlan]) -> [CommutePlan] {
-        guard let userLocation else {
-            return plans
-        }
-
-        return plans.filter { plan in
-            guard
-                let destinationID = plan.calendarEvent.resolvedStation,
-                let destination = availableStops.first(where: { $0.id == destinationID }),
-                let destinationCoordinate = destination.coordinate
-            else {
-                return true
-            }
-
-            return userLocation.distance(to: destinationCoordinate) > 800
-        }
     }
 
     public func configuredRouteStops() async -> [Stop] {

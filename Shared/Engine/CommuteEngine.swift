@@ -104,7 +104,7 @@ public actor CommuteEngine {
         }
 
         var liveOptions: [LiveDeparture] = []
-        for departure in departures.prefix(5) {
+        for departure in departures.prefix(12) {
             let delaySeconds = await realtimeService.delayFor(tripID: departure.tripID, stopID: origin) ?? 0
             let effectiveDeparture = departure.departureTime.addingTimeInterval(TimeInterval(delaySeconds))
             let minutesUntil = max(0, Int((effectiveDeparture.timeIntervalSince(clock.now) / 60.0).rounded(.awayFromZero)))
@@ -123,10 +123,23 @@ public actor CommuteEngine {
 
         let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
         let walkingSeconds = TimeInterval(await walkingMinutesProvider() * 60)
-        let viableOption = liveOptions.first(where: { liveDeparture in
-            let leaveBy = liveDeparture.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds))
-            return leaveBy > clock.now
-        }) ?? liveOptions.first
+
+        // Preferred: the latest train that (a) we can still catch (leave-by is in
+        // the future), and (b) arrives at the destination station with enough
+        // buffer before the event starts. This keeps notifications quiet until
+        // it is actually time to leave for the event, rather than firing for the
+        // first reachable train hours in advance.
+        let targetArrival = event.startDate.addingTimeInterval(-bufferSeconds)
+        let onTimeCandidates = liveOptions.filter { option in
+            let leaveBy = option.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds))
+            return leaveBy > clock.now && option.effectiveArrivalTime <= targetArrival
+        }
+
+        let viableOption = onTimeCandidates.max(by: { $0.effectiveDepartureTime < $1.effectiveDepartureTime })
+            ?? liveOptions.first(where: { option in
+                option.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds)) > clock.now
+            })
+            ?? liveOptions.first
 
         guard let viableOption else {
             return nil

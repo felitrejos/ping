@@ -465,8 +465,12 @@ struct MenuBarView: View {
                     Text("Enable calendar access")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else if let plan = nextCalendarCommute {
-                    commuteRow(plan)
+                } else if !calendarPlans.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(calendarPlans) { plan in
+                            commuteRow(plan)
+                        }
+                    }
                 } else {
                     Text("Nothing upcoming.")
                         .font(.caption)
@@ -505,14 +509,21 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Button {
-                applyCommutePlan(plan)
-            } label: {
-                Label("Use this route", systemImage: "arrow.triangle.branch")
+            if isCurrentRoutePlan(plan) {
+                Label("Matches current route", systemImage: "checkmark.circle")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Button {
+                    applyCommutePlan(plan)
+                } label: {
+                    Label("Use this route", systemImage: "arrow.triangle.branch")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
         }
     }
 
@@ -522,8 +533,8 @@ struct MenuBarView: View {
         }
     }
 
-    private var nextCalendarCommute: CommutePlan? {
-        store.commutePlans.first { !isCurrentRoutePlan($0) }
+    private var calendarPlans: [CommutePlan] {
+        Array(store.commutePlans.prefix(3))
     }
 
     private func isCurrentRoutePlan(_ plan: CommutePlan) -> Bool {
