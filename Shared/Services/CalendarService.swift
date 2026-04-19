@@ -6,19 +6,24 @@ import MapKit
 public actor CalendarService: CalendarServiceProviding {
     private let eventProvider: any CalendarEventProviding
     private let routeEstimator: any CalendarRouteEstimating
+    private let locationGeocoder: any CalendarLocationGeocoding
     private let staticService: StaticServiceProviding
     private let defaults: UserDefaults
     private var stationResolutionCache: [StationResolutionCacheKey: StationResolutionCacheValue] = [:]
     private let stationResolutionCacheTTL: TimeInterval = 20 * 60
+    private var addressGeocodeCache: [String: AddressGeocodeCacheValue] = [:]
+    private let addressGeocodeCacheTTL: TimeInterval = 24 * 60 * 60
 
     public init(
         eventProvider: any CalendarEventProviding = EventKitCalendarProvider(),
         routeEstimator: any CalendarRouteEstimating = MapKitCalendarRouteEstimator(),
+        locationGeocoder: any CalendarLocationGeocoding = CLGeocoderCalendarLocationGeocoder(),
         staticService: StaticServiceProviding,
         defaults: UserDefaults = .standard
     ) {
         self.eventProvider = eventProvider
         self.routeEstimator = routeEstimator
+        self.locationGeocoder = locationGeocoder
         self.staticService = staticService
         self.defaults = defaults
     }
@@ -34,6 +39,7 @@ public actor CalendarService: CalendarServiceProviding {
     public func upcomingCommutes(within hours: Int) async throws -> [CommuteEvent] {
         let status = eventProvider.authorizationStatus()
         guard status.isAuthorized else {
+            CalendarDiagnosticLog.write("upcomingCommutes: not authorized (\(status))")
             return []
         }
 
@@ -42,13 +48,30 @@ public actor CalendarService: CalendarServiceProviding {
         let records = try await eventProvider.fetchEvents(from: startDate, to: endDate)
         let stops = try await staticService.allStops()
 
+        CalendarDiagnosticLog.beginSnapshot(
+            window: (startDate, endDate),
+            totalRecords: records.count
+        )
+
         var commutes: [CommuteEvent] = []
-        for record in records
-            .filter({ $0.coordinate != nil })
-            .sorted(by: { $0.startDate < $1.startDate }) {
+        let sortedRecords = records.sorted(by: { $0.startDate < $1.startDate })
+        for record in sortedRecords {
+            let coordinate = await coordinateForRecord(record)
+            guard let coordinate else {
+                CalendarDiagnosticLog.record(
+                    record,
+                    disposition: "DROPPED: no geo coordinate and could not geocode location"
+                )
+                continue
+            }
             let resolution = await resolveStation(
-                coordinate: record.coordinate,
+                coordinate: coordinate,
                 from: stops
+            )
+            let coordinateOrigin = record.coordinate != nil ? "from EventKit" : "geocoded from location string"
+            CalendarDiagnosticLog.record(
+                record,
+                disposition: "KEPT (\(coordinateOrigin)) -> resolvedStation=\(resolution.stationID ?? "nil"), candidates=\(resolution.candidateStationIDs)"
             )
             commutes.append(
                 CommuteEvent(
@@ -63,6 +86,7 @@ public actor CalendarService: CalendarServiceProviding {
             )
         }
 
+        CalendarDiagnosticLog.finish(commuteCount: commutes.count)
         return commutes
     }
 
@@ -80,6 +104,33 @@ public actor CalendarService: CalendarServiceProviding {
 
     public func setUserDestinationStation(_ stopID: StopID?) async {
         UserSettings.setDestinationStationID(stopID, defaults: defaults)
+    }
+
+    /// Returns the best coordinate for an event: the structured one from
+    /// EventKit if present, otherwise a geocode of the free-text `location`
+    /// string. Results are cached for 24h because calendar locations rarely
+    /// change and CLGeocoder is rate-limited.
+    private func coordinateForRecord(_ record: CalendarEventRecord) async -> TransitCoordinate? {
+        if let coordinate = record.coordinate {
+            return coordinate
+        }
+        guard let rawAddress = record.location?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawAddress.isEmpty else {
+            return nil
+        }
+
+        let cacheKey = rawAddress.lowercased()
+        if let cached = addressGeocodeCache[cacheKey],
+           Date().timeIntervalSince(cached.timestamp) < addressGeocodeCacheTTL {
+            return cached.coordinate
+        }
+
+        let resolved = await locationGeocoder.geocode(address: rawAddress)
+        addressGeocodeCache[cacheKey] = AddressGeocodeCacheValue(
+            coordinate: resolved,
+            timestamp: Date()
+        )
+        return resolved
     }
 
     private func resolveStation(
@@ -168,6 +219,13 @@ public protocol CalendarRouteEstimating: Sendable {
     func walkingTravelTime(from source: TransitCoordinate, to destination: TransitCoordinate) async -> TimeInterval?
 }
 
+public protocol CalendarLocationGeocoding: Sendable {
+    /// Resolves a free-text address string to a coordinate. Should return nil
+    /// for unresolvable or rate-limited inputs. Implementations are expected to
+    /// handle their own timeouts/throttling.
+    func geocode(address: String) async -> TransitCoordinate?
+}
+
 private struct StationResolutionCacheKey: Hashable {
     let latitudeBucket: Int
     let longitudeBucket: Int
@@ -189,6 +247,31 @@ private struct StationResolutionResult {
     let stationID: StopID?
     let candidateStationIDs: [StopID]
     let walkingSecondsByStop: [StopID: TimeInterval]
+}
+
+private struct AddressGeocodeCacheValue {
+    let coordinate: TransitCoordinate?
+    let timestamp: Date
+}
+
+public struct CLGeocoderCalendarLocationGeocoder: CalendarLocationGeocoding {
+    public init() {}
+
+    public func geocode(address: String) async -> TransitCoordinate? {
+        let geocoder = CLGeocoder()
+        do {
+            let placemarks = try await geocoder.geocodeAddressString(address)
+            guard let location = placemarks.first?.location else {
+                return nil
+            }
+            return TransitCoordinate(
+                latitude: location.coordinate.latitude,
+                longitude: location.coordinate.longitude
+            )
+        } catch {
+            return nil
+        }
+    }
 }
 
 public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {

@@ -4,7 +4,7 @@ import Testing
 
 struct CalendarServiceTests {
     @Test
-    func upcomingCommutesIgnoresEventsWithoutStructuredCoordinate() async throws {
+    func upcomingCommutesDropsEventsWithNoCoordinateAndNoResolvableAddress() async throws {
         let provider = StubCalendarProvider(
             status: .fullAccess,
             events: [
@@ -19,12 +19,41 @@ struct CalendarServiceTests {
         let service = CalendarService(
             eventProvider: provider,
             routeEstimator: StubRouteEstimator(),
+            locationGeocoder: StubLocationGeocoder(mapping: [:]),
             staticService: StubStaticService()
         )
 
         let commutes = try await service.upcomingCommutes(within: 2)
 
         #expect(commutes.isEmpty)
+    }
+
+    @Test
+    func upcomingCommutesGeocodesFreeTextLocationWhenEventHasNoStructuredCoordinate() async throws {
+        let provider = StubCalendarProvider(
+            status: .fullAccess,
+            events: [
+                CalendarEventRecord(
+                    id: "event-1",
+                    title: "Gym",
+                    startDate: Date(timeIntervalSince1970: 1000),
+                    location: "Tuset DiR, Calle de Aribau 230, Barcelona"
+                ),
+            ]
+        )
+        let service = CalendarService(
+            eventProvider: provider,
+            routeEstimator: StubRouteEstimator(),
+            locationGeocoder: StubLocationGeocoder(mapping: [
+                "tuset dir, calle de aribau 230, barcelona": TransitCoordinate(latitude: 41.386, longitude: 2.17),
+            ]),
+            staticService: StubStaticService()
+        )
+
+        let commutes = try await service.upcomingCommutes(within: 2)
+
+        #expect(commutes.count == 1)
+        #expect(commutes.first?.resolvedStation == "ST_CITY")
     }
 
     @Test
@@ -96,6 +125,14 @@ private struct StubRouteEstimator: CalendarRouteEstimating {
         let latitudeDelta = source.latitude - destination.latitude
         let longitudeDelta = source.longitude - destination.longitude
         return (latitudeDelta * latitudeDelta + longitudeDelta * longitudeDelta) * 1_000_000
+    }
+}
+
+private struct StubLocationGeocoder: CalendarLocationGeocoding {
+    let mapping: [String: TransitCoordinate]
+
+    func geocode(address: String) async -> TransitCoordinate? {
+        mapping[address.lowercased()]
     }
 }
 

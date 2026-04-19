@@ -24,9 +24,6 @@
         }
       }
     },
-    "%@" : {
-
-    },
     "+ %lld min walk" : {
       "comment" : "Fragment showing the walking time from the destination station to the event location.",
       "extractionState" : "manual",
@@ -51,12 +48,6 @@
         }
       }
     },
-    "%@ min" : {
-
-    },
-    "%@ min walk" : {
-
-    },
     "%@. Tap to see details." : {
       "comment" : "Accessibility label for the tappable service-status pill. Placeholder is the already-formatted summary.",
       "extractionState" : "manual",
@@ -80,9 +71,6 @@
           }
         }
       }
-    },
-    "%@m walk" : {
-
     },
     "%1$@ to %2$@" : {
       "comment" : "Map route summary. Placeholders are origin and destination station names.",
@@ -251,12 +239,6 @@
           }
         }
       }
-    },
-    "→" : {
-
-    },
-    "+%@ min" : {
-
     },
     "+%lld min" : {
       "comment" : "Delay badge shown next to a delayed train, e.g. \"+3 min\".",
@@ -2953,7 +2935,27 @@
       }
     },
     "Pull to refresh once Ping finishes loading the FGC schedule." : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estira per refrescar quan Ping acabi de carregar l'horari FGC."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull to refresh once Ping finishes loading the FGC schedule."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza para actualizar cuando Ping termine de cargar el horario FGC."
+          }
+        }
+      }
     },
     "Pull to retry or try again in a moment." : {
       "extractionState" : "manual",
