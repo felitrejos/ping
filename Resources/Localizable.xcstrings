@@ -1,1550 +1,4343 @@
 {
   "sourceLanguage" : "en",
-  "version" : "1.0",
   "strings" : {
-    "%lld stations" : {
-      "comment" : "Station picker subtitle with the number of visible stations.",
+    " · may be outdated" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%lld estacions" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld estaciones" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · pot estar desactualitzat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · may be outdated"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " · puede estar desactualizado"
+          }
+        }
       }
     },
-    "%1$@ to %2$@" : {
-      "comment" : "Map route summary. Placeholders are origin and destination station names.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ a %2$@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ to %2$@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ a %2$@" } }
-      }
+    "%@" : {
+
     },
-    "%lld min ride" : {
-      "comment" : "Train segment length in the journey timeline. e.g. \"12 min ride\".",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%lld min en tren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld min ride" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld min en tren" } }
-      }
-    },
-    "%lld min walk" : {
-      "comment" : "Walking segment length in the journey timeline. e.g. \"7 min walk\".",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%lld min caminant" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld min walk" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld min andando" } }
-      }
-    },
-    "%lldm ride" : {
-      "comment" : "Compact ride duration used inside the Live Activity Dynamic Island.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%lldm tren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm ride" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lldm tren" } }
-      }
-    },
-    "%lldm walk" : {
-      "comment" : "Compact walk duration used inside the Live Activity Dynamic Island.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%lldm a peu" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lldm walk" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lldm andando" } }
-      }
-    },
-    "+%lld min" : {
-      "comment" : "Delay badge shown next to a delayed train, e.g. \"+3 min\".",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "+%lld min" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "+%lld min" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "+%lld min" } }
-      }
+    "%@ min walk" : {
+
     },
     "%@. Tap to see details." : {
       "comment" : "Accessibility label for the tappable service-status pill. Placeholder is the already-formatted summary.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%@. Toca per veure els detalls." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@. Tap to see details." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%@. Toca para ver los detalles." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Toca per veure els detalls."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Tap to see details."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@. Toca para ver los detalles."
+          }
+        }
       }
     },
-    "2 min to departure" : {
-      "comment" : "Live Activity alert title shown two minutes before departure.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "2 min per a la sortida" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "2 min to departure" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "2 min para salir" } }
-      }
+    "%@m walk" : {
+
     },
-    "Add" : {
+    "%1$@ to %2$@" : {
+      "comment" : "Map route summary. Placeholders are origin and destination station names.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Afegeix" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir" } }
-      }
-    },
-    "Add Favorite" : {
-      "comment" : "Sheet title for adding a favorite station.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Afegeix preferida" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Favorite" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir favorita" } }
-      }
-    },
-    "Add favorite stations in Settings for quick route switching." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Afegeix estacions preferides a Configuració per canviar de ruta ràpidament." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add favorite stations in Settings for quick route switching." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añade estaciones favoritas en Ajustes para cambiar de ruta rápidamente." } }
-      }
-    },
-    "Add new favorite" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Afegeix una preferida" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add new favorite" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir favorita" } }
-      }
-    },
-    "All clear" : {
-      "comment" : "Empty state title for the service alerts sheet when there are no disruptions.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tot bé" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All clear" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todo en orden" } }
-      }
-    },
-    "All stations" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Totes les estacions" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todas las estaciones" } }
-      }
-    },
-    "Allow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Permet" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Permitir" } }
-      }
-    },
-    "Allow calendar access to get commute suggestions from your upcoming events." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Permet l'accés al calendari per rebre suggeriments de trajectes a partir dels teus esdeveniments." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow calendar access to get commute suggestions from your upcoming events." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Permite el acceso al calendario para recibir sugerencias de trayectos a partir de tus eventos." } }
-      }
-    },
-    "Allowed" : {
-      "comment" : "Settings row indicating calendar access has been granted.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Permès" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allowed" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Permitido" } }
-      }
-    },
-    "Apply route %@ to %@" : {
-      "comment" : "Accessibility label for a saved-route chip. Placeholders are origin and destination station names.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Aplica la ruta %1$@ a %2$@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Apply route %1$@ to %2$@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aplicar ruta %1$@ a %2$@" } }
-      }
-    },
-    "Arrival" : {
-      "comment" : "Dynamic Island column label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Arribada" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arrival" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Llegada" } }
-      }
-    },
-    "Calendar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Calendari" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calendar" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario" } }
-      }
-    },
-    "Calendar access" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Accés al calendari" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calendar access" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Acceso al calendario" } }
-      }
-    },
-    "Cancel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cancel·la" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } }
-      }
-    },
-    "Choose Destination" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tria la destinació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Destination" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige destino" } }
-      }
-    },
-    "Choose Origin" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tria l'origen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose Origin" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige origen" } }
-      }
-    },
-    "Choose origin and destination in Settings." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tria l'origen i la destinació a Configuració." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose origin and destination in Settings." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige origen y destino en Ajustes." } }
-      }
-    },
-    "Choose station" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tria estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Choose station" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Elige estación" } }
-      }
-    },
-    "Closest station is %1$@. Next train: %2$@." : {
-      "comment" : "Siri response summarising the single next departure.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "L'estació més propera és %1$@. Pròxim tren: %2$@." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Closest station is %1$@. Next train: %2$@." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La estación más cercana es %1$@. Próximo tren: %2$@." } }
-      }
-    },
-    "Closest station is %1$@. Next trains: %2$@, then %3$@." : {
-      "comment" : "Siri response summarising the next few departures.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "L'estació més propera és %1$@. Pròxims trens: %2$@, després %3$@." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Closest station is %1$@. Next trains: %2$@, then %3$@." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La estación más cercana es %1$@. Próximos trenes: %2$@, luego %3$@." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ to %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a %2$@"
+          }
+        }
       }
     },
     "%1$@ to %2$@ in %3$lld min" : {
       "comment" : "Siri-friendly train summary. Placeholders: route code, headsign, minutes until departure.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ a %2$@ en %3$lld min" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ to %2$@ in %3$lld min" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "%1$@ a %2$@ en %3$lld min" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a %2$@ en %3$lld min"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ to %2$@ in %3$lld min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a %2$@ en %3$lld min"
+          }
+        }
       }
     },
-    "Close bus stop details" : {
+    "%lld min ride" : {
+      "comment" : "Train segment length in the journey timeline. e.g. \"12 min ride\".",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tanca els detalls de la parada" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close bus stop details" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar detalles de la parada" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min en tren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min ride"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min en tren"
+          }
+        }
       }
     },
-    "Close station actions" : {
+    "%lld min walk" : {
+      "comment" : "Walking segment length in the journey timeline. e.g. \"7 min walk\".",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tanca les accions de l'estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close station actions" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar acciones de la estación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min caminant"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min walk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min andando"
+          }
+        }
       }
     },
-    "Closure" : {
-      "comment" : "Severity label for a service alert that closes a line.",
+    "%lld stations" : {
+      "comment" : "Station picker subtitle with the number of visible stations.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tancament" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Closure" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cierre" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld estacions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld estaciones"
+          }
+        }
       }
     },
-    "Couldn't reach FGC. Check your connection — Ping will retry on the next refresh." : {
+    "%lldm ride" : {
+      "comment" : "Compact ride duration used inside the Live Activity Dynamic Island.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No s'ha pogut connectar amb FGC. Comprova la connexió — Ping ho tornarà a provar." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't reach FGC. Check your connection — Ping will retry on the next refresh." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo contactar con FGC. Comprueba la conexión — Ping volverá a intentarlo." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm tren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm ride"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm tren"
+          }
+        }
       }
     },
-    "Couldn't reach FGC. Check your connection — we'll retry on the next refresh." : {
+    "%lldm walk" : {
+      "comment" : "Compact walk duration used inside the Live Activity Dynamic Island.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No s'ha pogut connectar amb FGC. Comprova la connexió — ho tornarem a provar." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't reach FGC. Check your connection — we'll retry on the next refresh." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo contactar con FGC. Comprueba la conexión — volveremos a intentarlo." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm a peu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm walk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldm andando"
+          }
+        }
       }
     },
-    "Couldn't refresh" : {
+    "→" : {
+
+    },
+    "+%@ min" : {
+
+    },
+    "+%lld min" : {
+      "comment" : "Delay badge shown next to a delayed train, e.g. \"+3 min\".",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No s'ha pogut actualitzar" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Couldn't refresh" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo actualizar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld min"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld min"
+          }
+        }
       }
     },
-    "Cutting it close" : {
-      "comment" : "Status banner shown when the user can still catch their tracked train but only barely.",
+    "2 min to departure" : {
+      "comment" : "Live Activity alert title shown two minutes before departure.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Just a temps" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cutting it close" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vas justo" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 min per a la sortida"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 min to departure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 min para salir"
+          }
+        }
       }
     },
-    "Delayed · %@" : {
-      "comment" : "Delay banner. Placeholder is a free-text status from the realtime feed.",
+    "Add" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Retard · %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delayed · %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Retraso · %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afegeix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir"
+          }
+        }
       }
     },
-    "Denied" : {
-      "comment" : "Settings row indicating calendar access has been denied.",
+    "Add Favorite" : {
+      "comment" : "Sheet title for adding a favorite station.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Denegat" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Denied" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Denegado" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afegeix preferida"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Favorite"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir favorita"
+          }
+        }
       }
     },
-    "Departure" : {
+    "Add favorite stations in Settings for quick route switching." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afegeix estacions preferides a Configuració per canviar de ruta ràpidament."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add favorite stations in Settings for quick route switching."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade estaciones favoritas en Ajustes para cambiar de ruta rápidamente."
+          }
+        }
+      }
+    },
+    "Add new favorite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afegeix una preferida"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add new favorite"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir favorita"
+          }
+        }
+      }
+    },
+    "All clear" : {
+      "comment" : "Empty state title for the service alerts sheet when there are no disruptions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot bé"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All clear"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo en orden"
+          }
+        }
+      }
+    },
+    "All stations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Totes les estacions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las estaciones"
+          }
+        }
+      }
+    },
+    "Allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir"
+          }
+        }
+      }
+    },
+    "Allow calendar access to get commute suggestions from your upcoming events." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permet l'accés al calendari per rebre suggeriments de trajectes a partir dels teus esdeveniments."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow calendar access to get commute suggestions from your upcoming events."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite el acceso al calendario para recibir sugerencias de trayectos a partir de tus eventos."
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "comment" : "Settings row indicating calendar access has been granted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permès"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitido"
+          }
+        }
+      }
+    },
+    "Apply route %@ to %@" : {
+      "comment" : "Accessibility label for a saved-route chip. Placeholders are origin and destination station names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplica la ruta %1$@ a %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply route %1$@ to %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar ruta %1$@ a %2$@"
+          }
+        }
+      }
+    },
+    "Arrival" : {
       "comment" : "Dynamic Island column label.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Sortida" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Departure" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salida" } }
-      }
-    },
-    "Departures Between Stations" : {
-      "comment" : "App Intent / Siri title.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Sortides entre estacions" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Departures Between Stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salidas entre estaciones" } }
-      }
-    },
-    "Departures from %@ in %@" : {
-      "comment" : "Siri/Spotlight phrase for the Departures Between Stations shortcut.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Sortides des de %1$@ a %2$@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Departures from %1$@ in %2$@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salidas desde %1$@ en %2$@" } }
-      }
-    },
-    "DESTINATION" : {
-      "comment" : "Section caption above the destination station picker.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "DESTINACIÓ" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "DESTINATION" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "DESTINO" } }
-      }
-    },
-    "Destination" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Destinació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Destination" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Destino" } }
-      }
-    },
-    "Disable FGC station overlay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Desactiva la capa d'estacions FGC" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disable FGC station overlay" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desactivar capa de estaciones FGC" } }
-      }
-    },
-    "Disable TMB bus overlay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Desactiva la capa de busos TMB" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Disable TMB bus overlay" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desactivar capa de buses TMB" } }
-      }
-    },
-    "Done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Fet" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Listo" } }
-      }
-    },
-    "Enable calendar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa el calendari" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable calendar" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activar calendario" } }
-      }
-    },
-    "Enable calendar access" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa l'accés al calendari" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable calendar access" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activa el acceso al calendario" } }
-      }
-    },
-    "Enable calendar access in Settings to get commute suggestions from your upcoming events." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa l'accés al calendari a Configuració per rebre suggeriments dels teus propers esdeveniments." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable calendar access in Settings to get commute suggestions from your upcoming events." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activa el acceso al calendario en Ajustes para recibir sugerencias de tus próximos eventos." } }
-      }
-    },
-    "Enable FGC station overlay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa la capa d'estacions FGC" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable FGC station overlay" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activar capa de estaciones FGC" } }
-      }
-    },
-    "Enable location to search routes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa la ubicació per cercar rutes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable location to search routes" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activa la ubicación para buscar rutas" } }
-      }
-    },
-    "Enable TMB bus overlay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activa la capa de busos TMB" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable TMB bus overlay" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activar capa de buses TMB" } }
-      }
-    },
-    "FGC: %@" : {
-      "comment" : "Map nearby-stations chip prefix for FGC stations.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC: %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC: %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC: %@" } }
-      }
-    },
-    "FGC · %lld alert" : {
-      "comment" : "Status pill when there is exactly one actionable FGC alert.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld avís" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld alert" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld aviso" } }
-      }
-    },
-    "FGC · %lld alerts" : {
-      "comment" : "Status pill when there are multiple actionable FGC alerts.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld avisos" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld alerts" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC · %lld avisos" } }
-      }
-    },
-    "FGC · All lines running" : {
-      "comment" : "Status pill when there are no actionable FGC alerts.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC · Totes les línies en servei" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC · All lines running" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC · Todas las líneas operativas" } }
-      }
-    },
-    "FGC isn't reporting any departures from here right now." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC no informa de cap sortida des d'aquí ara mateix." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC isn't reporting any departures from here right now." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC no informa de salidas desde aquí ahora mismo." } }
-      }
-    },
-    "FGC isn't reporting any disruptions right now." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "FGC no informa de cap incidència ara mateix." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "FGC isn't reporting any disruptions right now." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "FGC no informa de incidencias ahora mismo." } }
-      }
-    },
-    "Favorite stations" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions preferides" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorite stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones favoritas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arribada"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrival"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llegada"
+          }
+        }
       }
     },
     "best reachable station: %@" : {
       "comment" : "Calendar event detail fragment used when we couldn't route to the event's exact station.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "millor estació accessible: %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "best reachable station: %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "mejor estación accesible: %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "millor estació accessible: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "best reachable station: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mejor estación accesible: %@"
+          }
+        }
+      }
+    },
+    "Calendar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendari"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendario"
+          }
+        }
+      }
+    },
+    "Calendar access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accés al calendari"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calendar access"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acceso al calendario"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel·la"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
+    },
+    "Choose Destination" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tria la destinació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Destination"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige destino"
+          }
+        }
+      }
+    },
+    "Choose Origin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tria l'origen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Origin"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige origen"
+          }
+        }
+      }
+    },
+    "Choose origin and destination in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tria l'origen i la destinació a Configuració."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose origin and destination in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige origen y destino en Ajustes."
+          }
+        }
+      }
+    },
+    "Choose station" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tria estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose station"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige estación"
+          }
+        }
+      }
+    },
+    "Close bus stop details" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanca els detalls de la parada"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close bus stop details"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar detalles de la parada"
+          }
+        }
+      }
+    },
+    "Close station actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanca les accions de l'estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close station actions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar acciones de la estación"
+          }
+        }
+      }
+    },
+    "Closest station is %1$@. Next train: %2$@." : {
+      "comment" : "Siri response summarising the single next departure.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'estació més propera és %1$@. Pròxim tren: %2$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closest station is %1$@. Next train: %2$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La estación más cercana es %1$@. Próximo tren: %2$@."
+          }
+        }
+      }
+    },
+    "Closest station is %1$@. Next trains: %2$@, then %3$@." : {
+      "comment" : "Siri response summarising the next few departures.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'estació més propera és %1$@. Pròxims trens: %2$@, després %3$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closest station is %1$@. Next trains: %2$@, then %3$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La estación más cercana es %1$@. Próximos trenes: %2$@, luego %3$@."
+          }
+        }
+      }
+    },
+    "Closure" : {
+      "comment" : "Severity label for a service alert that closes a line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tancament"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierre"
+          }
+        }
+      }
+    },
+    "Couldn't reach FGC. Check your connection — Ping will retry on the next refresh." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No s'ha pogut connectar amb FGC. Comprova la connexió — Ping ho tornarà a provar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach FGC. Check your connection — Ping will retry on the next refresh."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo contactar con FGC. Comprueba la conexión — Ping volverá a intentarlo."
+          }
+        }
+      }
+    },
+    "Couldn't reach FGC. Check your connection — we'll retry on the next refresh." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No s'ha pogut connectar amb FGC. Comprova la connexió — ho tornarem a provar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach FGC. Check your connection — we'll retry on the next refresh."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo contactar con FGC. Comprueba la conexión — volveremos a intentarlo."
+          }
+        }
+      }
+    },
+    "Couldn't refresh" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No s'ha pogut actualitzar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't refresh"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar"
+          }
+        }
+      }
+    },
+    "Cutting it close" : {
+      "comment" : "Status banner shown when the user can still catch their tracked train but only barely.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Just a temps"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cutting it close"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vas justo"
+          }
+        }
+      }
+    },
+    "Delayed · %@" : {
+      "comment" : "Delay banner. Placeholder is a free-text status from the realtime feed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retard · %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delayed · %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retraso · %@"
+          }
+        }
+      }
+    },
+    "Denied" : {
+      "comment" : "Settings row indicating calendar access has been denied.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denegat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denied"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denegado"
+          }
+        }
+      }
+    },
+    "Departure" : {
+      "comment" : "Dynamic Island column label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortida"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Departure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salida"
+          }
+        }
+      }
+    },
+    "Departures Between Stations" : {
+      "comment" : "App Intent / Siri title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortides entre estacions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Departures Between Stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salidas entre estaciones"
+          }
+        }
+      }
+    },
+    "Departures from %@ in %@" : {
+      "comment" : "Siri/Spotlight phrase for the Departures Between Stations shortcut.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortides des de %1$@ a %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Departures from %1$@ in %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salidas desde %1$@ en %2$@"
+          }
+        }
+      }
+    },
+    "Destination" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destinació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destination"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destino"
+          }
+        }
+      }
+    },
+    "DESTINATION" : {
+      "comment" : "Section caption above the destination station picker.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESTINACIÓ"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESTINATION"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DESTINO"
+          }
+        }
       }
     },
     "destination station: %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "estació de destinació: %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "destination station: %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "estación de destino: %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "estació de destinació: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "destination station: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "estación de destino: %@"
+          }
+        }
       }
     },
-    "from %@" : {
-      "comment" : "Calendar route detail prefix. Placeholder is the origin station name.",
+    "Disable FGC station overlay" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "des de %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "from %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "desde %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactiva la capa d'estacions FGC"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable FGC station overlay"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar capa de estaciones FGC"
+          }
+        }
+      }
+    },
+    "Disable TMB bus overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactiva la capa de busos TMB"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable TMB bus overlay"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar capa de buses TMB"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
+          }
+        }
+      }
+    },
+    "Enable calendar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa el calendari"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable calendar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar calendario"
+          }
+        }
+      }
+    },
+    "Enable calendar access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa l'accés al calendari"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable calendar access"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa el acceso al calendario"
+          }
+        }
+      }
+    },
+    "Enable calendar access in Settings to get commute suggestions from your upcoming events." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa l'accés al calendari a Configuració per rebre suggeriments dels teus propers esdeveniments."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable calendar access in Settings to get commute suggestions from your upcoming events."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa el acceso al calendario en Ajustes para recibir sugerencias de tus próximos eventos."
+          }
+        }
+      }
+    },
+    "Enable FGC station overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la capa d'estacions FGC"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable FGC station overlay"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar capa de estaciones FGC"
+          }
+        }
+      }
+    },
+    "Enable location to search routes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la ubicació per cercar rutes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable location to search routes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la ubicación para buscar rutas"
+          }
+        }
+      }
+    },
+    "Enable TMB bus overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la capa de busos TMB"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable TMB bus overlay"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar capa de buses TMB"
+          }
+        }
+      }
+    },
+    "Favorite stations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions preferides"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones favoritas"
+          }
+        }
       }
     },
     "Favorites" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Preferides" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Favoritas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferides"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritas"
+          }
+        }
       }
     },
     "Favorites show up in the menu bar for quick switching." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Les preferides apareixen a la barra de menús per canviar-les ràpidament." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites show up in the menu bar for quick switching." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Las favoritas aparecen en la barra de menús para cambiarlas rápidamente." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les preferides apareixen a la barra de menús per canviar-les ràpidament."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorites show up in the menu bar for quick switching."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las favoritas aparecen en la barra de menús para cambiarlas rápidamente."
+          }
+        }
+      }
+    },
+    "FGC · %lld alert" : {
+      "comment" : "Status pill when there is exactly one actionable FGC alert.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld avís"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld alert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld aviso"
+          }
+        }
+      }
+    },
+    "FGC · %lld alerts" : {
+      "comment" : "Status pill when there are multiple actionable FGC alerts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld avisos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld alerts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · %lld avisos"
+          }
+        }
+      }
+    },
+    "FGC · All lines running" : {
+      "comment" : "Status pill when there are no actionable FGC alerts.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · Totes les línies en servei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · All lines running"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC · Todas las líneas operativas"
+          }
+        }
+      }
+    },
+    "FGC isn't reporting any departures from here right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC no informa de cap sortida des d'aquí ara mateix."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC isn't reporting any departures from here right now."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC no informa de salidas desde aquí ahora mismo."
+          }
+        }
+      }
+    },
+    "FGC isn't reporting any disruptions right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC no informa de cap incidència ara mateix."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC isn't reporting any disruptions right now."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC no informa de incidencias ahora mismo."
+          }
+        }
+      }
+    },
+    "FGC: %@" : {
+      "comment" : "Map nearby-stations chip prefix for FGC stations.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FGC: %@"
+          }
+        }
       }
     },
     "Follow" : {
       "comment" : "Compact button on a departure row that starts following that trip.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Segueix" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Seguir" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segueix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir"
+          }
+        }
       }
     },
     "Follow this trip" : {
       "comment" : "Accessibility label for the follow-trip button.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Segueix aquest trajecte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow this trip" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Seguir este trayecto" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segueix aquest trajecte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow this trip"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir este trayecto"
+          }
+        }
       }
     },
     "Follow trip" : {
       "comment" : "Hero card button that promotes a departure to a tracked Live Activity.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Segueix el trajecte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Follow trip" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Seguir trayecto" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segueix el trajecte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow trip"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir trayecto"
+          }
+        }
       }
     },
     "Following trip" : {
       "comment" : "Hero card heading while a Live Activity is active.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Seguint el trajecte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Following trip" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Siguiendo trayecto" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguint el trajecte"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Following trip"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiendo trayecto"
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "comment" : "Calendar route detail prefix. Placeholder is the origin station name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "des de %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "from %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desde %@"
+          }
+        }
       }
     },
     "Go to %@" : {
       "comment" : "Map sheet header. Placeholder is the origin station name.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap a %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Go to %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ve a %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap a %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ve a %@"
+          }
+        }
       }
     },
     "Heading home?" : {
       "comment" : "Time-of-day suggestion title that proposes reversing the route.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Tornes a casa?" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Heading home?" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Vuelves a casa?" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tornes a casa?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heading home?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Vuelves a casa?"
+          }
+        }
       }
     },
     "Hide upcoming departures" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Amaga les properes sortides" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Hide upcoming departures" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ocultar próximas salidas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amaga les properes sortides"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide upcoming departures"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar próximas salidas"
+          }
+        }
       }
     },
     "Home" : {
       "comment" : "Tab bar label.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Inici" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicio" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inici"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio"
+          }
+        }
       }
     },
     "I couldn't find your closest station. Enable location access for Ping and try again." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No he trobat la teva estació més propera. Activa l'accés a la ubicació per a Ping i torna-ho a provar." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "I couldn't find your closest station. Enable location access for Ping and try again." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No encontré tu estación más cercana. Activa el acceso a la ubicación para Ping e inténtalo otra vez." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No he trobat la teva estació més propera. Activa l'accés a la ubicació per a Ping i torna-ho a provar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I couldn't find your closest station. Enable location access for Ping and try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No encontré tu estación más cercana. Activa el acceso a la ubicación para Ping e inténtalo otra vez."
+          }
+        }
       }
     },
     "Info" : {
       "comment" : "Severity label for a purely informational service alert.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Informació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Info" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Información" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Info"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Información"
+          }
+        }
       }
     },
     "Leave %@" : {
       "comment" : "Calendar commute row. Placeholder is the recommended departure time.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Surt a les %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sal a las %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surt a les %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sal a las %@"
+          }
+        }
       }
     },
     "Leave in" : {
       "comment" : "Big countdown caption.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Surt en" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave in" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sal en" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surt en"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave in"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sal en"
+          }
+        }
       }
     },
     "Leave now" : {
       "comment" : "Live Activity alert title fired when the user must leave to catch the train.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Surt ara" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave now" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sal ahora" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surt ara"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave now"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sal ahora"
+          }
+        }
       }
     },
     "Leave now for %@ · Train at %@" : {
       "comment" : "Notification body. First placeholder is the calendar event title, second is the train departure time.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Surt ara per a %1$@ · Tren a les %2$@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Leave now for %1$@ · Train at %2$@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sal ahora para %1$@ · Tren a las %2$@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surt ara per a %1$@ · Tren a les %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave now for %1$@ · Train at %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sal ahora para %1$@ · Tren a las %2$@"
+          }
+        }
       }
     },
     "Live Activity" : {
       "comment" : "Hero card heading when no Live Activity is running yet.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Activitat en directe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Live Activity" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actividad en vivo" } }
-      }
-    },
-    "Live countdown is paused. Wake from Settings anytime." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "El compte enrere està en pausa. Desperta'l des de Configuració quan vulguis." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Live countdown is paused. Wake from Settings anytime." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La cuenta atrás está en pausa. Despiértala desde Ajustes cuando quieras." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activitat en directe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Activity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad en vivo"
+          }
+        }
       }
     },
     "Live countdown is paused while Sleep mode is on." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "El compte enrere està en pausa mentre el mode Repòs està activat." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Live countdown is paused while Sleep mode is on." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La cuenta atrás está en pausa mientras el modo Reposo está activo." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El compte enrere està en pausa mentre el mode Repòs està activat."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live countdown is paused while Sleep mode is on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cuenta atrás está en pausa mientras el modo Reposo está activo."
+          }
+        }
+      }
+    },
+    "Live countdown is paused. Wake from Settings anytime." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El compte enrere està en pausa. Desperta'l des de Configuració quan vulguis."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live countdown is paused. Wake from Settings anytime."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cuenta atrás está en pausa. Despiértala desde Ajustes cuando quieras."
+          }
+        }
       }
     },
     "Loading arrivals…" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Carregant arribades…" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading arrivals…" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cargando llegadas…" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregant arribades…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading arrivals…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando llegadas…"
+          }
+        }
       }
     },
     "Loading departures…" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Carregant sortides…" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading departures…" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cargando salidas…" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregant sortides…"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading departures…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando salidas…"
+          }
+        }
       }
     },
     "Location is off, so nearby stations are unavailable." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "La ubicació està desactivada, així que no hi ha estacions properes." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Location is off, so nearby stations are unavailable." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "La ubicación está desactivada, así que no hay estaciones cercanas." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ubicació està desactivada, així que no hi ha estacions properes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Location is off, so nearby stations are unavailable."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ubicación está desactivada, así que no hay estaciones cercanas."
+          }
+        }
       }
     },
     "Major" : {
       "comment" : "Severity label for a major service alert.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Important" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Major" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Importante" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Important"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Major"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importante"
+          }
+        }
       }
     },
     "Map" : {
       "comment" : "Tab bar label.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mapa" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Map" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mapa" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Map"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa"
+          }
+        }
       }
     },
     "Minor" : {
       "comment" : "Severity label for a minor service alert.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Lleu" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Minor" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Leve" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleu"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leve"
+          }
+        }
       }
     },
     "Missed" : {
       "comment" : "Status banner / Live Activity title shown after the tracked train departs.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Perdut" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Missed" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Perdido" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perdut"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perdido"
+          }
+        }
       }
     },
     "Missed %@" : {
       "comment" : "Live Activity alert title after a train was missed. Placeholder is the train label.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Has perdut %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Missed %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Has perdido %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has perdut %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has perdido %@"
+          }
+        }
       }
     },
     "Nearby stations" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions properes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones cercanas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions properes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones cercanas"
+          }
+        }
       }
     },
     "Nearby Stations" : {
       "comment" : "Title of the nearby-stations section in the station picker sheet.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions properes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby Stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones cercanas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions properes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearby Stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones cercanas"
+          }
+        }
       }
     },
     "Nearest stations" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions més properes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearest stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones más cercanas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions més properes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearest stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones más cercanas"
+          }
+        }
       }
     },
     "Never miss your train" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No perdis mai el tren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Never miss your train" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No vuelvas a perder el tren" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No perdis mai el tren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never miss your train"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No vuelvas a perder el tren"
+          }
+        }
       }
     },
     "Next Departure" : {
       "comment" : "App Intent / Siri title.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Propera sortida" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next Departure" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próxima salida" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Propera sortida"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Departure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima salida"
+          }
+        }
       }
     },
     "Next departures from %@ to %@: %@." : {
       "comment" : "Siri response listing departures between two stations.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Properes sortides de %1$@ a %2$@: %3$@." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next departures from %1$@ to %2$@: %3$@." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximas salidas de %1$@ a %2$@: %3$@." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Properes sortides de %1$@ a %2$@: %3$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next departures from %1$@ to %2$@: %3$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próximas salidas de %1$@ a %2$@: %3$@."
+          }
+        }
       }
     },
     "Next train in %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Pròxim tren a %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next train in %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximo tren en %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pròxim tren a %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next train in %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próximo tren en %@"
+          }
+        }
       }
     },
     "Next train near me in %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Pròxim tren a prop meu a %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next train near me in %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximo tren cerca de mí en %@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pròxim tren a prop meu a %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next train near me in %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próximo tren cerca de mí en %@"
+          }
+        }
       }
     },
     "No compatible stations found for this route." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No s'ha trobat cap estació compatible per a aquesta ruta." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No compatible stations found for this route." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se han encontrado estaciones compatibles para esta ruta." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No s'ha trobat cap estació compatible per a aquesta ruta."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No compatible stations found for this route."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado estaciones compatibles para esta ruta."
+          }
+        }
       }
     },
     "No favorites yet. Add stations you use most for quick switching." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Encara no tens preferides. Afegeix les estacions que fas servir més per canviar-les ràpidament." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No favorites yet. Add stations you use most for quick switching." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aún no tienes favoritas. Añade las estaciones que más usas para cambiarlas rápido." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encara no tens preferides. Afegeix les estacions que fas servir més per canviar-les ràpidament."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No favorites yet. Add stations you use most for quick switching."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no tienes favoritas. Añade las estaciones que más usas para cambiarlas rápido."
+          }
+        }
       }
     },
     "No matches" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap coincidència" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No matches" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin resultados" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap coincidència"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matches"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin resultados"
+          }
+        }
       }
     },
     "No nearby stations" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap estació propera" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No nearby stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin estaciones cercanas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap estació propera"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No nearby stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin estaciones cercanas"
+          }
+        }
       }
     },
     "No nearby stops" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap parada propera" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No nearby stops" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin paradas cercanas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap parada propera"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No nearby stops"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin paradas cercanas"
+          }
+        }
       }
     },
     "No stations available" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap estació disponible" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No stations available" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay estaciones disponibles" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap estació disponible"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No stations available"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay estaciones disponibles"
+          }
+        }
       }
     },
     "No stations found" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap estació trobada" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No stations found" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se han encontrado estaciones" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap estació trobada"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No stations found"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han encontrado estaciones"
+          }
+        }
       }
     },
     "No upcoming buses" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap bus proper" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No upcoming buses" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin próximos buses" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap bus proper"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No upcoming buses"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin próximos buses"
+          }
+        }
       }
     },
     "No upcoming departures found from %@ right now." : {
       "comment" : "Siri response when there are no upcoming departures.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No hi ha sortides imminents des de %@ ara mateix." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No upcoming departures found from %@ right now." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay próximas salidas desde %@ ahora mismo." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hi ha sortides imminents des de %@ ara mateix."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No upcoming departures found from %@ right now."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay próximas salidas desde %@ ahora mismo."
+          }
+        }
       }
     },
     "No upcoming departures found from %@ to %@." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "No hi ha sortides imminents de %1$@ a %2$@." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No upcoming departures found from %1$@ to %2$@." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay próximas salidas de %1$@ a %2$@." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hi ha sortides imminents de %1$@ a %2$@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No upcoming departures found from %1$@ to %2$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay próximas salidas de %1$@ a %2$@."
+          }
+        }
       }
     },
     "No upcoming trains" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cap tren proper" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No upcoming trains" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin próximos trenes" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cap tren proper"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No upcoming trains"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin próximos trenes"
+          }
+        }
       }
     },
     "Nothing upcoming." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Res a la vista." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing upcoming." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nada a la vista." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Res a la vista."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing upcoming."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada a la vista."
+          }
+        }
       }
     },
     "Nothing upcoming. Add a location to a calendar event to see commute suggestions here." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Res a la vista. Afegeix una ubicació a un esdeveniment del calendari per veure aquí suggeriments de trajecte." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nothing upcoming. Add a location to a calendar event to see commute suggestions here." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nada a la vista. Añade una ubicación a un evento del calendario para ver sugerencias aquí." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Res a la vista. Afegeix una ubicació a un esdeveniment del calendari per veure aquí suggeriments de trajecte."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing upcoming. Add a location to a calendar event to see commute suggestions here."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada a la vista. Añade una ubicación a un evento del calendario para ver sugerencias aquí."
+          }
+        }
       }
     },
     "Open App Settings" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre la configuració de l'app" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open App Settings" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ajustes de la app" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre la configuració de l'app"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open App Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ajustes de la app"
+          }
+        }
       }
     },
     "Open Ping to switch to the next train" : {
       "comment" : "Live Activity alert body shown after a missed train.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre Ping per passar al pròxim tren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Ping to switch to the next train" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abre Ping para pasar al próximo tren" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre Ping per passar al pròxim tren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ping to switch to the next train"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre Ping para pasar al próximo tren"
+          }
+        }
       }
     },
     "Open settings" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre la configuració" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open settings" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ajustes" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre la configuració"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ajustes"
+          }
+        }
       }
     },
     "Open Settings" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre la configuració" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir ajustes" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre la configuració"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ajustes"
+          }
+        }
       }
     },
     "Open settings to enable location" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre la configuració per activar la ubicació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open settings to enable location" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abre los ajustes para activar la ubicación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre la configuració per activar la ubicació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open settings to enable location"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre los ajustes para activar la ubicación"
+          }
+        }
       }
     },
     "Open System Settings" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Obre Configuració del sistema" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open System Settings" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir Ajustes del sistema" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obre Configuració del sistema"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes del sistema"
+          }
+        }
       }
     },
     "Origin" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Origen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Origin" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Origen" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origin"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen"
+          }
+        }
       }
     },
     "ORIGIN" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "ORIGEN" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "ORIGIN" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "ORIGEN" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ORIGEN"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ORIGIN"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ORIGEN"
+          }
+        }
       }
     },
     "Origin and destination must be different stations." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "L'origen i la destinació han de ser estacions diferents." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Origin and destination must be different stations." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El origen y el destino deben ser estaciones distintas." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'origen i la destinació han de ser estacions diferents."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origin and destination must be different stations."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El origen y el destino deben ser estaciones distintas."
+          }
+        }
       }
     },
     "Ping" : {
       "comment" : "App name. Should not be translated.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Ping" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ping" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ping" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping"
+          }
+        }
       }
     },
     "Ping uses your calendar to suggest when to leave for upcoming commutes." : {
       "comment" : "Settings footer for the calendar section.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Ping fa servir el calendari per suggerir-te quan sortir cap als propers trajectes." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ping uses your calendar to suggest when to leave for upcoming commutes." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ping usa tu calendario para sugerirte cuándo salir hacia tus próximos trayectos." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping fa servir el calendari per suggerir-te quan sortir cap als propers trajectes."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping uses your calendar to suggest when to leave for upcoming commutes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ping usa tu calendario para sugerirte cuándo salir hacia tus próximos trayectos."
+          }
+        }
       }
     },
     "Primary" : {
       "comment" : "Settings detail label for the first favorite station, which is treated as primary.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Principal" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Primary" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Principal" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Principal"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primary"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Principal"
+          }
+        }
       }
+    },
+    "Pull to refresh once Ping finishes loading the FGC schedule." : {
+
     },
     "Pull to retry or try again in a moment." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estira per tornar-ho a provar o espera un moment." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pull to retry or try again in a moment." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desliza para reintentar o vuelve a probar en un momento." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estira per tornar-ho a provar o espera un moment."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull to retry or try again in a moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza para reintentar o vuelve a probar en un momento."
+          }
+        }
       }
     },
     "Quit" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Surt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salir" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salir"
+          }
+        }
       }
     },
     "Refresh" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Actualitza" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Refresh" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualitza"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar"
+          }
+        }
       }
     },
     "Remove" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Elimina" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        }
       }
     },
     "Results" : {
       "comment" : "Navigation title for the route-results screen.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Resultats" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Results" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Resultados" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultats"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados"
+          }
+        }
       }
     },
     "Retry" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Torna-ho a provar" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reintentar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torna-ho a provar"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        }
       }
     },
     "Reverse" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Inverteix" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reverse" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Invertir" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverteix"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reverse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir"
+          }
+        }
       }
     },
     "Reverse today's route." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Inverteix la ruta d'avui." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reverse today's route." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Invierte la ruta de hoy." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverteix la ruta d'avui."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reverse today's route."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invierte la ruta de hoy."
+          }
+        }
       }
     },
     "Route" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Ruta" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ruta" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta"
+          }
+        }
       }
     },
     "Route selected" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Ruta seleccionada" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Route selected" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ruta seleccionada" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta seleccionada"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Route selected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta seleccionada"
+          }
+        }
       }
     },
     "Save current route" : {
       "comment" : "Accessibility label for the save-route plus button.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Desa la ruta actual" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save current route" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar ruta actual" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desa la ruta actual"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save current route"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar ruta actual"
+          }
+        }
       }
     },
     "Saved routes" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Rutes desades" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saved routes" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Rutas guardadas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rutes desades"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved routes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rutas guardadas"
+          }
+        }
       }
     },
     "Search" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        }
       }
     },
     "Search and select a station" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca i selecciona una estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search and select a station" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Busca y selecciona una estación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca i selecciona una estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search and select a station"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca y selecciona una estación"
+          }
+        }
       }
     },
     "Search and select stations using the pickers above." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca i selecciona estacions amb els selectors de dalt." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search and select stations using the pickers above." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Busca y selecciona estaciones con los selectores de arriba." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca i selecciona estacions amb els selectors de dalt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search and select stations using the pickers above."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca y selecciona estaciones con los selectores de arriba."
+          }
+        }
       }
     },
     "Search results" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Resultats de la cerca" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search results" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Resultados de la búsqueda" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultats de la cerca"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search results"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultados de la búsqueda"
+          }
+        }
       }
     },
     "Search routes" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca rutes" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search routes" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar rutas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca rutes"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search routes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar rutas"
+          }
+        }
       }
     },
     "Search station" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search station" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar estación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search station"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar estación"
+          }
+        }
       }
     },
     "Search stations" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cerca estacions" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar estaciones" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca estacions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar estaciones"
+          }
+        }
       }
     },
     "Searching stations..." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cercant estacions..." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Searching stations..." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscando estaciones..." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cercant estacions..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching stations..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando estaciones..."
+          }
+        }
       }
     },
     "Searching..." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Cercant..." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Searching..." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscando..." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cercant..."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching..."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando..."
+          }
+        }
       }
     },
     "Service alerts" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Avisos de servei" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Service alerts" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Avisos de servicio" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisos de servei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service alerts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisos de servicio"
+          }
+        }
       }
     },
     "Service may have wound down for the night, or FGC is between scheduled departures. Pull to refresh once trains start running again." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "El servei pot haver acabat per avui, o FGC està entre sortides programades. Estira per actualitzar quan els trens tornin a circular." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Service may have wound down for the night, or FGC is between scheduled departures. Pull to refresh once trains start running again." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El servicio puede haber terminado por hoy o FGC está entre salidas programadas. Desliza para actualizar cuando vuelvan a circular." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servei pot haver acabat per avui, o FGC està entre sortides programades. Estira per actualitzar quan els trens tornin a circular."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service may have wound down for the night, or FGC is between scheduled departures. Pull to refresh once trains start running again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servicio puede haber terminado por hoy o FGC está entre salidas programadas. Desliza para actualizar cuando vuelvan a circular."
+          }
+        }
       }
     },
     "Service may have wound down for the night. Ping will keep refreshing in the background." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "El servei pot haver acabat per avui. Ping continuarà actualitzant-se en segon pla." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Service may have wound down for the night. Ping will keep refreshing in the background." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "El servicio puede haber terminado por hoy. Ping seguirá actualizándose en segundo plano." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servei pot haver acabat per avui. Ping continuarà actualitzant-se en segon pla."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service may have wound down for the night. Ping will keep refreshing in the background."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servicio puede haber terminado por hoy. Ping seguirá actualizándose en segundo plano."
+          }
+        }
       }
     },
     "Set %@ as origin." : {
       "comment" : "Time-of-day suggestion subtitle. Placeholder is the home station name.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estableix %@ com a origen." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set %@ as origin." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pon %@ como origen." } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estableix %@ com a origen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set %@ as origin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pon %@ como origen."
+          }
+        }
       }
     },
     "Set as destination" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estableix com a destinació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set as destination" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Establecer como destino" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estableix com a destinació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as destination"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer como destino"
+          }
+        }
       }
     },
     "Set as origin" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estableix com a origen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set as origin" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Establecer como origen" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estableix com a origen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as origin"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer como origen"
+          }
+        }
       }
     },
     "Set route" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Defineix ruta" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Set route" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Definir ruta" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Defineix ruta"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set route"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definir ruta"
+          }
+        }
       }
     },
     "Settings" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Configuració" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ajustes" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuració"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        }
       }
     },
     "Show trains to %@ in %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mostra trens a %1$@ a %2$@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show trains to %1$@ in %2$@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar trenes a %1$@ en %2$@" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra trens a %1$@ a %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show trains to %1$@ in %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar trenes a %1$@ en %2$@"
+          }
+        }
       }
     },
     "Show upcoming departures" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mostra les properes sortides" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show upcoming departures" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar próximas salidas" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra les properes sortides"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show upcoming departures"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar próximas salidas"
+          }
+        }
       }
     },
     "Shows FGC train stations on the map" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mostra les estacions de tren FGC al mapa" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows FGC train stations on the map" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Muestra las estaciones de tren FGC en el mapa" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra les estacions de tren FGC al mapa"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows FGC train stations on the map"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra las estaciones de tren FGC en el mapa"
+          }
+        }
       }
     },
     "Shows nearby TMB bus stops on the map when zoomed in" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mostra les parades de bus TMB properes al mapa quan fas zoom" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows nearby TMB bus stops on the map when zoomed in" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Muestra las paradas de bus TMB cercanas al mapa al hacer zoom" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra les parades de bus TMB properes al mapa quan fas zoom"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows nearby TMB bus stops on the map when zoomed in"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra las paradas de bus TMB cercanas al mapa al hacer zoom"
+          }
+        }
       }
     },
     "Sleep menu bar" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Posa la barra de menús a dormir" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sleep menu bar" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Dormir barra de menús" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posa la barra de menús a dormir"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep menu bar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dormir barra de menús"
+          }
+        }
       }
     },
     "Sleep mode on" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Mode Repòs activat" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sleep mode on" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modo Reposo activado" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode Repòs activat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep mode on"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo Reposo activado"
+          }
+        }
       }
     },
     "Sleeping" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Adormit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sleeping" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "En reposo" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adormit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleeping"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En reposo"
+          }
+        }
       }
     },
     "Start from home?" : {
       "comment" : "Time-of-day suggestion title that proposes starting from the home station.",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Comences des de casa?" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start from home?" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Sales desde casa?" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comences des de casa?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start from home?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Sales desde casa?"
+          }
+        }
       }
     },
     "Station metadata still loading" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Encara s'estan carregant les dades de l'estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Station metadata still loading" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cargando datos de la estación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encara s'estan carregant les dades de l'estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Station metadata still loading"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando datos de la estación"
+          }
+        }
       }
     },
     "Stations" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stations" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones"
+          }
+        }
       }
     },
     "Stations unavailable" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Estacions no disponibles" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stations unavailable" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estaciones no disponibles" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estacions no disponibles"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stations unavailable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estaciones no disponibles"
+          }
+        }
       }
     },
     "Stop" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Atura" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Detener" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atura"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener"
+          }
+        }
       }
     },
     "Swap origin and destination" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Intercanvia l'origen i la destinació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Swap origin and destination" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Intercambiar origen y destino" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intercanvia l'origen i la destinació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swap origin and destination"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intercambiar origen y destino"
+          }
+        }
       }
     },
     "Swap route" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Intercanvia la ruta" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Swap route" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Intercambiar ruta" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intercanvia la ruta"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swap route"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intercambiar ruta"
+          }
+        }
       }
     },
     "Switch" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Canvia" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canvia"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar"
+          }
+        }
       }
     },
     "Switch to next" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Passa al següent" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to next" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pasar al siguiente" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passa al següent"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to next"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasar al siguiente"
+          }
+        }
       }
     },
     "Switch to this train" : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Canvia a aquest tren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to this train" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cambiar a este tren" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canvia a aquest tren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to this train"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar a este tren"
+          }
+        }
       }
     },
     "Tap the + above to save this route for one-tap switching later." : {
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Toca el + de dalt per desar aquesta ruta i canviar-la d'un sol toc més endavant." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tap the + above to save this route for one-tap switching later." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Toca el + de arriba para guardar esta ruta y cambiarla luego con un toque." } }
-      }
-    },
-    "Tip: pick “While Using the App” to avoid re-enabling every launch." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Consell: tria “Mentre utilitzes l'app” per no haver d'activar-ho cada vegada." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tip: pick “While Using the App” to avoid re-enabling every launch." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Consejo: elige “Mientras uses la app” para no tener que activarlo cada vez." } }
-      }
-    },
-    "TMB: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "TMB: %@" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "TMB: %@" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "TMB: %@" } }
-      }
-    },
-    "TMB isn't reporting any arrivals at this stop right now." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "TMB no informa de cap arribada en aquesta parada ara mateix." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "TMB isn't reporting any arrivals at this stop right now." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "TMB no informa de llegadas en esta parada ahora mismo." } }
-      }
-    },
-    "Train departs" : {
-      "comment" : "Map sheet caption above the train departure time.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "El tren surt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Train departs" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sale el tren" } }
-      }
-    },
-    "Try a different station name." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Prova amb un altre nom d'estació." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try a different station name." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Prueba con otro nombre de estación." } }
-      }
-    },
-    "Try again in a moment." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Torna-ho a provar d'aquí un moment." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try again in a moment." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vuelve a intentarlo en un momento." } }
-      }
-    },
-    "Try another station name." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Prova amb un altre nom d'estació." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try another station name." } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Prueba con otro nombre de estación." } }
-      }
-    },
-    "Updated " : {
-      "comment" : "Prefix for the \"Updated X ago\" freshness caption, before the relative time component.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Actualitzat " } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updated " } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizado " } }
-      }
-    },
-    " · may be outdated" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : " · pot estar desactualitzat" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : " · may be outdated" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : " · puede estar desactualizado" } }
-      }
-    },
-    "Upcoming departures" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Properes sortides" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Upcoming departures" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Próximas salidas" } }
-      }
-    },
-    "Use home" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Fes servir la de casa" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use home" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usar la de casa" } }
-      }
-    },
-    "Use this route" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Fes servir aquesta ruta" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Use this route" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usa esta ruta" } }
-      }
-    },
-    "Using location" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Utilitzant la ubicació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Using location" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Usando la ubicación" } }
-      }
-    },
-    "Wake menu bar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "Desperta la barra de menús" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wake menu bar" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "Despertar barra de menús" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el + de dalt per desar aquesta ruta i canviar-la d'un sol toc més endavant."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the + above to save this route for one-tap switching later."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el + de arriba para guardar esta ruta y cambiarla luego con un toque."
+          }
+        }
       }
     },
     "the station" : {
       "comment" : "Generic placeholder used when the origin station name is unknown, used inside \"Go to %@\".",
       "extractionState" : "manual",
       "localizations" : {
-        "ca" : { "stringUnit" : { "state" : "translated", "value" : "l'estació" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "the station" } },
-        "es" : { "stringUnit" : { "state" : "translated", "value" : "la estación" } }
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "l'estació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the station"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la estación"
+          }
+        }
+      }
+    },
+    "Tip: pick “While Using the App” to avoid re-enabling every launch." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consell: tria “Mentre utilitzes l'app” per no haver d'activar-ho cada vegada."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip: pick “While Using the App” to avoid re-enabling every launch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consejo: elige “Mientras uses la app” para no tener que activarlo cada vez."
+          }
+        }
+      }
+    },
+    "TMB isn't reporting any arrivals at this stop right now." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB no informa de cap arribada en aquesta parada ara mateix."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB isn't reporting any arrivals at this stop right now."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB no informa de llegadas en esta parada ahora mismo."
+          }
+        }
+      }
+    },
+    "TMB: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TMB: %@"
+          }
+        }
+      }
+    },
+    "Train departs" : {
+      "comment" : "Map sheet caption above the train departure time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El tren surt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Train departs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sale el tren"
+          }
+        }
+      }
+    },
+    "Try a different station name." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova amb un altre nom d'estació."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try a different station name."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba con otro nombre de estación."
+          }
+        }
+      }
+    },
+    "Try again in a moment." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torna-ho a provar d'aquí un moment."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again in a moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a intentarlo en un momento."
+          }
+        }
+      }
+    },
+    "Try another station name." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova amb un altre nom d'estació."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try another station name."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba con otro nombre de estación."
+          }
+        }
+      }
+    },
+    "Upcoming departures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Properes sortides"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upcoming departures"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próximas salidas"
+          }
+        }
+      }
+    },
+    "Updated " : {
+      "comment" : "Prefix for the \"Updated X ago\" freshness caption, before the relative time component.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualitzat "
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated "
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizado "
+          }
+        }
+      }
+    },
+    "Use home" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fes servir la de casa"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar la de casa"
+          }
+        }
+      }
+    },
+    "Use this route" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fes servir aquesta ruta"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use this route"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa esta ruta"
+          }
+        }
+      }
+    },
+    "Using location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilitzant la ubicació"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Using location"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usando la ubicación"
+          }
+        }
+      }
+    },
+    "Wake menu bar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desperta la barra de menús"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake menu bar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Despertar barra de menús"
+          }
+        }
       }
     }
-  }
+  },
+  "version" : "1.0"
 }
