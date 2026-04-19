@@ -27,6 +27,30 @@
     "%@" : {
 
     },
+    "+ %lld min walk" : {
+      "comment" : "Fragment showing the walking time from the destination station to the event location.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ca" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min caminant"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min walk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ %lld min caminando"
+          }
+        }
+      }
+    },
     "%@ min" : {
 
     },

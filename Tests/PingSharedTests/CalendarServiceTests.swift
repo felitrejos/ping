@@ -53,6 +53,32 @@ struct CalendarServiceTests {
     }
 
     @Test
+    func upcomingCommutesPopulatesDestinationWalkingTimes() async throws {
+        let provider = StubCalendarProvider(
+            status: .fullAccess,
+            events: [
+                CalendarEventRecord(
+                    id: "event-1",
+                    title: "Campus",
+                    startDate: Date(timeIntervalSince1970: 1_000),
+                    location: "Somewhere",
+                    coordinate: TransitCoordinate(latitude: 41.386, longitude: 2.17)
+                ),
+            ]
+        )
+        let service = CalendarService(
+            eventProvider: provider,
+            routeEstimator: StubRouteEstimator(),
+            staticService: StubStaticService()
+        )
+
+        let commutes = try await service.upcomingCommutes(within: 2)
+
+        let resolved = try #require(commutes.first)
+        #expect(resolved.destinationWalkingSeconds(for: "ST_CITY") != nil)
+    }
+
+    @Test
     func deniedAccessReturnsNoCommutes() async throws {
         let service = CalendarService(
             eventProvider: StubCalendarProvider(status: .denied, events: []),

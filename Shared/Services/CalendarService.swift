@@ -57,7 +57,8 @@ public actor CalendarService: CalendarServiceProviding {
                     startDate: record.startDate,
                     location: record.location,
                     resolvedStation: resolution.stationID,
-                    stationCandidateIDs: resolution.candidateStationIDs
+                    stationCandidateIDs: resolution.candidateStationIDs,
+                    destinationWalkingSecondsByStop: resolution.walkingSecondsByStop
                 )
             )
         }
@@ -88,7 +89,8 @@ public actor CalendarService: CalendarServiceProviding {
         guard let coordinate else {
             return .init(
                 stationID: nil,
-                candidateStationIDs: []
+                candidateStationIDs: [],
+                walkingSecondsByStop: [:]
             )
         }
 
@@ -97,7 +99,8 @@ public actor CalendarService: CalendarServiceProviding {
            Date().timeIntervalSince(cached.timestamp) < stationResolutionCacheTTL {
             return .init(
                 stationID: cached.stationID,
-                candidateStationIDs: cached.candidateStationIDs
+                candidateStationIDs: cached.candidateStationIDs,
+                walkingSecondsByStop: cached.walkingSecondsByStop
             )
         }
 
@@ -105,7 +108,8 @@ public actor CalendarService: CalendarServiceProviding {
         guard !candidates.isEmpty else {
             return .init(
                 stationID: nil,
-                candidateStationIDs: []
+                candidateStationIDs: [],
+                walkingSecondsByStop: [:]
             )
         }
 
@@ -139,14 +143,23 @@ public actor CalendarService: CalendarServiceProviding {
         let candidateStationIDs = orderedResults.map(\.stop.id)
         let resolvedStationID = orderedResults.first?.stop.id ?? candidates.first?.id
 
+        var walkingSecondsByStop: [StopID: TimeInterval] = [:]
+        for result in orderedResults {
+            if let travelTime = result.travelTime {
+                walkingSecondsByStop[result.stop.id] = travelTime
+            }
+        }
+
         stationResolutionCache[cacheKey] = StationResolutionCacheValue(
             stationID: resolvedStationID,
             candidateStationIDs: candidateStationIDs,
+            walkingSecondsByStop: walkingSecondsByStop,
             timestamp: Date()
         )
         return .init(
             stationID: resolvedStationID,
-            candidateStationIDs: candidateStationIDs
+            candidateStationIDs: candidateStationIDs,
+            walkingSecondsByStop: walkingSecondsByStop
         )
     }
 }
@@ -168,12 +181,14 @@ private struct StationResolutionCacheKey: Hashable {
 private struct StationResolutionCacheValue {
     let stationID: StopID?
     let candidateStationIDs: [StopID]
+    let walkingSecondsByStop: [StopID: TimeInterval]
     let timestamp: Date
 }
 
 private struct StationResolutionResult {
     let stationID: StopID?
     let candidateStationIDs: [StopID]
+    let walkingSecondsByStop: [StopID: TimeInterval]
 }
 
 public struct MapKitCalendarRouteEstimator: CalendarRouteEstimating {
@@ -292,8 +307,13 @@ public final class EventKitCalendarProvider: @unchecked Sendable, CalendarEventP
                 )
             }
 
+            // `calendarItemIdentifier` is shared across every occurrence of a
+            // recurring event, which made two upcoming occurrences collapse to
+            // a single row in the UI (ForEach dedupes by id). Pair it with the
+            // start date so each occurrence gets a unique stable id.
+            let occurrenceID = "\(event.calendarItemIdentifier)#\(Int(event.startDate.timeIntervalSince1970))"
             return CalendarEventRecord(
-                id: event.calendarItemIdentifier,
+                id: occurrenceID,
                 title: event.title,
                 startDate: event.startDate,
                 location: event.location,

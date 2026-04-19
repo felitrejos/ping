@@ -93,6 +93,7 @@ public struct CommuteEvent: Codable, Equatable, Identifiable, Sendable {
     public let location: String?
     public let resolvedStation: StopID?
     public let stationCandidateIDs: [StopID]
+    public let destinationWalkingSecondsByStop: [StopID: TimeInterval]
 
     public init(
         id: String,
@@ -100,7 +101,8 @@ public struct CommuteEvent: Codable, Equatable, Identifiable, Sendable {
         startDate: Date,
         location: String?,
         resolvedStation: StopID?,
-        stationCandidateIDs: [StopID] = []
+        stationCandidateIDs: [StopID] = [],
+        destinationWalkingSecondsByStop: [StopID: TimeInterval] = [:]
     ) {
         self.id = id
         self.title = title
@@ -108,6 +110,11 @@ public struct CommuteEvent: Codable, Equatable, Identifiable, Sendable {
         self.location = location
         self.resolvedStation = resolvedStation
         self.stationCandidateIDs = stationCandidateIDs
+        self.destinationWalkingSecondsByStop = destinationWalkingSecondsByStop
+    }
+
+    public func destinationWalkingSeconds(for stopID: StopID) -> TimeInterval? {
+        destinationWalkingSecondsByStop[stopID]
     }
 }
 

@@ -34,6 +34,14 @@ public enum CommutePresentation {
             }
         }
 
+        if let walkSeconds = plan.calendarEvent.destinationWalkingSeconds(for: plan.destinationStationID) {
+            let walkMinutes = max(1, Int((walkSeconds / 60.0).rounded(.toNearestOrAwayFromZero)))
+            parts.append(String(
+                localized: "+ \(walkMinutes) min walk",
+                comment: "Fragment showing the walking time from the destination station to the event location."
+            ))
+        }
+
         return parts.isEmpty ? nil : parts.joined(separator: " -> ")
     }
 

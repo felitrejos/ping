@@ -63,6 +63,38 @@ struct CommuteEngineTests {
     }
 
     @Test
+    func destinationWalkingTimeShrinksViableWindow() async throws {
+        // Same setup as `picksLatestTrainThatStillArrivesBeforeEvent`, but the
+        // event is a 10-minute walk from the destination station. That pushes
+        // the latest acceptable arrival back by 600s, so TRIP_2 (arriving at
+        // 2_300) no longer fits and TRIP_1 (arriving at 1_800) becomes the
+        // latest on-time option.
+        // targetArrival = 3_600 - 180 - 600 = 2_820. 2_300 ≤ 2_820 ✓, 1_800 ✓.
+        let engine = makeEngine(
+            delays: [:],
+            now: Date(timeIntervalSince1970: 100),
+            destinationWalkingSeconds: 600
+        )
+
+        let plan = try await engine.nextCommute()
+
+        // 2_300 <= 2_820 so TRIP_2 is still the latest on-time train.
+        #expect(plan?.recommendedDeparture == Date(timeIntervalSince1970: 1_140))
+
+        let engineWithLongerWalk = makeEngine(
+            delays: [:],
+            now: Date(timeIntervalSince1970: 100),
+            destinationWalkingSeconds: 1_500
+        )
+
+        let tightPlan = try await engineWithLongerWalk.nextCommute()
+
+        // targetArrival = 3_600 - 180 - 1_500 = 1_920. Now only TRIP_1 (arrives
+        // 1_800) fits, so the engine should leave earlier (640 instead of 1_140).
+        #expect(tightPlan?.recommendedDeparture == Date(timeIntervalSince1970: 640))
+    }
+
+    @Test
     func missedTrainFallsForwardToNextOption() async throws {
         // TRIP_1 leave-by is already in the past. Engine should fall through to
         // TRIP_2 even though it is not the on-time latest candidate.
@@ -112,12 +144,13 @@ private func makeEngine(
         ),
     ],
     delays: [String: [StopID: Int]],
-    now: Date
+    now: Date,
+    destinationWalkingSeconds: TimeInterval? = nil
 ) -> CommuteEngine {
     CommuteEngine(
         staticService: EngineStaticService(departures: departures),
         realtimeService: MockRealtimeService(snapshot: RealtimeSnapshot(delaysByTripAndStop: delays)),
-        calendarService: EngineCalendarService(),
+        calendarService: EngineCalendarService(destinationWalkingSeconds: destinationWalkingSeconds),
         clock: FixedClock(now: now),
         walkingMinutesProvider: { 8 },
         bufferMinutesProvider: { 3 }
@@ -165,6 +198,12 @@ private actor EngineStaticService: StaticServiceProviding {
 }
 
 private actor EngineCalendarService: CalendarServiceProviding {
+    let destinationWalkingSeconds: TimeInterval?
+
+    init(destinationWalkingSeconds: TimeInterval? = nil) {
+        self.destinationWalkingSeconds = destinationWalkingSeconds
+    }
+
     func authorizationStatus() async -> CalendarAuthorizationState {
         .fullAccess
     }
@@ -174,13 +213,20 @@ private actor EngineCalendarService: CalendarServiceProviding {
     }
 
     func upcomingCommutes(within hours: Int) async throws -> [CommuteEvent] {
-        [
+        let walkingMap: [StopID: TimeInterval]
+        if let destinationWalkingSeconds {
+            walkingMap = ["ST_CITY": destinationWalkingSeconds]
+        } else {
+            walkingMap = [:]
+        }
+        return [
             CommuteEvent(
                 id: "event-1",
                 title: "Office",
                 startDate: Date(timeIntervalSince1970: 3_600),
                 location: "City",
-                resolvedStation: "ST_CITY"
+                resolvedStation: "ST_CITY",
+                destinationWalkingSecondsByStop: walkingMap
             ),
         ]
     }

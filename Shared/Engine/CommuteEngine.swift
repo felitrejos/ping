@@ -123,13 +123,17 @@ public actor CommuteEngine {
 
         let bufferSeconds = TimeInterval(bufferMinutesProvider() * 60)
         let walkingSeconds = TimeInterval(await walkingMinutesProvider() * 60)
+        // Walking time from the destination station to the event location, as
+        // computed by MapKit when the calendar event was resolved. Falls back
+        // to 0 when unknown so we still produce a plan.
+        let destinationWalkSeconds = event.destinationWalkingSeconds(for: destination) ?? 0
 
         // Preferred: the latest train that (a) we can still catch (leave-by is in
         // the future), and (b) arrives at the destination station with enough
-        // buffer before the event starts. This keeps notifications quiet until
-        // it is actually time to leave for the event, rather than firing for the
+        // time to walk to the event plus a buffer. This keeps notifications
+        // quiet until it is actually time to leave, rather than firing for the
         // first reachable train hours in advance.
-        let targetArrival = event.startDate.addingTimeInterval(-bufferSeconds)
+        let targetArrival = event.startDate.addingTimeInterval(-(bufferSeconds + destinationWalkSeconds))
         let onTimeCandidates = liveOptions.filter { option in
             let leaveBy = option.effectiveDepartureTime.addingTimeInterval(-(walkingSeconds + bufferSeconds))
             return leaveBy > clock.now && option.effectiveArrivalTime <= targetArrival
