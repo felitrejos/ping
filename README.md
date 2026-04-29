@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Never miss your train. FGC commute assistant for iPhone and Mac</strong>
+  <strong>Never miss your train or bus. FGC and TMB commute assistant for iPhone and Mac</strong>
 </p>
 
 <p align="center">
@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  Local-first commute planning powered by FGC schedule and realtime data
+  Local-first commute planning powered by FGC and TMB schedule and realtime data
 </p>
 
 ---
@@ -27,11 +27,9 @@
 
 - Track upcoming departures and delay-aware leave times
 - Save favorite stations for quick route switching
-- Get calendar-aware commute suggestions in one tap
-- Browse TMB bus stops on the map
-- Tap a TMB stop to load upcoming iBus arrivals
-- Receive iPhone leave reminders for calendar-aware commutes
-- See GTFS-Realtime service alerts in iOS and macOS
+- Get calendar-aware commute suggestions and iPhone leave reminders
+- Browse TMB bus stops on the map and tap a stop to see upcoming arrivals
+- See FGC service alerts in iOS and macOS
 
 ---
 
