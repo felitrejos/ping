@@ -27,9 +27,6 @@
     "%@" : {
 
     },
-    "%@ min walk" : {
-
-    },
     "%@. Tap to see details." : {
       "comment" : "Accessibility label for the tappable service-status pill. Placeholder is the already-formatted summary.",
       "extractionState" : "manual",
@@ -53,9 +50,6 @@
           }
         }
       }
-    },
-    "%@m walk" : {
-
     },
     "%1$@ to %2$@" : {
       "comment" : "Map route summary. Placeholders are origin and destination station names.",
