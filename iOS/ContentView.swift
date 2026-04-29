@@ -1,12 +1,8 @@
 import Combine
 import CoreLocation
 import SwiftUI
-import UserNotifications
 #if canImport(AppIntents)
 import AppIntents
-#endif
-#if canImport(ActivityKit)
-import ActivityKit
 #endif
 #if canImport(UIKit)
 import UIKit
@@ -18,7 +14,6 @@ struct ContentView: View {
     @Environment(PingStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
-    @State private var tracker = CommuteTracker()
     @State private var selectedOriginID: StopID?
     @State private var selectedOriginName: String?
     @State private var selectedDestinationID: StopID?
@@ -72,24 +67,16 @@ struct ContentView: View {
             }
         }
         .refreshable { await store.refresh() }
-        .onChange(of: store.nextDeparture) { _, _ in
-            Task { await tracker.syncWithStore(store) }
-        }
-        .onChange(of: store.upcomingDepartures) { _, _ in
-            Task { await tracker.syncWithStore(store) }
-        }
         .onChange(of: store.availableStops) { _, stops in
             guard !stops.isEmpty else { return }
             Task { await prefillStationNames(from: stops) }
         }
         .onChange(of: store.lastUpdated) { _, _ in
-            Task { await tracker.syncWithStore(store) }
             guard !store.availableStops.isEmpty else { return }
             Task { await prefillStationNames(from: store.availableStops) }
         }
         .onChange(of: scenePhase) { _, newPhase in
             guard newPhase == .active else { return }
-            Task { await tracker.syncWithStore(store) }
             // Refresh the suggestion clock on foreground so a user who keeps the app open
             // across morning → evening sees the right card without waiting for the next tick.
             suggestionClock = Date()
@@ -98,19 +85,8 @@ struct ContentView: View {
             suggestionClock = date
         }
         .task {
-            await tracker.syncWithStore(store)
             if !store.availableStops.isEmpty {
                 await prefillStationNames(from: store.availableStops)
-            }
-        }
-        .task(id: tracker.isTracking) {
-            // Drive phase transitions (leave-now, <2 min, missed) while a trip is locked.
-            // Store refreshes can be minutes apart so we tick ourselves here.
-            guard tracker.isTracking else { return }
-            while !Task.isCancelled, tracker.isTracking {
-                try? await Task.sleep(for: .seconds(5))
-                if Task.isCancelled { break }
-                await tracker.syncWithStore(store)
             }
         }
     }
@@ -461,11 +437,8 @@ struct ContentView: View {
 
     /// A contextual one-tap nudge based on the wall clock + configured home station.
     ///
-    /// Two triggers:
-    ///   - Morning (05:00–11:59) + pending origin is not `homeStationID` + home is known
-    ///     → `"Start from home?"` sets pending origin to home.
-    ///   - Evening (17:00–23:59) + pending origin is `homeStationID` + pending destination
-    ///     is set and is not home → `"Heading home?"` swaps origin and destination.
+    /// Morning (05:00–11:59) + pending origin is not `homeStationID` + home is known
+    /// → `"Start from home?"` sets pending origin to home.
     ///
     /// Returns `EmptyView` otherwise; driven by a 60 s `TimelineView` tick so the card
     /// appears/disappears as the hour rolls without a full scene refresh.
@@ -484,12 +457,10 @@ struct ContentView: View {
 
     private enum TimeOfDaySuggestion: Equatable {
         case startFromHome(homeID: StopID, homeName: String)
-        case reverseToHome
 
         var title: String {
             switch self {
             case .startFromHome: String(localized: "Start from home?")
-            case .reverseToHome: String(localized: "Heading home?")
             }
         }
 
@@ -500,22 +471,18 @@ struct ContentView: View {
                     localized: "Set \(homeName) as origin.",
                     comment: "Time-of-day suggestion subtitle. Placeholder is the home station name."
                 )
-            case .reverseToHome:
-                String(localized: "Reverse today's route.")
             }
         }
 
         var actionLabel: String {
             switch self {
             case .startFromHome: String(localized: "Use home")
-            case .reverseToHome: String(localized: "Reverse")
             }
         }
 
         var systemImage: String {
             switch self {
             case .startFromHome: "house.fill"
-            case .reverseToHome: "arrow.uturn.backward"
             }
         }
     }
@@ -529,15 +496,6 @@ struct ContentView: View {
            selectedOriginID != homeID,
            let homeName = stationName(for: homeID) {
             return .startFromHome(homeID: homeID, homeName: homeName)
-        }
-
-        // Evening path — user probably wants to head back home. Requires a fully-configured
-        // outbound route so the "reverse" action has something to operate on.
-        if (17...23).contains(hour),
-           selectedOriginID == homeID,
-           let destinationID = selectedDestinationID,
-           destinationID != homeID {
-            return .reverseToHome
         }
 
         return nil
@@ -583,8 +541,6 @@ struct ContentView: View {
         switch suggestion {
         case .startFromHome(let homeID, _):
             setPendingOrigin(homeID)
-        case .reverseToHome:
-            swapPendingRoute()
         }
     }
 
@@ -838,16 +794,8 @@ struct ContentView: View {
         if routeSearchCommitted, store.hasConfiguredDefaultRoute {
             if let displayed = heroDeparture {
                 TrainHeroCard(
-                    tracker: tracker,
-                    departure: displayed,
-                    onStartTracking: {
-                        Task { await tracker.start(departure: displayed, store: store) }
-                    },
-                    onStopTracking: { Task { await tracker.stop() } },
-                    onSwitchToNextTrain: { Task { await tracker.switchToNextTrain(store: store) } }
+                    departure: displayed
                 )
-                .modifier(TrackingHapticsModifier(tracker: tracker))
-                .modifier(LeaveNowBumpModifier(tracker: tracker))
             } else {
                 NoTrainsCard(onRefresh: {
                     Task { await store.refresh() }
@@ -856,10 +804,9 @@ struct ContentView: View {
         }
     }
 
-    /// Departure shown at the top. In Planning mode this is the auto-rolling next catchable
-    /// train. In TrackingLocked mode this is the locked trip — even when it's already missed.
+    /// Departure shown at the top: the auto-rolling next catchable train.
     private var heroDeparture: LiveDeparture? {
-        tracker.trackedDeparture ?? store.nextDeparture
+        store.nextDeparture
     }
 
     @ViewBuilder
@@ -891,9 +838,6 @@ struct ContentView: View {
 
     private func departureBoardRow(_ departure: LiveDeparture) -> some View {
         let routeCode = departure.trainLabel.split(separator: " ").first.map(String.init) ?? "FGC"
-        let isTrackingLocked = tracker.isTrackingLocked
-        let followButtonLabel = isTrackingLocked ? "Switch" : "Follow"
-        let followButtonIcon = isTrackingLocked ? "arrow.triangle.2.circlepath" : "livephoto"
 
         return HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 6) {
@@ -930,18 +874,6 @@ struct ContentView: View {
                         .foregroundStyle(.orange)
                 }
             }
-
-            Button {
-                Task { await tracker.start(departure: departure, store: store) }
-            } label: {
-                Label(followButtonLabel, systemImage: followButtonIcon)
-                    .labelStyle(.iconOnly)
-                    .font(.subheadline.weight(.semibold))
-                    .frame(width: 32, height: 32)
-            }
-            .buttonStyle(.bordered)
-            .tint(isTrackingLocked ? .orange : .blue)
-            .accessibilityLabel(isTrackingLocked ? "Switch to this train" : "Follow this trip")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)

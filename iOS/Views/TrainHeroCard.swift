@@ -3,11 +3,7 @@ import SwiftUI
 // MARK: - Train hero card
 
 struct TrainHeroCard: View {
-    let tracker: CommuteTracker
     let departure: LiveDeparture
-    let onStartTracking: () -> Void
-    let onStopTracking: () -> Void
-    let onSwitchToNextTrain: () -> Void
     @Environment(PingStore.self) private var store
 
     private var walkMin: Int { store.walkingMinutes }
@@ -20,23 +16,15 @@ struct TrainHeroCard: View {
     private var leaveByDate: Date {
         departure.effectiveDepartureTime.addingTimeInterval(TimeInterval(-walkMin * 60))
     }
-    private var isTrackingThisTrip: Bool {
-        tracker.isTrackingLocked && tracker.trackedTripID == departure.tripID
-    }
-    private var phase: TrackingPhase {
-        isTrackingThisTrip ? tracker.phase : .planning
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            liveActivityRow
-            Divider().padding(.horizontal, 16)
             departureTimingHeader
             heroCountdown
             timelineSection
-            if shouldShowStatusBanner {
+            if departure.isDelayed {
                 Divider().padding(.horizontal, 16)
-                statusBanner
+                delayBanner
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -74,7 +62,7 @@ struct TrainHeroCard: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
 
-                HeroCountdownValue(targetDate: leaveByDate, phase: phase)
+                HeroCountdownValue(targetDate: leaveByDate)
             }
             Spacer(minLength: 0)
         }
@@ -112,94 +100,17 @@ struct TrainHeroCard: View {
         .padding(.bottom, 14)
     }
 
-    private var shouldShowStatusBanner: Bool {
-        switch phase {
-        case .likelyMissed, .missed:
-            true
-        case .planning, .tracking:
-            departure.isDelayed
-        }
-    }
-
-    @ViewBuilder
-    private var statusBanner: some View {
-        switch phase {
-        case .likelyMissed:
-            HStack(spacing: 8) {
-                Circle().fill(Color.orange).frame(width: 8, height: 8)
-                Text("Cutting it close")
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.orange)
-                Spacer(minLength: 8)
-                Button("Switch", action: onSwitchToNextTrain)
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .tint(.orange)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-        case .missed:
-            HStack(spacing: 8) {
-                Circle().fill(Color.red).frame(width: 8, height: 8)
-                Text("Missed")
-                    .font(.callout.weight(.medium))
-                    .foregroundStyle(.red)
-                Spacer(minLength: 8)
-                Button("Switch to next", action: onSwitchToNextTrain)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .tint(.red)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-        case .planning, .tracking:
-            if departure.isDelayed {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color.orange)
-                        .frame(width: 8, height: 8)
-                    Text("Delayed · \(departure.statusText)")
-                        .font(.callout.weight(.medium))
-                        .foregroundStyle(.orange)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-            }
-        }
-    }
-
-    private var liveActivityRow: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Image(systemName: isTrackingThisTrip ? "livephoto" : "sparkles")
-                .font(.headline)
-                .foregroundStyle(.blue)
-                .frame(width: 18)
-
-            Text(isTrackingThisTrip ? "Following trip" : "Live Activity")
-                .font(.subheadline.weight(.semibold))
-
-            Spacer(minLength: 8)
-
-            if isTrackingThisTrip {
-                Button(action: onStopTracking) {
-                    Label("Stop", systemImage: "stop.fill")
-                        .font(.subheadline.weight(.semibold))
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .tint(.red)
-            } else {
-                Button(action: onStartTracking) {
-                    Label("Follow trip", systemImage: "livephoto")
-                        .font(.subheadline.weight(.semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .tint(.blue)
-            }
+    private var delayBanner: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(Color.orange)
+                .frame(width: 8, height: 8)
+            Text("Delayed · \(departure.statusText)")
+                .font(.callout.weight(.medium))
+                .foregroundStyle(.orange)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 16)
+        .padding(.vertical, 14)
     }
 }
 
@@ -218,20 +129,6 @@ struct CountdownText: View {
 
 private struct HeroCountdownValue: View {
     let targetDate: Date
-    var phase: TrackingPhase = .planning
-
-    /// Tint for the big countdown digits.
-    ///
-    /// We keep `.primary` for the neutral states so the number reads as "status quo, all good"
-    /// and only escalate to orange/red when the tracker actually flags trouble. This lets the
-    /// color itself carry the urgency signal without needing a separate animated border.
-    private var digitColor: Color {
-        switch phase {
-        case .likelyMissed: .orange
-        case .missed: .red
-        case .planning, .tracking: .primary
-        }
-    }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
@@ -243,7 +140,7 @@ private struct HeroCountdownValue: View {
                     Text(parts.leadingValue)
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
                         .monospacedDigit()
-                        .foregroundStyle(digitColor)
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.leadingUnit)
@@ -253,7 +150,7 @@ private struct HeroCountdownValue: View {
                     Text(parts.trailingValue ?? "")
                         .font(.system(size: 50, weight: .heavy, design: .rounded))
                         .monospacedDigit()
-                        .foregroundStyle(digitColor)
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.trailingUnit ?? "")
@@ -267,7 +164,7 @@ private struct HeroCountdownValue: View {
                     Text(parts.leadingValue)
                         .font(.system(size: 56, weight: .heavy, design: .rounded))
                         .monospacedDigit()
-                        .foregroundStyle(digitColor)
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText(countsDown: true))
                         .lineLimit(1)
                     Text(parts.leadingUnit)
@@ -278,6 +175,5 @@ private struct HeroCountdownValue: View {
                 .fixedSize(horizontal: true, vertical: false)
             }
         }
-        .animation(.smooth(duration: 0.3), value: phase)
     }
 }

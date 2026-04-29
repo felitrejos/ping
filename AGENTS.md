@@ -6,7 +6,7 @@ by GTFS static + realtime.
 
 Core features: unified origin/destination picker, saved routes + favorite stations,
 time-of-day suggestions, commute tracking with leave-now notifications, service alerts,
-calendar-aware suggestions, widgets, and a Live Activity.
+and calendar-aware suggestions.
 
 ## Build
 
@@ -20,9 +20,8 @@ calendar-aware suggestions, widgets, and a Live Activity.
 - `Shared/` — `PingShared` Swift package: models, services (FGC/TMB static + realtime,
   calendar, service alerts, location, walking ETA, GTFS updates, notifications), engine
   (`CommuteEngine`, `PingStore`), cross-platform SwiftUI views
-- `iOS/` — iOS app (home planner, map, settings, commute tracker UI)
+- `iOS/` — iOS app (home planner, map, settings)
 - `macOS/` — macOS menu bar app (`MenuBarView`)
-- `Widgets/` — WidgetKit + Live Activity
 - `Tests/PingSharedTests/` — tests for the shared library
 
 ## Dependencies

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Never miss your train. FGC commute assistant for iPhone, Mac, and Live Activities</strong>
+  <strong>Never miss your train. FGC commute assistant for iPhone and Mac</strong>
 </p>
 
 <p align="center">
@@ -30,7 +30,7 @@
 - Get calendar-aware commute suggestions in one tap
 - Browse TMB bus stops on the map
 - Tap a TMB stop to load upcoming iBus arrivals
-- Receive iPhone leave reminders and Live Activity trip tracking
+- Receive iPhone leave reminders for calendar-aware commutes
 - See GTFS-Realtime service alerts in iOS and macOS
 
 ---
@@ -93,7 +93,7 @@ the app works fine, but the TMB map layer stays empty.
 
 ## Architecture
 
-- Swift + SwiftUI multi-target app (`iOS/`, `macOS/`, `Widgets/`)
+- Swift + SwiftUI multi-target app (`iOS/`, `macOS/`)
 - Shared domain and services in `Shared/`
 - FGC GTFS static + GTFS-Realtime ingestion
 - TMB GTFS static + iBus arrivals ingestion (iOS map)
@@ -116,7 +116,6 @@ ping/
 ├── Shared/              # shared models, services, engine, settings views
 ├── iOS/                 # iPhone app
 ├── macOS/               # menu bar app
-├── Widgets/             # Live Activity widget
 ├── Tests/PingSharedTests/
 ├── Resources/
 └── Proto/

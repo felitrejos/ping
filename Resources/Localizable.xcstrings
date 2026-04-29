@@ -177,54 +177,6 @@
         }
       }
     },
-    "%lldm ride" : {
-      "comment" : "Compact ride duration used inside the Live Activity Dynamic Island.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm tren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm ride"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm tren"
-          }
-        }
-      }
-    },
-    "%lldm walk" : {
-      "comment" : "Compact walk duration used inside the Live Activity Dynamic Island.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm a peu"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm walk"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldm andando"
-          }
-        }
-      }
-    },
     "→" : {
 
     },
@@ -275,30 +227,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "+%lld min"
-          }
-        }
-      }
-    },
-    "2 min to departure" : {
-      "comment" : "Live Activity alert title shown two minutes before departure.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 min per a la sortida"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 min to departure"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 min para salir"
           }
         }
       }
@@ -533,30 +461,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aplicar ruta %1$@ a %2$@"
-          }
-        }
-      }
-    },
-    "Arrival" : {
-      "comment" : "Dynamic Island column label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arribada"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrival"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Llegada"
           }
         }
       }
@@ -933,30 +837,6 @@
         }
       }
     },
-    "Cutting it close" : {
-      "comment" : "Status banner shown when the user can still catch their tracked train but only barely.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Just a temps"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cutting it close"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vas justo"
-          }
-        }
-      }
-    },
     "Delayed · %@" : {
       "comment" : "Delay banner. Placeholder is a free-text status from the realtime feed.",
       "extractionState" : "manual",
@@ -1001,30 +881,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Denegado"
-          }
-        }
-      }
-    },
-    "Departure" : {
-      "comment" : "Dynamic Island column label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sortida"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Departure"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salida"
           }
         }
       }
@@ -1565,102 +1421,6 @@
         }
       }
     },
-    "Follow" : {
-      "comment" : "Compact button on a departure row that starts following that trip.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segueix"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Follow"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguir"
-          }
-        }
-      }
-    },
-    "Follow this trip" : {
-      "comment" : "Accessibility label for the follow-trip button.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segueix aquest trajecte"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Follow this trip"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguir este trayecto"
-          }
-        }
-      }
-    },
-    "Follow trip" : {
-      "comment" : "Hero card button that promotes a departure to a tracked Live Activity.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segueix el trajecte"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Follow trip"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguir trayecto"
-          }
-        }
-      }
-    },
-    "Following trip" : {
-      "comment" : "Hero card heading while a Live Activity is active.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguint el trajecte"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Following trip"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Siguiendo trayecto"
-          }
-        }
-      }
-    },
     "from %@" : {
       "comment" : "Calendar route detail prefix. Placeholder is the origin station name.",
       "extractionState" : "manual",
@@ -1705,30 +1465,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ve a %@"
-          }
-        }
-      }
-    },
-    "Heading home?" : {
-      "comment" : "Time-of-day suggestion title that proposes reversing the route.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tornes a casa?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heading home?"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Vuelves a casa?"
           }
         }
       }
@@ -1875,30 +1611,6 @@
         }
       }
     },
-    "Leave now" : {
-      "comment" : "Live Activity alert title fired when the user must leave to catch the train.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Surt ara"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leave now"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sal ahora"
-          }
-        }
-      }
-    },
     "Leave now for %@ · Train at %@" : {
       "comment" : "Notification body. First placeholder is the calendar event title, second is the train departure time.",
       "extractionState" : "manual",
@@ -1919,30 +1631,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sal ahora para %1$@ · Tren a las %2$@"
-          }
-        }
-      }
-    },
-    "Live Activity" : {
-      "comment" : "Hero card heading when no Live Activity is running yet.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activitat en directe"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live Activity"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actividad en vivo"
           }
         }
       }
@@ -2130,54 +1818,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Leve"
-          }
-        }
-      }
-    },
-    "Missed" : {
-      "comment" : "Status banner / Live Activity title shown after the tracked train departs.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perdut"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Missed"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perdido"
-          }
-        }
-      }
-    },
-    "Missed %@" : {
-      "comment" : "Live Activity alert title after a train was missed. Placeholder is the train label.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Has perdut %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Missed %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Has perdido %@"
           }
         }
       }
@@ -2692,30 +2332,6 @@
         }
       }
     },
-    "Open Ping to switch to the next train" : {
-      "comment" : "Live Activity alert body shown after a missed train.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obre Ping per passar al pròxim tren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Ping to switch to the next train"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre Ping para pasar al próximo tren"
-          }
-        }
-      }
-    },
     "Open settings" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3107,52 +2723,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reintentar"
-          }
-        }
-      }
-    },
-    "Reverse" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverteix"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reverse"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invertir"
-          }
-        }
-      }
-    },
-    "Reverse today's route." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverteix la ruta d'avui."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reverse today's route."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invierte la ruta de hoy."
           }
         }
       }
@@ -3961,75 +3531,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intercambiar ruta"
-          }
-        }
-      }
-    },
-    "Switch" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canvia"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Switch"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cambiar"
-          }
-        }
-      }
-    },
-    "Switch to next" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passa al següent"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Switch to next"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pasar al siguiente"
-          }
-        }
-      }
-    },
-    "Switch to this train" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "ca" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Canvia a aquest tren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Switch to this train"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cambiar a este tren"
           }
         }
       }

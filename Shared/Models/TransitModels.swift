@@ -229,21 +229,6 @@ public struct CommutePlan: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
-/// High-level state machine for the commute hero and Live Activity.
-///
-/// * `.planning` — no specific trip is locked; the hero auto-rolls to the next catchable train.
-/// * `.tracking` — the user tapped *Follow trip*; we lock to a specific `tripID` and render
-///   tracking-focused metrics (ETA to station, train departs in, buffer +/-).
-/// * `.likelyMissed` — the tracked trip hasn't departed yet, but the buffer turned negative
-///   enough that the user is almost certainly going to miss it if they don't act now.
-/// * `.missed` — the tracked trip's effective departure time has passed.
-public enum TrackingPhase: String, Codable, Equatable, Sendable {
-    case planning
-    case tracking
-    case likelyMissed
-    case missed
-}
-
 public enum ServiceAlertSeverity: String, Codable, Equatable, Sendable {
     case info
     case minor
