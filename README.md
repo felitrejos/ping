@@ -19,6 +19,10 @@
   Local-first commute planning powered by FGC and TMB schedule and realtime data
 </p>
 
+<p align="center">
+  <img src="Resources/screenshots/hero.png" alt="Ping on iOS — map, results, and home screens" width="900" />
+</p>
+
 ---
 
 ## Product Overview
